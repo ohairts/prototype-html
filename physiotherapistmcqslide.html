@@ -238,7 +238,7 @@
   </div>
 
   <audio id="pingSound" preload="auto">
-    <source src="audio/audioPing.mp3" type="audio/mp3">
+    <source src="audio/audioping.mp3" type="audio/mp3">
   </audio>
 
   <div id="flyOptions" class="fly" aria-hidden="true">
@@ -264,7 +264,7 @@
   </div>
 
   <div id="navGreen" class="next-green hidden" title="Continue">
-    <img src="images/nextSlideGreenShape.png" alt="Next">
+    <img src="images/nextslidegreenshape.png" alt="Next">
   </div>
 
   <script type="module">
@@ -336,11 +336,11 @@
         showToast(`+${CORRECT_POINTS}`);
 
         // correct -> rushtoresus
-        showNav("PTworkbench2.html");
+        showNav("ptworkbench2.html");
       } else {
         showToast("Not quite");
         // wrong -> workbench2
-        showNav("PTworkbench2.html");
+        showNav("ptworkbench2.html");
       }
     });
 
@@ -377,7 +377,7 @@
       if (social) addSocial(social);
 
       // Any fly-in option -> workbench2
-      showNav("PTworkbench1.html");
+      showNav("ptworkbench2.html");
 
       if (DEBUG) console.log("[Fly-in] social +", social);
 

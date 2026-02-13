@@ -276,7 +276,7 @@
 
     <!-- MUST be visible immediately on page 8; hidden on pages 1-7 -->
     <div id="p8Next" class="next-green hidden" title="Continue to discussion">
-      <img src="images/nextSlideGreenShape.png" alt="Next">
+      <img src="images/nextslidegreenshape.png" alt="Next">
     </div>
 
   </div>
@@ -480,7 +480,7 @@
             addScore(1);
             localStorage.setItem(P8_KEYS.internDone, "1");
           }
-          window.location.href = "workbench3.html";
+          window.location.href="workbench3.html";
         }
 
         if (action === "clerking"){
@@ -489,7 +489,7 @@
             addScore(3);
             localStorage.setItem(P8_KEYS.clerkingDone, "1");
           }
-          window.location.href = "workbench3.html";
+          window.location.href="workbench3.html";
         }
 
         if (action === "arrest"){
@@ -497,7 +497,7 @@
             // no scoring by design
             localStorage.setItem(P8_KEYS.arrestDone, "1");
           }
-          window.location.href = "workbench3.html";
+          window.location.href="workbench3.html";
         }
       });
     }
@@ -521,7 +521,7 @@
     }
 
     p8Next.addEventListener("click", ()=>{
-      window.location.href = "thrombolysischeck.html";
+      window.location.href="thrombolysischeck.html";
     });
 
     function renderPage(){
@@ -553,3 +553,4 @@
   </script>
 </body>
 </html>
+

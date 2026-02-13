@@ -221,13 +221,13 @@
 </head>
 
 <body>
-<audio id="bgAudio" src="audio/audioEcgSimulatorPneumonia.mp3" playsinline></audio>
-<audio id="pingAudio" src="audio/audioPing.mp3" preload="auto"></audio>
+<audio id="bgAudio" src="audio/audioecgsimulatorpneumonia.mp3" playsinline></audio>
+<audio id="pingAudio" src="audio/audioping.mp3" preload="auto"></audio>
 
 <div class="stage">
   <div class="left">
     <div class="imgWrap" id="imgWrap">
-      <img src="images/silhouetteManwithrings.png" alt="A to E silhouette">
+      <img src="images/silhouettemanwithrings.png" alt="A to E silhouette">
 
       <button class="hotspot" id="hsAirway" style="left:24%; top:8%; width:22%; height:15%;" aria-label="Airway"></button>
       <button class="hotspot" id="hsBreathing" style="left:53%; top:17%; width:37%; height:26%;" aria-label="Breathing"></button>
@@ -325,7 +325,7 @@
     const LOOP_START = 10;
     const LOOP_END = 30;
 
-    document.getElementById("btnAbg").onclick = () => location.href = "medabgreview.html";
+    document.getElementById("btnAbg").onclick = () => location.href="medabgreview.html";
 
     const DEFAULT_TEXT = "Please select in a stepwise fashion.";
     const DEFAULT_COLOR = getComputedStyle(document.documentElement).getPropertyValue('--statusDefault').trim() || "#bfefff";
@@ -482,7 +482,7 @@ function showPopup(text, onClick, durationMs){
         // resolveActionAndReset("images/gcs.png");
 
         // ✅ go to GCS page
-        setTimeout(() => { window.location.href = "medcalculategcs.html"; }, 120);
+        setTimeout(() => { window.location.href="medcalculategcs.html"; }, 120);
       }, 3000);
 
       activeTimer = setTimeout(() => { hidePopup(); resetStatus(); }, 3000);
@@ -501,3 +501,4 @@ function showPopup(text, onClick, durationMs){
 
 </body>
 </html>
+
