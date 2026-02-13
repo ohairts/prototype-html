@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <link rel="stylesheet" href="css/tile.css">
+  <link rel="stylesheet" href="css/speech-bubble.css">
+  <link rel="stylesheet" href="css/common.css">
+
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The Bleep</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Serif:wght@400;700&display=swap" rel="stylesheet">
+
+  <style>
+  body, html {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background-color: #000;
+      font-family: Arial, sans-serif;
+      overflow: hidden;
+    }
+
+    .yellow-box {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      background: url('images/thebleeptextwithsilhouette.png') no-repeat center center/contain;
+      background-size: cover;
+      z-index: 2;
+    }
+
+    .background-video {
+      position: fixed;
+      inset: 0; 
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    button {
+      background-color: #242121;
+      border: 2px solid #333;
+      color: white;
+      padding: 15px 30px;
+      text-align: center;
+      text-decoration: none;
+      display: inline-block;
+      font-size: 1.2em;
+      margin-top: 20px;
+      cursor: pointer;
+      border-radius: 10px;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5),
+                  inset 0 -1px 2px rgba(0, 0, 0, 0.5),
+                  0 5px 10px rgba(0, 0, 0, 0.5);
+      position: absolute;
+      top: 70%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 2;
+    }
+
+    button:hover { background-color: #2ed714; }
+  </style>
+</head>
+<body>
+
+<video
+  class="background-video"
+  autoplay
+  muted
+  loop
+  playsinline
+>
+  <source src="videos/videoStressedMan.mp4" type="video/mp4">
+  <!-- Optional fallback -->
+</video>
+
+  <div class="yellow-box"></div>
+
+
+
+
+  <button id="startBtn">START SIMULATION</button>
+
+  <script type="module">
+    import { initGame } from "./js/state.js";
+
+    document.getElementById("startBtn").addEventListener("click", () => {
+      initGame({ resetScore: true, resetTimer: true });
+      window.location.href = "Slide2.html";
+    });
+  </script>
+
+</body>
+</html>

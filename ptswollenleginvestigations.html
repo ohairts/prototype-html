@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Swollen leg investigations</title>
+
+  <link rel="stylesheet" href="css/common.css">
+  <link rel="stylesheet" href="css/tile.css">
+  <link rel="stylesheet" href="css/nav-arrows.css">
+  <link rel="stylesheet" href="css/fly-in-options.css">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@600;800;900&display=swap" rel="stylesheet">
+
+  <style>
+    :root{
+      --bg:#0b3f53;
+      --shadow: rgba(0,0,0,0.35);
+      --panelPurple:#d67ad9;
+      --white:#fff;
+      --ink:#0b0f12;
+    }
+
+    *{ box-sizing:border-box; }
+    html,body{
+      height:100%;
+      margin:0;
+      background:var(--bg);
+      font-family:"Roboto Slab", serif;
+      overflow:hidden;
+    }
+
+    /* 16:9 stage */
+    .stage{
+      position:relative;
+      width:min(100vw, calc(100vh * 16 / 9));
+      height:min(100vh, calc(100vw * 9 / 16));
+      margin:0 auto;
+      background:var(--bg);
+      overflow:hidden;
+      border: 2px solid rgba(0,0,0,0.35);
+    }
+
+    /* Center patient image block */
+    .centerImg{
+      position:absolute;
+      left: 34%;
+      top: 5%;
+      width: 32%;
+      height: 90%;
+      background: rgba(0,0,0,0.2);
+      border-radius: 2px;
+      overflow:hidden;
+      box-shadow: 0 14px 26px var(--shadow);
+      z-index: 1;
+    }
+    .centerImg img{
+      width:100%;
+      height:100%;
+      object-fit:cover;
+      display:block;
+    }
+
+    /* Purple prompt */
+    .prompt{
+      position:absolute;
+      left: 4%;
+      top: 4%;
+      width: 28%;
+      padding: 16px 14px;
+      background: var(--panelPurple);
+      border-radius: 18px;
+      border: 4px solid rgba(0,0,0,0.28);
+      box-shadow: 0 14px 26px var(--shadow);
+      z-index: 5;
+      text-align:center;
+      font-weight: 900;
+      color: #0b0f12;
+      line-height: 1.1;
+      font-size: clamp(16px, 2.1vw, 26px);
+    }
+    .prompt .small{
+      display:block;
+      margin-top: 8px;
+      font-size: clamp(14px, 1.7vw, 20px);
+      font-weight: 900;
+    }
+
+    /* Tile grid region */
+    .grid{
+      position:absolute;
+      left: 6%;
+      top: 30%;
+      width: 88%;
+      height: 38%;
+      display:grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 18px 22px;
+      z-index: 4;
+      align-items:stretch;
+    }
+
+    .tile{
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      text-align:center;
+      font-weight: 900;
+      user-select:none;
+      cursor:pointer;
+      min-height: 70px;
+      line-height: 1.1;
+      font-size: clamp(12px, 1.4vw, 18px);
+    }
+    .tile.disabled{
+      pointer-events:none;
+      opacity: 0.55;
+      filter: grayscale(0.25);
+    }
+    .tile.selected{
+      outline: 4px solid rgba(255,255,255,0.75);
+      filter: brightness(1.03);
+    }
+
+    /* --- FLY-IN --- */
+/* ===== FORCE .fly to be a bottom toolbar (override fly-in-options.css overlay) ===== */
+.fly{
+  position: absolute !important;
+  inset: auto !important;              /* cancels inset:0 */
+  left: 50% !important;
+  right: auto !important;
+  top: auto !important;
+  bottom: 18px !important;
+
+  width: min(1120px, 92%) !important;
+  height: auto !important;
+
+  background: transparent !important;  /* cancels overlay dim */
+  display: block !important;
+  place-items: initial !important;
+
+  opacity: 0;
+  transform: translateX(-50%) translateY(24px);
+  transition: opacity .25s ease, transform .25s ease;
+
+  pointer-events: none;                /* let tiles remain clickable */
+  z-index: 30;
+}
+
+.fly.is-open{
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* The tray itself */
+.fly__backdrop{ display:none !important; }  /* if present, kill it */
+.fly__panel,
+.fly-panel{
+  background: rgba(0,0,0,.25) !important;
+  border-radius: 14px;
+  padding: 12px;
+  box-shadow: 0 18px 35px rgba(0,0,0,.35);
+  pointer-events: none;                /* tray doesn’t block tiles */
+}
+
+.fly__grid,
+.fly-grid{
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  pointer-events: none;
+}
+
+/* Buttons clickable */
+.fly__opt,
+.fly-btn{
+  pointer-events: auto !important;
+}
+
+
+    /* NAV WRAP */
+    .navWrap{
+      position:absolute;
+      right: 4%;
+      bottom: 10%;
+      z-index: 50;
+      display:none;
+    }
+    .navWrap.show{ display:block; }
+
+    .navWrap a{
+      display:block;
+      width: 110px;
+      height: 86px;
+      text-decoration:none;
+      position: relative;
+      cursor: pointer;
+      pointer-events: auto;
+    }
+
+    /* Fallback arrow */
+    .navWrap a::before{
+      content:"";
+      position:absolute;
+      inset:0;
+      border-radius: 6px;
+      background: #ea7a2c;
+      border: 2px solid rgba(0,0,0,0.35);
+      box-shadow: 0 12px 20px rgba(0,0,0,0.35);
+    }
+    .navWrap a::after{
+      content:"";
+      position:absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-35%,-50%);
+      width:0;height:0;
+      border-top: 18px solid transparent;
+      border-bottom: 18px solid transparent;
+      border-left: 30px solid rgba(0,0,0,0.45);
+      filter: drop-shadow(0 6px 10px rgba(0,0,0,0.25));
+    }
+  </style>
+</head>
+
+<body>
+  <div class="stage" role="application" aria-label="Swollen leg investigations">
+
+    <div class="prompt">
+      What are the next most<br/>
+      urgent investigations Patrick<br/>
+      needs?
+      <span class="small">(Choose up to three)</span>
+    </div>
+
+    <div class="centerImg" aria-label="Patient image">
+      <img src="images/oldManUnhappyDvtStory.png" alt="Patient in bed">
+    </div>
+
+    <div class="grid" role="group" aria-label="Investigation choices (choose up to three)">
+      <div class="tile">Coagulation screen</div>
+      <div class="tile">Ultrasound pelvis</div>
+      <div class="tile">CT lower limb angiogram</div>
+
+      <div class="tile" data-correct="1">D-Dimer</div>
+      <div class="tile" data-correct="1">Ultrasound lower limb</div>
+      <div class="tile">MRI knee</div>
+
+      <div class="tile">Blood cultures</div>
+      <div class="tile">Ultrasound kidneys</div>
+      <div class="tile">Pet CT</div>
+    </div>
+
+<!-- FLY-IN OPTIONS -->
+<div class="fly" id="fly" aria-label="Social actions">
+  <div class="fly-panel">
+    <div class="fly-grid">
+      <button class="fly-btn" data-social="1" type="button">Call the intern</button>
+      <button class="fly-btn" data-social="3" type="button">Call MROC</button>
+      <button class="fly-btn" data-social="0" type="button">Call Pharmacist</button>
+      <button class="fly-btn" data-social="0" type="button">Do something or speak with someone else</button>
+    </div>
+  </div>
+</div>
+
+  </div>
+</div>
+
+  </div>
+</div>
+
+
+
+    <!-- Nav arrow (appears after first investigation selection) -->
+    <div id="navWrap" class="navWrap" aria-label="Next">
+      <a class="nav-arrow nav-arrows" href="ptcauseofpatientoutcome.html" aria-label="Continue to next slide"></a>
+    </div>
+
+  </div>
+
+<script type="module">
+(function(){
+
+  const DEBUG = false;
+  const MAX_SELECT = 3;
+
+  // =============================
+  // STATE.JS SCORING (MATCH WORKING PAGES)
+  // =============================
+  let addScore = (n)=>{
+    const key="overallScore";
+    const cur=Number(localStorage.getItem(key)||0);
+    localStorage.setItem(key,String(cur+Number(n||0)));
+  };
+
+  let addSocial = (n)=>{
+    const key="socialScore";
+    const cur=Number(localStorage.getItem(key)||0);
+    localStorage.setItem(key,String(cur+Number(n||0)));
+  };
+
+  import("./js/state.js")
+  .then(mod=>{
+    mod.ensureTimerStarted?.();
+    if(typeof mod.addScore==="function") addScore=mod.addScore;
+    if(typeof mod.addSocial==="function") addSocial=mod.addSocial;
+  })
+  .catch(e=>console.warn("state.js not loaded:",e));
+
+  function awardAndGo({overall=0,social=0,href}){
+    if(overall) addScore(overall);
+    if(social) addSocial(social);
+
+    if(DEBUG) console.log("[Award]",{overall,social,href});
+
+    setTimeout(()=>{
+      if(href) window.location.href=href;
+    },50);
+  }
+
+  // =============================
+  // INVESTIGATION TILE LOGIC (OVERALL ONLY)
+  // =============================
+  const tiles=[...document.querySelectorAll(".grid .tile")];
+  const navWrap=document.getElementById("navWrap");
+  let selectedCount=0;
+
+  function updateDisabled(){
+    const atLimit=selectedCount>=MAX_SELECT;
+    tiles.forEach(t=>{
+      if(!t.classList.contains("selected")){
+        t.classList.toggle("disabled",atLimit);
+      }
+    });
+  }
+
+  tiles.forEach(tile=>{
+    tile.addEventListener("click",()=>{
+
+      if(tile.classList.contains("selected")) return;
+      if(selectedCount>=MAX_SELECT) return;
+
+      tile.classList.add("selected");
+      selectedCount++;
+
+      // ✅ overall score if correct
+      if(tile.dataset.correct==="1"){
+        addScore(1);
+      }
+
+      navWrap.classList.add("show");
+      updateDisabled();
+    });
+  });
+
+  updateDisabled();
+
+  // =============================
+  // FLY-IN SOCIAL OPTIONS (SOCIAL ONLY)
+  // =============================
+  const fly=document.getElementById("fly");
+  const TARGET_HREF="PTworkbench8.html";
+
+  setTimeout(()=>{
+    fly.classList.add("is-open");
+  },2000);
+
+  document.querySelectorAll(".fly-btn").forEach(btn=>{
+    btn.addEventListener("click",()=>{
+      awardAndGo({
+        social:Number(btn.dataset.social||0),
+        href:TARGET_HREF
+      });
+    });
+  });
+
+})();
+</script>
+
+
+
+</body>
+</html>

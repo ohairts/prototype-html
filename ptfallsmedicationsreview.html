@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Falls Medication Review</title>
+
+<link rel="stylesheet" href="css/common.css">
+<link rel="stylesheet" href="css/nav-arrows.css">
+
+<link href="https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@700;900&display=swap" rel="stylesheet">
+
+<style>
+  body{
+    margin:0;
+    background:#06364a;
+    font-family:"Roboto Slab", serif;
+    overflow:hidden;
+  }
+
+  .stage{
+    position:relative;
+    width:100vw;
+    height:100vh;
+    background:#06364a;
+  }
+
+  /* ===== CENTER IMAGE PANEL (like screenshot) ===== */
+  .image-panel{
+    position:absolute;
+    top:0;
+    bottom:0;
+    left:50%;
+    transform:translateX(-50%);
+    width:min(360px, 38vw);
+    background:#111;
+    overflow:hidden;
+    z-index:1;
+  }
+
+  .image-panel::before{
+    content:"";
+    position:absolute;
+    inset:0;
+    background:url("images/oldmanimprovinginhospitalbed.png") center/cover no-repeat;
+    opacity:.95;
+    filter:contrast(1.15) grayscale(1);
+  }
+
+  /* ===== HEADER ===== */
+  .header{
+    position:absolute;
+    top:18px;
+    left:50%;
+    transform:translateX(-50%);
+    width:min(760px, calc(100vw - 44px));
+    background:#fff;
+    color:#111 !important;
+    border-radius:12px;
+    padding:14px 22px;
+    font-weight:900;
+    font-size:1.35rem;
+    text-align:center;
+    box-shadow:0 8px 18px rgba(0,0,0,.35);
+    z-index:20; /* above tiles + image */
+  }
+  .header small{
+    display:block;
+    font-size:1rem;
+    margin-top:4px;
+    color:#111 !important;
+    font-weight:900;
+  }
+
+  /* ===== OVALS (positioned around the image panel) ===== */
+  .oval-grid{
+    position:absolute;
+    inset:0;
+    z-index:10; /* above image panel */
+    pointer-events:auto;
+  }
+
+  .oval{
+    position:absolute;
+    width:240px;
+    height:92px;
+    border-radius:50%;
+    background:#f7b6eb;
+    border:4px solid #000;
+    box-shadow:0 8px 16px rgba(0,0,0,.35);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-weight:900;
+    font-size:1.15rem;
+    cursor:pointer;
+    user-select:none;
+    transition:transform .15s ease, filter .15s ease, background .15s ease, opacity .15s ease;
+  }
+
+  .oval:hover{ transform:translateY(-2px); filter:brightness(1.05); }
+
+  .oval.selected{
+    background:#ffd400;
+    outline:4px solid rgba(0,0,0,.45);
+  }
+
+  .oval.disabled{
+    opacity:.45;
+    filter:grayscale(0.6);
+    cursor:not-allowed;
+  }
+
+  /* Layout positions (approx. match screenshot) */
+  /* Top row */
+  .o1{ left: 9%;  top: 22%; }
+  .o2{ left: 50%; top: 22%; transform:translateX(-50%); }
+  .o3{ right:9%;  top: 22%; }
+
+  /* Middle row */
+  .o4{ left: 6%;  top: 46%; }
+  .o5{ left: 50%; top: 46%; transform:translateX(-50%); }
+  .o6{ right:6%;  top: 46%; }
+
+  /* Bottom row */
+  .o7{ left: 12%; top: 70%; }
+  .o8{ left: 50%; top: 70%; transform:translateX(-50%); }
+  .o9{ right:12%; top: 70%; }
+
+  /* Fix hover transform for centered ones (so they don't lose centering) */
+  .o2:hover, .o5:hover, .o8:hover{ transform:translateX(-50%) translateY(-2px); }
+  .o2:active, .o5:active, .o8:active{ transform:translateX(-50%) translateY(1px) scale(.99); }
+
+  /* ===== NAV ARROW ===== */
+  .nav-next{
+    display:none;
+    position:fixed;
+    right:22px;
+    bottom:22px;
+    width:110px;
+    height:86px;
+    cursor:pointer;
+    z-index:30;
+  }
+  .nav-next img{
+    width:100%;
+    height:100%;
+    object-fit:contain;
+    display:block;
+  }
+  .nav-next.show{ display:block; }
+
+    /* ===== PHARMACIST TILE (bottom glowing) ===== */
+  .pharm-tile{
+    position:fixed;
+    left:50%;
+    bottom:18px;
+    transform:translateX(-50%);
+    width:min(520px, calc(100vw - 44px));
+    padding:18px 20px;
+    border-radius:16px;
+    background: #007fa3;
+    border: 3px solid #4fe3ff;
+
+    color:#fff;
+    text-decoration:none;
+    font-weight:900;
+    font-size:1.25rem;
+    text-align:center;
+    z-index:35; /* above ovals + header + image */
+    box-shadow:
+      0 0 18px rgba(0, 210, 255, .55),
+      0 0 42px rgba(0, 210, 255, .35),
+      0 10px 24px rgba(0,0,0,.35);
+    animation:pharmPulse 1.6s ease-in-out infinite;
+    user-select:none;
+  }
+
+  .pharm-tile:hover{
+    filter:brightness(1.08);
+    transform:translateX(-50%) translateY(-2px);
+  }
+  .pharm-tile:active{
+    transform:translateX(-50%) translateY(1px) scale(.99);
+  }
+
+  .pharm-tile.used{
+    animation:none;
+    opacity: 1;
+    box-shadow: 0 0 10px rgba(0, 210, 255, .35), 0 10px 24px rgba(0,0,0,.25);
+  }
+
+  @keyframes pharmPulse{
+    0%, 100%{
+      box-shadow:
+        0 0 14px rgba(0, 210, 255, .45),
+        0 0 30px rgba(0, 210, 255, .28),
+        0 10px 24px rgba(0,0,0,.35);
+    }
+    50%{
+      box-shadow:
+        0 0 26px rgba(0, 210, 255, .75),
+        0 0 64px rgba(0, 210, 255, .45),
+        0 10px 24px rgba(0,0,0,.35);
+    }
+  }
+
+
+  @media (max-width: 900px){
+    .oval{ width:210px; height:84px; font-size:1.05rem; }
+    .image-panel{ width:min(320px, 46vw); }
+  }
+</style>
+</head>
+
+<body>
+<div class="stage">
+
+  <!-- Center image panel behind tiles -->
+  <div class="image-panel" aria-hidden="true"></div>
+
+  <!-- Header (force visible text) -->
+  <div class="header">
+    Which medications may increase his risk of falls at home?
+    <small>(Choose up to four)</small>
+  </div>
+
+  <!-- Ovals -->
+  <div class="oval-grid" aria-label="Medication options">
+
+    <div class="oval o1" data-score="1">Bisoprolol</div>
+    <div class="oval o2" data-score="0">Keral</div>
+    <div class="oval o3" data-score="0">Paracetamol</div>
+
+    <div class="oval o4" data-score="1">Ramipril</div>
+    <div class="oval o5" data-score="0">Metformin</div>
+    <div class="oval o6" data-score="1">Ranolazine</div>
+
+    <div class="oval o7" data-score="0">Fluoxetine</div>
+    <div class="oval o8" data-score="0">Aspirin</div>
+    <div class="oval o9" data-score="1">Zopiclone</div>
+
+  </div>
+
+  <!-- NEXT ARROW -->
+  <a class="nav-next" id="nextArrow"
+     href="ptbacktothesidelines.html"
+     aria-label="Next slide">
+    <img src="images/nextSlideOrangeShape.png" alt="Next">
+  </a>
+
+  <!-- PHARMACIST DISCUSSION TILE -->
+  <a class="pharm-tile" id="pharmTile" href="PTworkbench8.html">
+    Discuss with Pharmacists?
+  </a>
+
+</div>
+
+<script type="module">
+  const DEBUG = true;
+
+  // =============================
+  // FALLBACK STORAGE SCORING (ALWAYS WORKS)
+  // =============================
+  const OVERALL_KEY = "overallScore";
+  const SOCIAL_KEY  = "socialScore";
+
+  function fallbackAddScore(n){
+    const cur = Number(localStorage.getItem(OVERALL_KEY) || 0);
+    localStorage.setItem(OVERALL_KEY, String(cur + Number(n || 0)));
+  }
+  function fallbackAddSocial(n){
+    const cur = Number(localStorage.getItem(SOCIAL_KEY) || 0);
+    localStorage.setItem(SOCIAL_KEY, String(cur + Number(n || 0)));
+  }
+
+  // =============================
+  // TRY LOAD state.js (IF IT FAILS, WE STILL SCORE)
+  // =============================
+  let addScore = fallbackAddScore;
+  let addSocial = fallbackAddSocial;
+  let ensureTimerStarted = ()=>{};
+
+  try{
+    const mod = await import("./js/state.js");
+    if (typeof mod.addScore === "function") addScore = mod.addScore;
+    if (typeof mod.addSocial === "function") addSocial = mod.addSocial;
+    if (typeof mod.ensureTimerStarted === "function") ensureTimerStarted = mod.ensureTimerStarted;
+
+    if (DEBUG) console.log("[state.js] loaded OK");
+  }catch(e){
+    console.warn("[state.js] NOT loaded → using localStorage fallback", e);
+  }
+
+  try { ensureTimerStarted(); } catch(e){}
+
+  // =============================
+  // PHARM TILE SOCIAL SCORING (ONCE ONLY + RELIABLE NAV)
+  // =============================
+  const pharmTile = document.getElementById("pharmTile");
+  const PHARM_KEY = "nightshift_fallsmedreview_pharm_used";
+
+  if(localStorage.getItem(PHARM_KEY) === "1"){
+    pharmTile.classList.add("used");
+  }
+
+// --- tiny toast (optional but recommended) ---
+function showToast(msg){
+  let t = document.getElementById("toastSocial");
+  if(!t){
+    t = document.createElement("div");
+    t.id = "toastSocial";
+    t.style.position = "fixed";
+    t.style.left = "50%";
+    t.style.bottom = "120px";
+    t.style.transform = "translateX(-50%)";
+    t.style.background = "rgba(0,0,0,.75)";
+    t.style.color = "#fff";
+    t.style.border = "1px solid rgba(255,255,255,.25)";
+    t.style.padding = "10px 14px";
+    t.style.borderRadius = "10px";
+    t.style.fontWeight = "900";
+    t.style.zIndex = "9999";
+    t.style.pointerEvents = "none";
+    document.body.appendChild(t);
+  }
+  t.textContent = msg;
+  t.style.opacity = "1";
+  clearTimeout(t._hideTimer);
+  t._hideTimer = setTimeout(()=>{ t.style.opacity = "0"; }, 900);
+}
+
+pharmTile.addEventListener("click", (e) => {
+  e.preventDefault();
+
+  // stop double-taps immediately
+  pharmTile.style.pointerEvents = "none";
+
+  let awarded = false;
+  if (localStorage.getItem(PHARM_KEY) !== "1") {
+    addSocial(3);
+    localStorage.setItem(PHARM_KEY, "1");
+    pharmTile.classList.add("used");
+    awarded = true;
+  }
+
+  if (DEBUG) console.log("[SOCIAL after click]", localStorage.getItem(SOCIAL_KEY));
+
+  if (awarded) showToast("+3 social");
+  else showToast("Already counted");
+
+  // 👇 make this longer if you want it more obvious
+  const NAV_DELAY_MS = 450;
+
+  setTimeout(() => {
+    window.location.href = pharmTile.getAttribute("href");
+  }, NAV_DELAY_MS);
+});
+
+  // =============================
+  // OVAL SCORING (OVERALL)
+  // =============================
+  const MAX_SELECTIONS = 4;
+  let selectedCount = 0;
+  let arrowShown = false;
+
+  const nextArrow = document.getElementById("nextArrow");
+
+  function updateDisabledStates(){
+    const atLimit = selectedCount >= MAX_SELECTIONS;
+    document.querySelectorAll(".oval").forEach(o=>{
+      if(atLimit && !o.classList.contains("selected")){
+        o.classList.add("disabled");
+      }else{
+        o.classList.remove("disabled");
+      }
+    });
+  }
+
+  document.querySelectorAll(".oval").forEach(oval=>{
+    oval.addEventListener("click", ()=>{
+      if(oval.classList.contains("selected")) return;
+      if(selectedCount >= MAX_SELECTIONS) return;
+
+      oval.classList.add("selected");
+      selectedCount++;
+
+      const score = Number(oval.dataset.score || 0);
+      if(score) addScore(score);
+
+      if(!arrowShown){
+        arrowShown = true;
+        nextArrow.classList.add("show");
+      }
+
+      updateDisabledStates();
+
+      if (DEBUG) console.log("[OVERALL]", localStorage.getItem(OVERALL_KEY));
+    });
+  });
+
+  updateDisabledStates();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Patient Recovery</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@400;600;800;900&display=swap" rel="stylesheet">
+
+  <style>
+    :root{
+      --bg:#0b3f53;
+      --white:#ffffff;
+      --shadow: rgba(0,0,0,0.35);
+      --orange:#ea7a2c;
+      --orangeDark:#c85f1f;
+      --ink:#06131a;
+    }
+
+    *{ box-sizing:border-box; }
+    html,body{
+      height:100%;
+      margin:0;
+      background:var(--bg);
+      font-family:"Roboto Slab", serif;
+      overflow:hidden;
+    }
+
+    /* 16:9 stage */
+    .stage{
+      position:relative;
+      width:min(100vw, calc(100vh * 16 / 9));
+      height:min(100vh, calc(100vw * 9 / 16));
+      margin:0 auto;
+      background:var(--bg);
+      overflow:hidden;
+      border: 2px solid rgba(0,0,0,0.35);
+    }
+
+    /* Left media blocks */
+    .imgBox, .vidBox{
+      position:absolute;
+      overflow:hidden;
+      border-radius: 2px;
+      box-shadow: 0 12px 22px var(--shadow);
+      background: rgba(0,0,0,0.15);
+    }
+    .imgBox img{
+      width:100%;
+      height:80%;
+      object-fit:cover;
+      display:block;
+    }
+
+    /* Top-left nurse image */
+    #imgNurse{
+      left: 4%;
+      top: 11%;
+      width: 20%;
+      height: 44%;
+    }
+
+    /* Top-middle patient image */
+    #imgPatient{
+      left: 25%;
+      top: 10%;
+      width: 28%;
+      height: 48%;
+      filter: blur(0.4px);
+      opacity: 0.95;
+      position:absolute;
+    }
+
+    /* ✅ Subtle “monitor glow” beside patient image */
+    .monitorGlow{
+      position:absolute;
+      /* position this just to the right of the patient image */
+      left: 48%;
+      top: 11%;
+      width: 4%;
+      height: 2%;
+      pointer-events:none;
+      z-index: 3;
+
+      /* glowing core */
+      background:
+        radial-gradient(circle at 35% 50%,
+          rgba(120,255,210,0.95) 0%,
+          rgba(120,255,210,0.45) 35%,
+          rgba(120,255,210,0.12) 60%,
+          rgba(120,255,210,0.00) 75%);
+      filter: blur(0.4px);
+      opacity: 0.75;
+      border-radius: 10px;
+
+      /* a gentle “spill” */
+      box-shadow:
+        0 0 18px rgba(120,255,210,0.55),
+        0 0 34px rgba(120,255,210,0.22),
+        0 0 60px rgba(120,255,210,0.12);
+      animation: glowPulse 1.4s ease-in-out infinite;
+    }
+
+    .monitorGlow::after{
+      content:"";
+      position:absolute;
+      inset: 10% 20%;
+      border-radius: 8px;
+      background: rgba(255,255,255,0.12);
+      box-shadow: inset 0 0 0 1px rgba(0,0,0,0.15);
+      opacity: 0.25;
+    }
+
+    @keyframes glowPulse{
+      0%, 100%{
+        transform: scale(1);
+        opacity: 0.55;
+        filter: blur(0.6px);
+      }
+      50%{
+        transform: scale(1.04);
+        opacity: 0.85;
+        filter: blur(0.25px);
+      }
+    }
+
+    /* Bottom-left monitor video */
+    #vidMonitor{
+      left: 4%;
+      bottom: 10%;
+      width: 48%;
+      height: 40%;
+      border: 2px solid rgba(0,0,0,0.35);
+    }
+    #vidMonitor video{
+      width:100%;
+      height:100%;
+      object-fit:cover;
+      display:block;
+      background:black;
+    }
+
+    /* Right text panel */
+    .rightPane{
+      position:absolute;
+      right: 8%;
+      top: 5%;
+      width: 38%;
+      height: 58%;
+      color: var(--white);
+      display:flex;
+      flex-direction:column;
+      justify-content:flex-start;
+      gap: 16px;
+      z-index: 2;
+    }
+
+    .title{
+      font-weight: 900;
+      letter-spacing: 1px;
+      line-height: 0.92;
+      font-size: clamp(44px, 6.3vw, 84px);
+      text-shadow: 0 3px 0 rgba(0,0,0,0.25);
+      margin:0;
+      text-align:center;
+    }
+
+    .bullets{
+      margin: 0;
+      padding-left: 22px;
+      font-weight: 700;
+      font-size: clamp(16px, 2.1vw, 28px);
+      text-align: center;
+      line-height: 1.15;
+      color: rgba(255,255,255,0.92);
+      text-shadow: 0 2px 0 rgba(0,0,0,0.18);
+    }
+    .bullets li{ margin: 12px 0; }
+    .quote{ quotes: "“" "”" "‘" "’"; }
+
+    /* Nav arrow */
+    .navArrow{
+      position:absolute;
+      right: 3.6%;
+      bottom: 11%;
+      width: 5.8%;
+      height: 18%;
+      background: var(--orange);
+      border: 2px solid rgba(0,0,0,0.35);
+      box-shadow: 0 12px 22px var(--shadow);
+      border-radius: 2px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      cursor:pointer;
+      z-index: 5;
+      transition: transform 120ms ease, filter 120ms ease;
+      text-decoration:none;
+    }
+    .navArrow:hover{ transform: translateY(-2px); filter: brightness(1.06); }
+    .navArrow:active{ transform: translateY(0px) scale(0.99); }
+
+    .navArrow .tri{
+      width:0; height:0;
+      border-top: 18px solid transparent;
+      border-bottom: 18px solid transparent;
+      border-left: 26px solid rgba(0,0,0,0.45);
+      transform: translateX(2px);
+      filter: drop-shadow(0 6px 8px rgba(0,0,0,0.25));
+      position:relative;
+    }
+    .navArrow .tri:after{
+      content:"";
+      position:absolute;
+      left:0;
+      top:0;
+      width:0; height:0;
+      border-top: 18px solid transparent;
+      border-bottom: 18px solid transparent;
+      border-left: 26px solid rgba(10,10,10,0.25);
+      transform: translateX(4px);
+    }
+
+    /* small tweak for very small screens */
+    @media (max-aspect-ratio: 16/9){
+      .rightPane{ right: 6%; width: 40%; }
+      .monitorGlow{
+        left: calc(28% + 24% + 1.6%);
+        width: 5.2%;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="stage" role="application" aria-label="Patient Recovery slide">
+
+    <!-- TOP LEFT IMAGE -->
+    <div id="imgNurse" class="imgBox" aria-label="Nurse image">
+      <img src="images/nurseCutoutPic.png" alt="Nurse" />
+    </div>
+
+    <!-- TOP MIDDLE PATIENT IMAGE -->
+    <div id="imgPatient" class="imgBox" aria-label="Patient image">
+      <img src="images/patientrecoveringsick.png" alt="Patient" />
+    </div>
+
+    <!-- ✅ Glow element beside the patient (mimics bedside monitor light) -->
+    <div class="monitorGlow" aria-hidden="true"></div>
+
+    <!-- BOTTOM LEFT VIDEO (autoplay) -->
+    <div id="vidMonitor" class="vidBox" aria-label="Monitor video">
+      <video id="monitorVideo" autoplay muted loop playsinline preload="auto">
+        <source src="videos/videoNormalVitalsMonitor.mp4" type="video/mp4" />
+      </video>
+    </div>
+
+    <!-- RIGHT TEXT -->
+    <div class="rightPane" aria-label="Recovery text">
+      <h1 class="title">PATIENT<br>RECOVERY</h1>
+
+      <ul class="bullets">
+        <li class="quote">“Oh thank you on call physio. He’s still very sick. But he looks so much better.”</li>
+        <li>The doctors have arrived and started some antibiotics and increased nebuliser frequency at your guidance.</li>
+        <li>Thank you.</li>
+        <li>You should head on and do more jobs. You’ve done a great job.”</li>
+      </ul>
+    </div>
+
+    <!-- NAV ARROW -->
+    <a class="navArrow" href="PTtreatedaspirationevent.html" aria-label="Next">
+      <div class="tri" aria-hidden="true"></div>
+    </a>
+
+    <!-- ✅ Two audio beds -->
+    <audio id="ambienceAudio" preload="auto" loop>
+      <source src="audio/audioHospitalAmbientSounds.mp3" type="audio/mpeg">
+    </audio>
+
+    <audio id="vitalsAudio" preload="auto" loop>
+      <source src="audio/audioNormalVitals.m4a" type="audio/mp4">
+    </audio>
+  </div>
+
+<script>
+  (function(){
+    // ---- Video: try play on load and first gesture (muted autoplay usually works) ----
+    const v = document.getElementById("monitorVideo");
+    const tryPlayVideo = async () => {
+      try { if (v) await v.play(); } catch(e) {}
+    };
+    tryPlayVideo();
+    window.addEventListener("pointerdown", tryPlayVideo, { once:true, capture:true });
+    window.addEventListener("keydown", tryPlayVideo, { once:true, capture:true });
+
+    // ---- Audio: 2 simultaneous loops (autoplay may be blocked; retry on first gesture) ----
+    const ambience = document.getElementById("ambienceAudio");
+    const vitals = document.getElementById("vitalsAudio");
+
+    function setupAudio(){
+      if (ambience){
+        ambience.loop = true;
+        ambience.volume = 0.55; // tweak if you want quieter
+      }
+      if (vitals){
+        vitals.loop = true;
+        vitals.volume = 0.75; // tweak if you want quieter
+      }
+    }
+
+    async function startAudio(){
+      setupAudio();
+      const p1 = ambience ? ambience.play().catch(()=>null) : null;
+      const p2 = vitals ? vitals.play().catch(()=>null) : null;
+      await Promise.all([p1, p2]);
+    }
+
+    // Attempt on load:
+    startAudio();
+
+    // If blocked, start on first user gesture anywhere:
+    let audioArmed = false;
+    function armOnce(){
+      if (audioArmed) return;
+      audioArmed = true;
+      startAudio();
+      window.removeEventListener("pointerdown", armOnce, true);
+      window.removeEventListener("keydown", armOnce, true);
+    }
+    window.addEventListener("pointerdown", armOnce, true);
+    window.addEventListener("keydown", armOnce, true);
+
+    // Optional: pause audio when tab hidden (prevents stacked audio when returning)
+    document.addEventListener("visibilitychange", () => {
+      if (document.hidden){
+        try { ambience && ambience.pause(); } catch(e){}
+        try { vitals && vitals.pause(); } catch(e){}
+      }
+    });
+  })();
+</script>
+
+</body>
+</html>

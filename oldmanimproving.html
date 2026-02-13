@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Discharge Summary - Simple</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@900&display=swap" rel="stylesheet">
+
+  <style>
+    body{
+      margin:0;
+      background:#08394a;
+      font-family:"Roboto Slab", serif;
+      overflow:hidden;
+    }
+
+    .stage{
+      position:relative;
+      width:100vw;
+      height:100vh;
+      background:#08394a;
+      overflow:hidden;
+      border: 3px solid rgba(0,0,0,.55);
+      box-sizing:border-box;
+    }
+
+    /* Center hero image (full visible, no crop) */
+    .hero{
+      position:absolute;
+      left:50%;
+      top:50%;
+      transform: translate(-50%,-50%);
+      height: min(86vh, 900px);
+      aspect-ratio: 3 / 4;           /* tweak if needed */
+      max-width: 44vw;
+      background: #000 url("images/oldmanimprovinginhospitalbed.png") center / contain no-repeat; /* <-- CHANGE FILE */
+      border: 3px solid rgba(0,0,0,.65);
+      box-shadow: 0 18px 45px rgba(0,0,0,.45);
+      z-index: 2;
+    }
+
+    /* Base tile styling */
+    .tile{
+      position:absolute;
+      background:#fff;
+      border: 4px solid rgba(0,0,0,.25);
+      border-radius: 22px;
+      box-shadow: 0 14px 22px rgba(0,0,0,.25);
+      padding: 14px 14px;
+      font-weight: 900;
+      text-align:center;
+      color:#111;
+      line-height:1.15;
+      z-index: 10;
+
+      /* hidden initially */
+      opacity: 0;
+      transform: translateY(10px) scale(.96);
+      animation: popIn .28s ease forwards;
+    }
+
+    /* Yellow note tile */
+    .tile.note{
+      background:#fff;
+      border-radius: 0;
+      font-size: medium;
+      border: 6px solid #f2b300; /* yellow frame */
+      box-shadow: 0 12px 18px rgba(0,0,0,.25);
+      text-align:center;
+      padding: 18px 18px;
+    }
+
+    /* Grey bottom-left tile (walking stick) */
+    .tile.grey{
+      background:#d9d9d9;
+      border-radius: 0;
+      width: min(280px, 26vw);
+      border: 3px solid rgba(0,0,0,.35);
+      box-shadow: 0 10px 16px rgba(0,0,0,.22);
+      padding: 12px 14px;
+      text-align:center;
+    }
+
+    /* Tile positions (match screenshot layout) */
+    #t1{ left: 34px; top: 42px;  width: min(280px, 26vw); }        /* yellow note */
+    #t2{ left: 34px; top: 255px; width: min(280px, 26vw); }        /* left white */
+    #t3{ left: 34px; bottom: 60px; width: min(280px, 26vw); }      /* grey */
+
+    #t4{ right: 34px; top: 28px; width: min(320px, 28vw); }        /* right top */
+    #t5{ right: 34px; top: 315px; width: min(320px, 28vw); }       /* right mid */
+
+    /* 1-second interval appearance */
+    #t1{ animation-delay: 1s; }
+    #t2{ animation-delay: 2s; }
+    #t3{ animation-delay: 3s; }
+    #t4{ animation-delay: 4s; }
+    #t5{ animation-delay: 5s; }
+
+    @keyframes popIn{
+      to{
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+
+    /* Nav arrow bottom-right */
+    .nav{
+      position:absolute;
+      right: 26px;
+      bottom: 22px;
+      width: 132px;
+      height: 96px;
+      z-index: 20;
+      user-select:none;
+      filter: drop-shadow(0 10px 18px rgba(0,0,0,.35));
+    }
+    .nav a{
+      display:block;
+      width:100%;
+      height:100%;
+    }
+    .nav img{
+      width:100%;
+      height:100%;
+      object-fit: contain;
+      display:block;
+    }
+
+    /* optional glow like screenshot */
+    .nav{
+      filter:
+        drop-shadow(0 0 10px rgba(46,215,20,.55))
+        drop-shadow(0 12px 18px rgba(0,0,0,.35));
+    }
+
+    @media (max-width: 900px){
+      .hero{ max-width: 58vw; height: 78vh; }
+      #t1,#t2,#t3{ width: min(300px, 44vw); left: 16px; }
+      #t4,#t5{ width: min(320px, 44vw); right: 16px; }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="stage">
+
+    <!-- Tiles (appear at 1s intervals) -->
+    <div id="t1" class="tile note">
+      Over the next week,<br>
+      he is seen by the<br>
+      speech therapists,<br>
+      occupational<br>
+      therapy and<br>
+      physiotherapists.
+    </div>
+
+    <div id="t2" class="tile">
+      Other than a mucous plug<br>
+      event, he improves<br>
+      clinically and<br>
+      makes an good recovery.
+    </div>
+
+    <div id="t3" class="tile grey">
+      He’s likely going to<br>
+      require a walking<br>
+      stick.
+    </div>
+
+    <div id="t4" class="tile">
+      He has no atrial<br>
+      fibrillation and his<br>
+      blood pressure and<br>
+      diabetes is controlled<br>
+      with his regular<br>
+      medications. His other<br>
+      blood work is back to<br>
+      normal.
+    </div>
+
+    <div id="t5" class="tile">
+      You have to review his<br>
+      discharge summary before he goes.
+    </div>
+
+    <!-- Center hero image -->
+    <div class="hero" aria-hidden="true"></div>
+
+    <!-- Nav arrow always present -->
+    <div class="nav" title="Continue">
+      <a href="dischargemeds.html" aria-label="Go to discharge meds">
+        <img src="images/nextSlideGreenShape.png" alt="Next"> <!-- swap if you use a different arrow -->
+      </a>
+    </div>
+
+  </div>
+</body>
+</html>

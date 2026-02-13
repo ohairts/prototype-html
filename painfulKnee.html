@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Pain Relief Advice - MCQ</title>
+
+  <!-- Shared styles -->
+  <link rel="stylesheet" href="css/common.css">
+  <link rel="stylesheet" href="css/tile.css">
+  <link rel="stylesheet" href="css/speech-bubble.css">
+  <link rel="stylesheet" href="css/nav-arrows.css">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@900&display=swap" rel="stylesheet">
+
+  <style>
+    body{
+      margin:0;
+      background:#08394a;
+      font-family:"Roboto Slab", serif;
+      overflow:hidden;
+      color:#111;
+    }
+
+    .stage{
+      position:relative;
+      width:100vw;
+      height:100vh;
+      background:#08394a;
+      overflow:hidden;
+      border: 3px solid rgba(0,0,0,.55);
+      box-sizing:border-box;
+    }
+
+    /* Patient image in center */
+    .hero{
+      position:absolute;
+      left:50%;
+      top:50%;
+      transform: translate(-50%,-50%);
+      width: min(520px, 44vw);
+      height: min(640px, 78vh);
+      background: #000 url("images/oldmanunhappydvtstory.png") center / contain no-repeat;
+      border: 3px solid rgba(0,0,0,.65);
+      box-shadow: 0 18px 45px rgba(0,0,0,.45);
+      z-index: 2;
+    }
+
+    /* Yellow note (top-left) */
+    .note{
+      position:absolute;
+      left: 22px;
+      top: 22px;
+      width: min(250px, 24vw);
+      text-align: center;
+      background: #ffe44d;
+      border: 4px solid rgba(0,0,0,.35);
+      box-shadow: 0 14px 22px rgba(0,0,0,.25);
+      padding: 16px 14px;
+      font-weight: 900;
+      line-height: 1.2;
+      z-index: 5;
+    }
+    .note p{
+      margin:0;
+      font-weight: 900;
+      font-size: clamp(14px, 1.5vw, 18px);
+    }
+
+    /* Auto speech bubble container */
+    .auto-bubble{
+      position:absolute;
+      left: 70px;
+      bottom: 90px;
+      width: min(320px, 28vw);
+      z-index: 10;
+
+      opacity: 0;
+      transform: translateY(10px) scale(.98);
+      transition: opacity .25s ease, transform .25s ease;
+      pointer-events:none;
+    }
+    .auto-bubble.is-visible{
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+
+    .speech-bubble{
+      background:#fff;
+      border: 4px solid rgba(0,0,0,.35);
+      border-radius: 26px;
+      padding: 18px 18px;
+      box-shadow: 0 14px 22px rgba(0,0,0,.25);
+      font-weight: 900;
+      font-size: clamp(14px, 1.55vw, 18px);
+      line-height: 1.15;
+      text-align:center;
+      position:relative;
+    }
+
+    /* Tail pointing ~2 o'clock */
+    .speech-bubble::after{
+      content:"";
+      position:absolute;
+      right: -22px;
+      top: 26px;
+
+      width: 0;
+      height: 0;
+      border-top: 18px solid transparent;
+      border-bottom: 18px solid transparent;
+      border-left: 34px solid #fff;
+
+      transform: rotate(-18deg);
+      filter: drop-shadow(0 6px 0 rgba(0,0,0,.18));
+    }
+
+    /* Right-side answer column */
+    .answers{
+      position:absolute;
+      right: 26px;
+      top: 56px;
+      width: min(360px, 30vw);
+      display:flex;
+      flex-direction: column;
+      gap: 18px;
+      z-index: 12;
+
+      opacity: 0;
+      transform: translateX(12px);
+      transition: opacity .25s ease, transform .25s ease;
+      pointer-events:none;
+    }
+    .answers.is-visible{
+      opacity: 1;
+      transform: translateX(0);
+      pointer-events:auto;
+    }
+
+    .answers .tile{
+      width: 100%;
+      min-width: unset;
+      max-width: unset;
+      margin: 0;
+      font-weight: 900;
+
+      border: 3px solid rgba(255,255,255,.8);
+      box-shadow:
+        0 0 0 6px rgba(46,215,20,.22),
+        0 0 18px rgba(46,215,20,.28),
+        0 14px 22px rgba(0,0,0,.30);
+      background: #fff;
+      color:#111;
+    }
+
+.answers .tile{
+  transition: transform .12s ease, filter .12s ease, box-shadow .12s ease;
+  cursor: pointer;
+}
+
+.answers .tile:hover{
+  transform: translateY(-2px);
+  filter: brightness(1.02);
+}
+
+.answers .tile:active{
+  transform: translateY(1px) scale(.99);
+  filter: brightness(.98);
+}
+
+
+    .answers .tile.is-picked{
+      outline: 5px solid rgba(46,215,20,.75);
+      filter: brightness(1.03);
+    }
+    .answers .tile.is-wrong{
+      outline: 5px solid rgba(255,140,0,.75);
+      filter: brightness(.98);
+      opacity: .92;
+    }
+
+    /* Next green arrow */
+    .next-green{
+      position:absolute;
+      right: 22px;
+      bottom: 22px;
+      width: 110px;
+      height: 86px;
+      cursor:pointer;
+      z-index: 20;
+      user-select:none;
+      filter: drop-shadow(0 10px 18px rgba(0,0,0,.35));
+      transition: transform .15s ease, filter .2s ease;
+    }
+    .next-green img{
+      width:100%;
+      height:100%;
+      object-fit: contain;
+      display:block;
+    }
+    .next-green:hover{
+      transform: translateY(-2px) scale(1.03);
+      filter: drop-shadow(0 0 12px rgba(46,215,20,.55))
+              drop-shadow(0 12px 18px rgba(0,0,0,.35));
+    }
+    .hidden{ display:none; }
+
+    @media (max-width: 900px){
+      .hero{ width: min(520px, 56vw); height: min(640px, 70vh); }
+      .answers{ width: min(360px, 44vw); top: 18px; }
+      .auto-bubble{ left: 22px; bottom: 18px; width: min(360px, 48vw); }
+      .note{ width: min(300px, 46vw); }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="stage">
+
+    <div class="note">
+      <p>
+        You review him later<br>
+        in the week. His<br>
+        knee is quite painful<br>
+        and the doctors<br>
+        diagnosed him with<br>
+        osteoarthritis flare.
+      </p>
+    </div>
+
+    <div class="hero" aria-hidden="true"></div>
+
+    <div id="autoBubble" class="auto-bubble" aria-hidden="true">
+      <div class="speech-bubble">
+        Hello Pharmacist! I<br>
+        feel much better. But my<br>
+        knee is so sore. When should I<br>
+        be taking painkillers<br>
+        before physio<br>
+        exercises?
+      </div>
+    </div>
+
+    <div id="answers" class="answers" aria-hidden="true">
+      <div class="tile" role="button" tabindex="0" data-social="1" data-action="physio">
+        Don’t worry. I’ll have a<br>
+        chat with the<br>
+        physiotherapists.
+      </div>
+
+      <div class="tile" role="button" tabindex="0" data-overall="1" data-action="para">
+        Take paracetamol about<br>
+        an hour before, avoid<br>
+        NSAIDs and if they use<br>
+        opioids maybe an hour<br>
+        before hand for fast<br>
+        acting medications like<br>
+        Oxynorm. But be careful<br>
+        walking.
+      </div>
+
+      <div class="tile" role="button" tabindex="0" data-action="talkdocs">
+        Maybe you should talk<br>to the doctors
+        about that?
+      </div>
+    </div>
+
+    <div id="navGreen" class="next-green hidden" title="Continue">
+      <a id="navLink" href="#" aria-label="Continue">
+        <img src="images/nextSlideGreenShape.png" alt="Next">
+      </a>
+    </div>
+
+  </div>
+
+<script type="module">
+  // Optional timer persistence + scoring
+  let addScore = (n)=>{};
+  let addSocial = (n)=>{};
+  try{
+    const mod = await import("./js/state.js");
+    mod.ensureTimerStarted?.();
+    if (typeof mod.addScore === "function") addScore = mod.addScore;
+    if (typeof mod.addSocial === "function") addSocial = mod.addSocial; // <-- FIX
+  }catch(e){
+    console.warn("state.js not loaded:", e);
+  }
+
+  const autoBubble = document.getElementById("autoBubble");
+  const answers = document.getElementById("answers");
+  const navGreen = document.getElementById("navGreen");
+  const navLink  = document.getElementById("navLink");
+
+  setTimeout(() => {
+    autoBubble.classList.add("is-visible");
+    autoBubble.setAttribute("aria-hidden","false");
+  }, 2000);
+
+  setTimeout(() => {
+    answers.classList.add("is-visible");
+    answers.setAttribute("aria-hidden","false");
+  }, 4000);
+
+  let locked = false;
+
+  function pickTile(tile){
+    if (locked) return;
+    locked = true;
+
+    // Visual feedback
+    [...answers.querySelectorAll(".tile")].forEach(t => t.classList.add("is-wrong"));
+    tile.classList.remove("is-wrong");
+    tile.classList.add("is-picked");
+
+    // --- Award points FROM data attributes (so data-social/data-overall work) ---
+    const social  = Number(tile.dataset.social  || 0);
+    const overall = Number(tile.dataset.overall || 0);
+
+    if (social)  addSocial(social);
+    if (overall) addScore(overall);
+
+    // --- Navigation based on action ---
+    const action = tile.dataset.action;
+    if (action === "physio") {
+      navLink.href = "workbench6.html";
+    } else if (action === "para") {
+      navLink.href = "oldmanimproving.html";
+    } else if (action === "talkdocs") {
+      navLink.href = "oldmanimproving.html";
+    }
+
+    navGreen.classList.remove("hidden");
+  }
+
+  answers.addEventListener("click", (e) => {
+    const tile = e.target.closest(".tile");
+    if (!tile) return;
+    pickTile(tile);
+  });
+
+  answers.addEventListener("keydown", (e) => {
+    if (e.key !== "Enter" && e.key !== " ") return;
+    const tile = e.target.closest(".tile");
+    if (!tile) return;
+    e.preventDefault();
+    pickTile(tile);
+  });
+</script>
+
+</body>
+</html>

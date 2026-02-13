@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>What are the potential benefits of ACBT?</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@400;600;800&display=swap" rel="stylesheet">
+
+  <style>
+    :root{
+      --bg: #0b3f53;
+      --tile: #a9bac8;
+      --shadow: rgba(0,0,0,0.35);
+      --orange: #ea7a2c;
+      --white: #ffffff;
+      --ink: #0b0f12;
+      --good: #29b36b;
+      --bad: #b33a3a;
+      --purple: #7a1e8c;
+    }
+
+    *{ box-sizing:border-box; }
+    html, body{
+      height:100%;
+      margin:0;
+      font-family: "Roboto Slab", serif;
+      background: var(--bg);
+      overflow: hidden;
+    }
+
+    .stage{
+      position: relative;
+      width: min(100vw, calc(100vh * 16 / 9));
+      height: min(100vh, calc(100vw * 9 / 16));
+      margin: 0 auto;
+      background: var(--bg);
+      overflow: hidden;
+      border: 2px solid rgba(0,0,0,0.35);
+    }
+
+    .title{
+      color:#fff;
+      font-weight:900;
+      font-size: clamp(18px, 2.4vw, 34px);
+      text-align:center;
+      text-shadow:0 3px 0 rgba(0,0,0,.25);
+      line-height:1.2;
+      margin:0;
+      width: 100%;
+      box-sizing: border-box;
+      padding: 16px 18px 6px;
+      white-space: normal;
+      overflow-wrap: anywhere;
+      word-break: break-word;
+      text-wrap: balance;
+    }
+
+    .tile{
+      position:absolute;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      text-align:center;
+      padding: 18px;
+      background: #a9bac8;
+      color: var(--ink);
+      font-weight: 800;
+      border-radius: 4px;
+      border: 2px solid rgba(0,0,0,0.25);
+      box-shadow:
+        0 0 0 3px rgba(230,161,58,0.85) inset,
+        0 10px 20px var(--shadow);
+      transition: transform 120ms ease, filter 120ms ease, opacity 120ms ease;
+      user-select:none;
+      cursor:pointer;
+    }
+    .tile:hover{ transform: translateY(-2px); filter: brightness(1.03); }
+    .tile:active{ transform: translateY(0px) scale(0.99); }
+
+    .tile .small{
+      display:block;
+      font-size: clamp(14px, 1.6vw, 20px);
+      line-height: 1.15;
+    }
+
+    .tile.selected{
+      outline: 4px solid rgba(255,255,255,0.35);
+      filter: brightness(1.05);
+      transform: translateY(-1px);
+    }
+    .tile.selected.correct{
+      box-shadow:
+        0 0 0 3px rgba(230,161,58,0.85) inset,
+        0 10px 20px var(--shadow),
+        0 0 0 4px rgba(41,179,107,0.75);
+    }
+    .tile.selected.wrong{
+      box-shadow:
+        0 0 0 3px rgba(230,161,58,0.85) inset,
+        0 10px 20px var(--shadow),
+        0 0 0 4px rgba(179,58,58,0.75);
+    }
+
+    .tile.locked{
+      cursor: default;
+      opacity: 0.6;
+      pointer-events: none;
+    }
+
+    /* Layout */
+    #tSecretions { left: 16%; top: 28%; width: 26%; height: 16%; }
+    #tVentilate  { left: 47%; top: 28%; width: 26%; height: 16%; }
+    #tEffusions  { left:  7%; top: 55%; width: 26%; height: 18%; }
+    #tSats       { left: 35%; top: 68%; width: 28%; height: 16%; }
+    #tVQ         { left: 62%; top: 55%; width: 22%; height: 18%; }
+
+    .countBubble{
+      position:absolute;
+      right: 12%;
+      top: 46%;
+      width: 78px;
+      height: 56px;
+      background: var(--white);
+      border-radius: 8px;
+      border: 2px solid rgba(0,0,0,0.25);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      box-shadow: 0 10px 20px var(--shadow);
+      z-index: 5;
+    }
+    .countBubble span{
+      font-size: 44px;
+      font-weight: 900;
+      line-height: 1;
+      color: #0a0a0a;
+    }
+
+    .barWrap{
+      position:absolute;
+      right: 4%;
+      top: 14%;
+      width: 6%;
+      height: 76%;
+      background: rgba(0,0,0,0.2);
+      border-radius: 2px;
+      overflow:hidden;
+      border: 2px solid rgba(0,0,0,0.25);
+      z-index: 4;
+    }
+    .barFill{
+      position:absolute;
+      left:0;
+      bottom:0;
+      width:100%;
+      height:100%;
+      background: var(--orange);
+      transform-origin: bottom;
+      transform: scaleY(1);
+      animation: barWipe 15s linear forwards;
+    }
+    @keyframes barWipe{
+      from { transform: scaleY(1); }
+      to   { transform: scaleY(0); }
+    }
+    .barFill.paused{ animation-play-state: paused; }
+
+    .bankText{
+      position:absolute;
+      right: 16%;
+      bottom: 14%;
+      color: #ffffff;
+      font-weight: 900;
+      font-size: clamp(18px, 2.2vw, 30px);
+      text-shadow: 0 3px 0 rgba(0,0,0,0.25);
+      text-align:center;
+      line-height: 1.05;
+    }
+    .redArrow{
+      position:absolute;
+      right: 14.5%;
+      bottom: 19%;
+      width: 20px;
+      height: 10px;
+      background: #e02020;
+      border-radius: 6px;
+      filter: drop-shadow(0 6px 8px rgba(0,0,0,0.35));
+    }
+    .redArrow:after{
+      content:"";
+      position:absolute;
+      right:-18px;
+      top:50%;
+      transform: translateY(-50%);
+      width:0; height:0;
+      border-top: 16px solid transparent;
+      border-bottom: 16px solid transparent;
+      border-left: 24px solid #e02020;
+    }
+
+    .nextBtn{
+      position:absolute;
+      right: 6.8%;
+      bottom: 12%;
+      width: 92px;
+      height: 58px;
+      border-radius: 6px;
+      background: var(--purple);
+      border: 2px solid rgba(0,0,0,0.3);
+      box-shadow: 0 10px 18px var(--shadow);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      opacity: 0.35;
+      pointer-events: none;
+      z-index: 6;
+      cursor: pointer;
+      transition: transform 120ms ease, opacity 120ms ease, filter 120ms ease;
+    }
+    .nextBtn:hover{ transform: translateY(-2px); filter: brightness(1.05); }
+    .nextBtn:active{ transform: translateY(0px) scale(0.99); }
+
+    .nextBtn:before{
+      content:"";
+      width:0; height:0;
+      border-top: 16px solid transparent;
+      border-bottom: 16px solid transparent;
+      border-left: 30px solid rgba(0,0,0,0.35);
+      margin-left: 6px;
+    }
+    .nextBtn:after{
+      content:"";
+      position:absolute;
+      width:0; height:0;
+      border-top: 16px solid transparent;
+      border-bottom: 16px solid transparent;
+      border-left: 30px solid #3d133f;
+      margin-left: 10px;
+    }
+
+    .nextBtn.enabled{
+      opacity: 0.95;
+      pointer-events: auto;
+    }
+    .nextBtn.flash{
+      animation: flash 600ms ease-in-out infinite;
+    }
+    @keyframes flash{
+      0%,100%{ filter: brightness(1); transform: translateY(0px) scale(1); }
+      50%{ filter: brightness(1.35); transform: translateY(-2px) scale(1.04); }
+    }
+
+    .audioHint{
+      position:absolute;
+      left: 50%;
+      bottom: 4%;
+      transform: translateX(-50%);
+      color: rgba(255,255,255,0.75);
+      font-size: 16px;
+      padding: 8px 12px;
+      border-radius: 8px;
+      border: 1px solid rgba(255,255,255,0.15);
+      background: rgba(255,255,255,0.06);
+      display:none;
+      z-index: 10;
+    }
+
+    .plusOne{
+      position:absolute;
+      left:50%;
+      top:50%;
+      transform: translate(-50%,-50%);
+      color: #ffffff;
+      font-weight: 900;
+      font-size: 44px;
+      text-shadow: 0 8px 18px rgba(0,0,0,0.55);
+      opacity: 0;
+      pointer-events:none;
+      z-index: 20;
+    }
+    .plusOne.show{ animation: pop 700ms ease-out forwards; }
+    @keyframes pop{
+      0%{ opacity:0; transform: translate(-50%,-45%) scale(0.9); }
+      20%{ opacity:1; transform: translate(-50%,-55%) scale(1.05); }
+      100%{ opacity:0; transform: translate(-50%,-70%) scale(1); }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="stage" role="application" aria-label="ACBT benefits slide">
+    <div class="title">What are the potential benefits of ACBT (select all that apply)?</div>
+
+    <div id="tSecretions" class="tile" data-correct="1">
+      <span class="small">Removes bronchial<br/>secretions</span>
+    </div>
+
+    <div id="tVentilate" class="tile" data-correct="1">
+      <span class="small">May increase<br/>ventilation and<br/>reduce airway<br/>resistance</span>
+    </div>
+
+    <div id="tEffusions" class="tile" data-correct="0">
+      <span class="small">May reduce pleural<br/>effusions</span>
+    </div>
+
+    <div id="tSats" class="tile" data-correct="0">
+      <span class="small">May increase<br/>oxygen saturations</span>
+    </div>
+
+    <div id="tVQ" class="tile" data-correct="1">
+      <span class="small">May improve V/Q<br/>matching</span>
+    </div>
+
+    <div class="countBubble" aria-label="Countdown timer">
+      <span id="count">15</span>
+    </div>
+
+    <div class="barWrap" aria-label="Timer bar">
+      <div id="barFill" class="barFill"></div>
+    </div>
+
+    <div class="bankText">Bank your<br/>answers<br/>ASAP</div>
+    <div class="redArrow" aria-hidden="true"></div>
+
+    <div id="nextBtn" class="nextBtn" role="button" aria-label="Next"></div>
+
+    <div id="audioHint" class="audioHint">Tap anywhere to enable audio</div>
+    <div id="plusOne" class="plusOne">+1</div>
+
+    <audio id="tickAudio" preload="auto">
+      <source src="audio/clockTickingDown.mp3" type="audio/mpeg">
+    </audio>
+
+    <audio id="monitorAudio" preload="auto">
+      <source src="audio/audioEcgSimulatorPneumonia.mp3" type="audio/mpeg">
+    </audio>
+
+    <audio id="pingAudio" preload="auto">
+      <source src="audio/ping.mp3" type="audio/mpeg">
+    </audio>
+  </div>
+
+  <!-- NOTE: Not a module. No top-level await. -->
+  <script>
+    (function(){
+      // ========= CONFIG =========
+      const TOTAL_MS = 15000;
+      const MONITOR_START_MS = 0;
+      const MONITOR_PLAY_MS  = 30000;
+      const MONITOR_SEEK_S   = 22;
+      const TICK_CUT_TAIL_S  = 1.0;
+
+      const NEXT_HREF = "PTquickmanagement.html";
+      const MAX_SELECTIONS = 3;
+
+      // ========= ELEMENTS =========
+      const countEl = document.getElementById("count");
+      const tick = document.getElementById("tickAudio");
+      const mon  = document.getElementById("monitorAudio");
+      const hint = document.getElementById("audioHint");
+      const ping = document.getElementById("pingAudio");
+      const plusOne = document.getElementById("plusOne");
+      const nextBtn = document.getElementById("nextBtn");
+      const barFill = document.getElementById("barFill");
+      const tiles = Array.from(document.querySelectorAll(".tile"));
+
+      // ========= SCORE (state.js, no await) =========
+      let addScore = function(){};
+      try{
+        import("./js/state.js")
+          .then((mod)=>{
+            if (mod && typeof mod.ensureTimerStarted === "function") mod.ensureTimerStarted();
+            if (mod && typeof mod.addScore === "function") addScore = mod.addScore;
+          })
+          .catch((e)=>console.warn("state.js not loaded:", e));
+      }catch(e){
+        console.warn("Dynamic import not supported:", e);
+      }
+
+      function popPlusOne(){
+        if (!plusOne) return;
+        plusOne.classList.remove("show");
+        void plusOne.offsetWidth;
+        plusOne.classList.add("show");
+      }
+
+      // ========= AUDIO HELPERS =========
+      function safePause(a){ try { a && a.pause(); } catch(e){} }
+      function safeReset(a, t=0){ try { a && (a.currentTime = t); } catch(e){} }
+      function hardStopAudio(){
+        [tick, mon, ping].forEach(a => { safePause(a); safeReset(a, 0); });
+      }
+
+      let armed = false;
+      function armGestureRetry(){
+        if (armed) return;
+        armed = true;
+        if (hint) hint.style.display = "block";
+
+        const resume = async () => {
+          if (hint) hint.style.display = "none";
+          try { if (tick) await tick.play(); } catch(e) {}
+          try { if (mon)  await mon.play();  } catch(e) {}
+          window.removeEventListener("pointerdown", resume, true);
+          window.removeEventListener("keydown", resume, true);
+          armed = false;
+        };
+
+        window.addEventListener("pointerdown", resume, true);
+        window.addEventListener("keydown", resume, true);
+      }
+
+      // ========= COUNTDOWN (stoppable) =========
+      let stopped = false;
+      let startTime = performance.now();
+      let rafId = null;
+      let stopTimeoutId = null;
+
+      function updateCountdown(){
+        if (stopped) return;
+        const elapsed = performance.now() - startTime;
+        const remaining = Math.max(0, TOTAL_MS - elapsed);
+        const remainingS = Math.ceil(remaining / 1000);
+        countEl.textContent = String(Math.max(0, Math.min(15, remainingS)));
+
+        if (remaining > 0) rafId = requestAnimationFrame(updateCountdown);
+        else countEl.textContent = "0";
+      }
+      rafId = requestAnimationFrame(updateCountdown);
+
+      function stopTimerAndAudio(){
+        if (stopped) return;
+        stopped = true;
+
+        if (rafId) cancelAnimationFrame(rafId);
+        if (barFill) barFill.classList.add("paused");
+        if (stopTimeoutId) clearTimeout(stopTimeoutId);
+
+        hardStopAudio();
+      }
+
+      // ========= TICK: loop excluding last 1s =========
+      let tickLoopEnd = null;
+      if (tick){
+        tick.volume = 0.9;
+        tick.loop = false;
+
+        tick.addEventListener("loadedmetadata", () => {
+          const dur = tick.duration;
+          if (Number.isFinite(dur) && dur > TICK_CUT_TAIL_S + 0.2) {
+            tickLoopEnd = Math.max(0, dur - TICK_CUT_TAIL_S);
+          } else tickLoopEnd = null;
+        });
+
+        tick.addEventListener("timeupdate", () => {
+          if (stopped) return;
+          if (!tick.paused && tickLoopEnd !== null && tick.currentTime >= tickLoopEnd) {
+            try { tick.currentTime = 0; } catch(e) {}
+            tick.play().catch(()=>{});
+          }
+        });
+      }
+
+      (async function startTickNow(){
+        if (!tick) return;
+        try { await tick.play(); }
+        catch(e){ armGestureRetry(); }
+      })();
+
+      stopTimeoutId = window.setTimeout(() => {
+        if (stopped) return;
+        safePause(tick);
+        safeReset(tick, 0);
+      }, TOTAL_MS);
+
+      // ========= MONITOR WINDOW =========
+      let monitorStartId = null;
+      let monitorStopId = null;
+
+      if (mon){
+        mon.volume = 0.9;
+        mon.loop = false;
+
+        (async function primeMonitor(){
+          try { await mon.play(); }
+          catch(e){ armGestureRetry(); }
+          mon.muted = true;
+        })();
+
+        monitorStartId = window.setTimeout(async () => {
+          if (stopped) return;
+
+          const seekAndPlay = async () => {
+            if (stopped) return;
+            try {
+              mon.muted = false;
+              const dur = mon.duration;
+              const target = (Number.isFinite(dur) && dur > 0)
+                ? Math.min(MONITOR_SEEK_S, Math.max(0, dur - 0.05))
+                : MONITOR_SEEK_S;
+
+              safeReset(mon, target);
+              await mon.play();
+            } catch(e){
+              armGestureRetry();
+            }
+          };
+
+          if (Number.isFinite(mon.duration) && mon.duration > 0) {
+            await seekAndPlay();
+          } else {
+            mon.addEventListener("loadedmetadata", seekAndPlay, { once: true });
+            mon.load();
+          }
+
+          monitorStopId = window.setTimeout(() => {
+            if (stopped) return;
+            safePause(mon);
+            safeReset(mon, 0);
+          }, MONITOR_PLAY_MS);
+
+        }, MONITOR_START_MS);
+      }
+
+      function cancelMonitorTimers(){
+        if (monitorStartId) clearTimeout(monitorStartId);
+        if (monitorStopId) clearTimeout(monitorStopId);
+      }
+
+      // ========= SELECTION LOGIC =========
+      function totalSelections(){
+        return tiles.filter(t => t.classList.contains("selected")).length;
+      }
+
+      function lockAllTiles(){
+        tiles.forEach(t => t.classList.add("locked"));
+      }
+
+      function unlockNextAndFlash(){
+        nextBtn.classList.add("enabled");
+        nextBtn.classList.add("flash");
+      }
+
+      function finishInteraction(){
+        stopTimerAndAudio();
+        cancelMonitorTimers();
+        lockAllTiles();
+        unlockNextAndFlash();
+      }
+
+      tiles.forEach(tile => {
+        tile.addEventListener("click", () => {
+          if (stopped) return;
+          if (tile.classList.contains("selected")) return;
+          if (totalSelections() >= MAX_SELECTIONS) return;
+
+          tile.classList.add("selected");
+
+          const isCorrect = tile.dataset.correct === "1";
+          if (isCorrect){
+            tile.classList.add("correct");
+
+            // ✅ OVERALL SCORE ONLY (+1 per correct)
+            addScore(1);
+
+            popPlusOne();
+            if (ping) { try { ping.currentTime = 0; ping.play().catch(()=>{}); } catch(e){} }
+          } else {
+            tile.classList.add("wrong");
+          }
+
+          if (totalSelections() >= MAX_SELECTIONS){
+            finishInteraction();
+          }
+        });
+      });
+
+      nextBtn.addEventListener("click", () => {
+        if (!nextBtn.classList.contains("enabled")) return;
+        window.location.href = NEXT_HREF;
+      });
+
+      document.addEventListener("visibilitychange", () => {
+        if (document.hidden){
+          hardStopAudio();
+        }
+      });
+    })();
+  </script>
+</body>
+</html>

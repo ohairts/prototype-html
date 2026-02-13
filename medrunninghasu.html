@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Clinical Notes / Patient Choice</title>
+
+  <link rel="stylesheet" href="css/common.css">
+  <link rel="stylesheet" href="css/tile.css">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@900&display=swap" rel="stylesheet">
+
+  <style>
+    body{
+      margin:0;
+      background:#0b3b4a;
+      font-family:"Roboto Slab", serif;
+      overflow:hidden;
+
+      /* center the slide panel */
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      width:100vw;
+      height:100vh;
+    }
+
+    .stage{
+      position:relative;
+      width: min(1280px, 92vw);
+      height: min(720px, 84vh);
+      background:#0b3b4a;
+      overflow:hidden;
+
+      border: 4px solid rgba(0,0,0,.45);
+      box-shadow: 0 26px 55px rgba(0,0,0,.45);
+    }
+
+    /* Background image framed */
+    .bg{
+      position:absolute;
+      inset: 18px;
+      background: url("images/ptrunninghasu2.png") center / cover no-repeat; /* <-- CHANGE THIS */
+      border: 4px solid rgba(0,0,0,.55);
+      box-shadow: 0 22px 45px rgba(0,0,0,.45);
+      z-index: 1;
+    }
+
+    /* Optional overlays (safe if assets missing) */
+    .runner{
+      position:absolute;
+      left: 22%;
+      bottom: 5%;
+      width: min(520px, 44%);
+      height: min(520px, 78%);
+      background: url("images/runner.png") left bottom / contain no-repeat; /* <-- CHANGE THIS (optional) */
+      z-index: 6;
+      pointer-events:none;
+    }
+
+    .patientbed{
+      position:absolute;
+      left: 54%;
+      top: 26%;
+      width: min(420px, 34%);
+      height: min(320px, 40%);
+      background: url("images/patientbed.png") center / contain no-repeat; /* <-- CHANGE THIS (optional) */
+      z-index: 5;
+      pointer-events:none;
+      opacity: .95;
+    }
+
+    /* Tile anchors */
+    .tile-link{
+      position:absolute;
+      text-decoration:none;
+      z-index: 10;
+      display:inline-block;
+    }
+
+    /* Page-specific sizing + font size (overrides tile.css only on this page) */
+    .stage .tile{
+      width: 10vw;
+
+      /* override any clamp rules from other pages */
+      font-size: 1.15rem;
+      line-height: 1.1;
+      font-weight: 900;
+
+      transition: transform 0.2s ease, filter 0.2s ease;
+    }
+
+    /* Make hover “pop” (works even if tile.css hover is weak) */
+    .stage .tile:hover{
+      transform: translateY(-2px) scale(1.06);
+      filter: brightness(1.03);
+    }
+
+    /* Tile positions to mimic screenshot */
+    #tileNotes{
+      left: 17%;
+      bottom: 20%;
+      transform: translate(-50%, 0);
+    }
+
+    #tilePatient{
+      left: 70%;
+      bottom: 18%;
+      transform: translate(-50%, 0);
+      width: min(520px, 46vw);
+    }
+    /* Make the right tile wider like the screenshot */
+    #tilePatient .tile{
+      width: 20vw;
+      font-size: 1.2rem;
+      padding: 18px 22px;
+    }
+
+    /* Blue arrows */
+    .arrow{
+      position:absolute;
+      width: 60px;
+      height: 18px;
+      background: #6fd0ff;
+      border: 3px solid rgba(0,0,0,.55);
+      box-shadow: 0 10px 18px rgba(0,0,0,.25);
+      z-index: 20;
+      transform-origin: left center;
+      pointer-events:none;
+    }
+    .arrow::after{
+      content:"";
+      position:absolute;
+      right:-22px;
+      top:50%;
+      transform: translateY(-50%);
+      width:0; height:0;
+      border-top: 16px solid transparent;
+      border-bottom: 16px solid transparent;
+      border-left: 22px solid #6fd0ff;
+      filter: drop-shadow(2px 2px 0 rgba(0,0,0,.35));
+    }
+
+    /* Arrow placements */
+    #arrowNotes{
+      left: 30%;
+      bottom: 12%;
+      transform: rotate(-150deg);
+    }
+
+    #arrowPatient{
+      left: 56%;
+      bottom: 10%;
+      transform: rotate(-25deg);
+    }
+
+    @media (max-width: 900px){
+      .bg{ inset: 12px; }
+
+      #tileNotes{ left: 22%; bottom: 18%; }
+      #tilePatient{ left: 68%; bottom: 16%; }
+
+      #arrowNotes{ display:none; }
+      #arrowPatient{ display:none; }
+
+      .runner{ display:none; }
+      .patientbed{ display:none; }
+    }
+
+    @media (max-width: 600px){
+      #tileNotes{ left: 50%; bottom: 34%; transform: translate(-50%,0); }
+      #tilePatient{ left: 50%; bottom: 14%; transform: translate(-50%,0); }
+      #tilePatient .tile{ width: 88vw; max-width: 88vw; }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="stage">
+
+    <div class="bg" aria-hidden="true"></div>
+
+    <!-- Optional overlays -->
+    <div class="patientbed" aria-hidden="true"></div>
+    <div class="runner" aria-hidden="true"></div>
+
+    <!-- Tiles -->
+    <a id="tileNotes" class="tile-link" href="medclinicalnotes.html" aria-label="Get to the notes quick">
+      <div class="tile">Get to the<br>notes quick</div>
+    </a>
+
+    <a id="tilePatient" class="tile-link" href="medpatient.html" aria-label="Go see patient">
+      <div class="tile">
+        The medics aren’t in there.<br>
+        Change your mind and go<br>
+        see patient?
+      </div>
+    </a>
+
+    <!-- Arrows -->
+    <div id="arrowNotes" class="arrow" aria-hidden="true"></div>
+    <div id="arrowPatient" class="arrow" aria-hidden="true"></div>
+
+  </div>
+
+  <script type="module">
+    // Optional timer persistence
+    try{
+      const mod = await import("./js/state.js");
+      mod.ensureTimerStarted?.();
+    }catch(e){}
+  </script>
+</body>
+</html>

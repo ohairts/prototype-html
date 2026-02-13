@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Interview – Questions</title>
+
+  <link rel="stylesheet" href="css/common.css">
+  <link rel="stylesheet" href="css/speech-bubble.css">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@900&display=swap" rel="stylesheet">
+
+  <style>
+    :root{
+      --bg:#0b3b4a;
+      --tile:#5aa2e7;
+      --tileBorder: rgba(255,196,0,.9);
+      --glow: rgba(46,215,20,.55);
+      --shadow: rgba(0,0,0,.35);
+      --yellow:#ffffff;
+      --ink:#111;
+      --white:#fff;
+    }
+
+    *{ box-sizing:border-box; }
+    html, body{
+      height:100%;
+      margin:0;
+      background:var(--bg);
+      font-family:"Roboto Slab", serif;
+      overflow:hidden;
+    }
+
+    /* ===== 16:9 STAGE ===== */
+    .stage{
+      position: relative;
+      width: min(100vw, calc(100vh * 16 / 9));
+      height: min(100vh, calc(100vw * 9 / 16));
+      margin: 0 auto;
+      background: var(--bg);
+      overflow: hidden;
+      border: 2px solid rgba(0,0,0,0.35);
+    }
+
+    /* ===== PORTRAIT ===== */
+    .portrait{
+      position:absolute;
+      left:50%;
+      top:50%;
+      transform: translate(-50%, -50%);
+      width: min(420px, 42vw);
+      height: min(640px, 78vh);
+      background: url("images/dvtstory.png") center / contain no-repeat;
+      background-color: #000;
+      border: 6px solid rgba(0,0,0,.55);
+      box-shadow: 0 18px 45px rgba(0,0,0,.45);
+      z-index: 2;
+    }
+    
+
+    /* ===== LEFT QUESTION COLUMN ===== */
+    .q-col{
+      position:absolute;
+      left: 18px;
+      top: 18px;
+      bottom: 18px;
+      width: min(320px, 28vw);
+      display:flex;
+      flex-direction: column;
+      gap: 14px;
+      z-index: 5;
+    }
+
+    /* ===== RIGHT BOTTOM 3 TILES ===== */
+    .q-right{
+      position:absolute;
+      right: 18px;
+      bottom: 22px;
+      width: min(320px, 30vw);
+      display:flex;
+      flex-direction: column;
+      gap: 14px;
+      z-index: 6;
+    }
+
+    /* ===== TILES ===== */
+    .q-tile{
+      background: var(--tile);
+      color: var(--white);
+      border: 3px solid var(--tileBorder);
+      box-shadow: 0 10px 18px rgba(0,0,0,.25);
+      border-radius: 6px;
+      padding: 18px 14px;
+      font-weight: 900;
+      text-align:center;
+      cursor:pointer;
+      user-select:none;
+      outline: 3px solid var(--glow);
+      animation: glowPulse 1.25s infinite ease-in-out;
+      transition: transform .12s ease, filter .12s ease;
+      line-height: 1.15;
+      font-size: clamp(14px, 1.4vw, 18px);
+    }
+
+    .q-tile:hover{
+      filter: brightness(1.05);
+      transform: translateY(-1px);
+    }
+    .q-tile:active{
+      transform: translateY(2px) scale(.99);
+    }
+
+    @keyframes glowPulse{
+      0%,100%{ filter: drop-shadow(0 0 0 rgba(46,215,20,0)); }
+      50%{ filter: drop-shadow(0 0 14px rgba(46,215,20,.55)); }
+    }
+
+    /* ===== PATIENT SPEECH BUBBLE ===== */
+    .speech-bubble{
+      position:absolute;
+      right: 18%;
+      top: 14%;
+      width: min(360px, 40vw);
+      background: var(--yellow);
+      color: var(--ink);
+      border: 4px solid rgba(0,0,0,.35);
+      border-radius: 16px;
+      padding: 16px 18px;
+      font-weight: 900;
+      font-size: clamp(16px, 1.8vw, 22px);
+      text-align: center;
+      line-height: 1.2;
+      box-shadow: 0 14px 22px rgba(0,0,0,.25);
+      z-index: 100;
+      opacity: 0;
+      transform: translate(20px, 12px) scale(.98);
+      pointer-events:none;
+      transition: opacity .2s ease, transform .2s ease;
+    }
+
+    .speech-bubble.is-visible{
+      opacity: 1;
+      transform: translate(0,0) scale(1);
+    }
+
+    .speech-bubble::after{
+      content:"";
+      position:absolute;
+      left: 28px;
+      bottom: -55px;
+      border-left: 7px solid transparent;
+      border-right: 7px solid transparent;
+      border-top: 70px solid var(--yellow);
+      transform: rotate(45deg);
+      transform-origin: top center;
+      filter: drop-shadow(0 8px 0 rgba(0,0,0,.18));
+    }
+
+    /* ===== NAV ARROW ===== */
+    .next{
+      position:absolute;
+      right: 22px;
+      top: 22px;              /* keep clear of bottom tiles */
+      width: 110px;
+      height: 86px;
+      cursor:pointer;
+      z-index: 20;
+      user-select:none;
+      filter: drop-shadow(0 10px 18px rgba(0,0,0,.35));
+      transition: transform .15s ease, filter .2s ease;
+    }
+    .next img{
+      width:100%;
+      height:100%;
+      object-fit: contain;
+      display:block;
+    }
+    .next:hover{
+      transform: translateY(-2px) scale(1.03);
+      filter: drop-shadow(0 0 12px rgba(255,196,0,.75))
+              drop-shadow(0 12px 18px rgba(0,0,0,.35));
+    }
+
+    /* ===== IMAGE OVERLAY ===== */
+.image-overlay{
+  position:absolute;
+  inset:0;
+  background: rgba(0,0,0,0.45);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  z-index: 50;
+
+  opacity: 0;
+  pointer-events:none;
+  transition: opacity 200ms ease;
+}
+
+.image-overlay.show{
+  opacity: 1;
+  pointer-events:auto;
+}
+
+.image-overlay img{
+  max-width: 70%;
+  max-height: 80%;
+  object-fit: contain;
+  border: 6px solid rgba(0,0,0,0.6);
+  box-shadow: 0 20px 40px rgba(0,0,0,0.6);
+  background:#000;
+}
+
+    /* ===== SMALL SCREENS ===== */
+    @media (max-width: 900px){
+      .portrait{ width: min(360px, 46vw); height: min(560px, 72vh); }
+      .q-col{ width: min(260px, 42vw); }
+      .q-right{ width: min(260px, 42vw); }
+      .speech-bubble{ right: 8%; top: 10%; }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="stage">
+
+    <div class="portrait" aria-hidden="true"></div>
+
+    <!-- IMAGE OVERLAY (hidden by default) -->
+<div id="imageOverlay" class="image-overlay" aria-hidden="true">
+  <img src="images/dvtstoryzoom.png" alt="Leg examination close-up">
+</div>
+
+
+    <!-- LEFT COLUMN (top questions) -->
+    <div class="q-col">
+      <div class="q-tile" data-reply="Oh, I’ve just been feeling really lousy today. And exhausted." data-duration="3000">
+        Patrick – are you sure? What’s been going on? Is there anything I can help with?
+      </div>
+
+      <div class="q-tile" data-reply="Oh my leg is really quite tight and sore." data-duration="2500">
+        In what way?
+      </div>
+
+      <div class="q-tile" data-reply="Yes – of course." data-duration="1200" data-showimage="true">
+        Can I see it?
+      </div>
+
+      <div class="q-tile" data-reply="I just woke up with it this morning." data-duration="3200">
+        How long has that been like that?
+      </div>
+
+      <div class="q-tile" data-reply="No – its just really sore." data-duration="2500">
+        Do you feel sick or have you felt feverish with it?
+      </div>
+    </div>
+
+    <!-- RIGHT SIDE (bottom three tiles) -->
+    <div class="q-right">
+      <div class="q-tile" data-reply="No, I’ve been effectively sat in bed for two days." data-duration="1200">
+        And you didn’t bang the leg off anything did you?
+      </div>
+
+      <div class="q-tile" data-reply="No, thankfully the doctors and team are happy with me. But definitely no weaknesses in one place." data-duration="3500">
+        Have you had any new weakness since your stroke?
+      </div>
+
+      <div class="q-tile" data-reply="Oh yes of course. Sorry. I’m Patrick Brown and I’m 72." data-duration="2200">
+        Can I ask your name and age?
+      </div>
+    </div>
+
+    <!-- Patient speech bubble -->
+    <div id="bubble" class="speech-bubble" aria-live="polite"></div>
+
+    <!-- NAV ARROW -->
+    <div class="next" id="nextBtn" title="Continue">
+      <img src="images/nextSlideOrangeShape.png" alt="Next">
+    </div>
+
+  </div>
+
+  <script type="module">
+    import { ensureTimerStarted } from "./js/state.js";
+    ensureTimerStarted();
+
+    const bubble = document.getElementById("bubble");
+    const tiles = document.querySelectorAll(".q-tile");
+    const nextBtn = document.getElementById("nextBtn");
+
+    let hideTimer = null;
+
+    function showBubble(text, duration){
+      if (hideTimer) clearTimeout(hideTimer);
+      bubble.textContent = text;
+      bubble.classList.add("is-visible");
+
+      hideTimer = setTimeout(() => {
+        bubble.classList.remove("is-visible");
+      }, duration);
+    }
+
+    // =========================
+// IMAGE OVERLAY LOGIC
+// =========================
+const imageOverlay = document.getElementById("imageOverlay");
+
+let overlayTimer = null;
+
+function showImageOverlay(){
+  if (!imageOverlay) return;
+
+  imageOverlay.classList.add("show");
+
+  // auto-hide after 4 seconds
+  overlayTimer = setTimeout(hideImageOverlay, 4000);
+}
+
+function hideImageOverlay(){
+  if (!imageOverlay) return;
+
+  imageOverlay.classList.remove("show");
+  if (overlayTimer) clearTimeout(overlayTimer);
+  overlayTimer = null;
+}
+
+// hide overlay if user clicks anywhere
+document.addEventListener("click", (e) => {
+  if (imageOverlay.classList.contains("show")) {
+    hideImageOverlay();
+  }
+});
+
+
+tiles.forEach(tile => {
+  tile.addEventListener("click", (e) => {
+    showBubble(
+      tile.dataset.reply || "",
+      Number(tile.dataset.duration || 2500)
+    );
+
+    // If this tile should show the image overlay
+    if (tile.dataset.showimage === "true") {
+      e.stopPropagation(); // prevent immediate close
+      showImageOverlay();
+    }
+  });
+});
+
+
+    nextBtn.addEventListener("click", () => {
+      window.location.href = "ptswollenleginvestigations.html";
+    });
+  </script>
+</body>
+</html>

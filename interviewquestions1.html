@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Interview Slide - Questions</title>
+
+  <link rel="stylesheet" href="css/common.css">
+    <link rel="stylesheet" href="css/speech-bubble.css">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@900&display=swap" rel="stylesheet">
+
+  <style>
+    /* ===== STAGE ===== */
+    .stage{
+      width: 100vw;
+      height: 100vh;
+      background:#0b3b4a;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* ===== PORTRAIT ===== */
+    .portrait{
+      position:absolute;
+      left:50%;
+      top:50%;
+      transform: translate(-50%, -50%);
+      width: min(420px, 42vw);
+      height: min(640px, 78vh);
+      background: url("images/oldmansittingout.png") center / contain no-repeat;
+      background-color: #000;
+      border: 6px solid rgba(0,0,0,.55);
+      box-shadow: 0 18px 45px rgba(0,0,0,.45);
+    }
+
+    /* ===== QUESTION TILES ===== */
+    .q-col{
+      position:absolute;
+      left: 18px;
+      top: 18px;
+      bottom: 18px;
+      width: min(300px, 28vw);
+      display:flex;
+      flex-direction: column;
+      gap: 14px;
+      z-index: 5;
+    }
+
+    .q-tile{
+      background: #5aa2e7;
+      color: #fff;
+      border: 3px solid rgba(255,196,0,.9);
+      box-shadow: 0 10px 18px rgba(0,0,0,.25);
+      border-radius: 6px;
+      padding: 18px 14px;
+      font-weight: 900;
+      text-align:center;
+      cursor:pointer;
+      user-select:none;
+      outline: 3px solid rgba(46,215,20,.55);
+      animation: glowPulse 1.25s infinite ease-in-out;
+      transition: transform .12s ease, filter .12s ease;
+    }
+
+    .q-tile:hover{
+      filter: brightness(1.05);
+      transform: translateY(-1px);
+    }
+
+    .q-tile:active{
+      transform: translateY(2px) scale(.99);
+      filter: brightness(.98);
+    }
+
+    @keyframes glowPulse{
+      0%,100%{ filter: drop-shadow(0 0 0 rgba(46,215,20,0)); }
+      50%{ filter: drop-shadow(0 0 14px rgba(46,215,20,.55)); }
+    }
+
+    /* bottom centered tile */
+    .q-bottom{
+      position:absolute;
+      left: 50%;
+      bottom: 22px;
+      transform: translateX(-50%);
+      width: min(320px, 50vw);
+      z-index: 6;
+    }
+
+    .q-bottom:hover{
+      transform: translateX(-50%);
+    }
+
+    /* ===== PATIENT BUBBLE ===== */
+    .speech-bubble{
+      position:absolute;
+      right: 18%;
+      top: 14%;
+      width: min(360px, 40vw);
+      background: #fdfdfd;
+      color:#111;
+      border: 4px solid rgba(0,0,0,.35);
+      border-radius: 16px;
+      padding: 16px 18px;
+      font-family: "Roboto Slab", serif;
+      font-weight: 900;
+      font-size: clamp(16px, 1.8vw, 22px);
+      line-height: 1.2;
+      box-shadow: 0 14px 22px rgba(0,0,0,.25);
+      z-index: 10;
+      opacity: 0;
+      transform: translate(20px, 12px) scale(.98);
+      pointer-events:none;
+      transition: opacity .2s ease, transform .2s ease;
+    }
+
+    .speech-bubble.is-visible{
+      opacity: 1;
+      transform: translate(0,0) scale(1);
+    }
+
+    .speech-bubble::after{
+      content:"";
+      position:absolute;
+      left: 38px;
+      bottom: -60px;
+      border-left: 22px solid transparent;
+      border-right: 5px solid transparent;
+      border-top: 70px solid #ffffff;
+      transform: rotate(55deg);
+      transform-origin: top center;
+      filter: drop-shadow(0 8px 0 rgba(0,0,0,.18));
+    }
+
+    /* ===== END TILES ===== */
+    .end-tiles{
+      position:absolute;
+      left:50%;
+      bottom:120px;
+      transform:translateX(-50%);
+      display:flex;
+      gap:16px;
+      z-index: 30;
+    }
+
+    .end-tile{
+      background:#e7ac5a;
+      color:#000000;
+      border: 3px solid rgba(255,196,0,.9);
+      border-radius: 50px;
+      padding: 14px 18px;
+      font-weight: 900;
+      cursor:pointer;
+      text-align:center;
+      box-shadow: 0 10px 18px rgba(0,0,0,.25);
+    }
+
+    .hidden{
+      display:none;
+    }
+
+    /* ===== NAV ARROW ===== */
+    .next{
+      position:absolute;
+      right: 22px;
+      bottom: 22px;
+      width: 110px;
+      height: 86px;
+      cursor:pointer;
+      z-index: 20;
+      user-select:none;
+      filter: drop-shadow(0 10px 18px rgba(0,0,0,.35));
+      transition: transform .15s ease, filter .2s ease;
+    }
+
+    .next img{
+      width:100%;
+      height:100%;
+      object-fit: contain;
+      display:block;
+    }
+
+    .next:hover{
+      transform: translateY(-2px) scale(1.03);
+      filter: drop-shadow(0 0 12px rgba(255,196,0,.75))
+              drop-shadow(0 12px 18px rgba(0,0,0,.35));
+    }
+
+    /* ===== SMALL SCREENS ===== */
+    @media (max-width: 900px){
+      .portrait{ width: min(360px, 46vw); height: min(560px, 72vh); }
+      .q-col{ width: min(260px, 42vw); }
+      .patient-bubble{ right: 8%; top: 10%; }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="stage">
+
+    <div class="portrait" aria-hidden="true"></div>
+
+    <div class="q-col">
+      <div class="q-tile" data-reply="I was watching my grandson play and just started to feel unwell. My friend said my face looked funny and called the ambulance." data-duration="3000">
+        What happened?
+      </div>
+
+      <div class="q-tile" data-reply="No, no I don’t get headaches." data-duration="2500">
+        Did you have a headache?
+      </div>
+
+      <div class="q-tile" data-reply="I actually felt completely fine. I’ve been feeling good recently." data-duration="3200">
+        Were you feeling well beforehand?
+      </div>
+
+      <div class="q-tile" data-reply="I have diabetes and high blood pressure, but they’re controlled with tablets." data-duration="3200">
+        Do you have any other medical history?
+      </div>
+
+      <div class="q-tile" data-reply="Probably this morning. 11am? What is it now – 6pm or so." data-duration="2500">
+        When did you last eat?
+      </div>
+    </div>
+
+    <div class="q-tile q-bottom"
+         data-reply="Oh yes of course. Sorry. I’m Patrick Brown and I’m 72."
+         data-duration="2200">
+      Can I ask your name and age?
+    </div>
+
+    <div id="bubble" class="speech-bubble"></div>
+
+    <div id="endTiles" class="end-tiles hidden">
+      <button id="moreQs" class="end-tile" type="button">
+        I’ve a couple more questions<br>about your admission.
+      </button>
+
+      <button id="noMoreQs" class="end-tile" type="button">
+        I’ve no more questions. I’ll<br>leave the rest to the medics.
+      </button>
+    </div>
+
+    <div class="next" id="nextBtn" title="Continue">
+      <img src="images/nextSlideOrangeShape.png" alt="Next">
+    </div>
+
+  </div>
+
+  <script type="module">
+    import { ensureTimerStarted } from "./js/state.js";
+    ensureTimerStarted();
+
+    const bubble = document.getElementById("bubble");
+    const tiles = document.querySelectorAll(".q-tile");
+    const nextBtn = document.getElementById("nextBtn");
+    const endTiles = document.getElementById("endTiles");
+    const moreQs = document.getElementById("moreQs");
+    const noMoreQs = document.getElementById("noMoreQs");
+
+    let hideTimer = null;
+    let askedCount = 0;
+
+    function showBubble(text, durationMs){
+      if (hideTimer) clearTimeout(hideTimer);
+      bubble.textContent = text;
+      bubble.classList.add("is-visible");
+
+      hideTimer = setTimeout(() => {
+        bubble.classList.remove("is-visible");
+      }, durationMs);
+    }
+
+    tiles.forEach(tile => {
+      tile.addEventListener("click", () => {
+        if (!tile.dataset.asked) {
+          tile.dataset.asked = "true";
+          askedCount++;
+        }
+
+        showBubble(tile.dataset.reply || "", Number(tile.dataset.duration || 2500));
+
+        if (askedCount >= tiles.length) {
+          endTiles.classList.remove("hidden");
+        }
+      });
+    });
+
+    moreQs.addEventListener("click", () => {
+      window.location.href = "interviewQuestions2.html";
+    });
+
+    noMoreQs.addEventListener("click", () => {
+      window.location.href = "mcqslide.html";
+    });
+
+    nextBtn.addEventListener("click", () => {
+      window.location.href = "interviewQuestions2.html";
+    });
+  </script>
+</body>
+</html>

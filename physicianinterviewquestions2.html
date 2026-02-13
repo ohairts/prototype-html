@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Interview Slide - Questions 2</title>
+
+  <link rel="stylesheet" href="css/common.css">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@900&display=swap" rel="stylesheet">
+
+  <style>
+    /* ===== STAGE ===== */
+    .stage{
+      width: 100vw;
+      height: 100vh;
+      background:#0b3b4a;
+      position: relative;
+      overflow: hidden;
+      font-family: "Roboto Slab", serif;
+    }
+
+    /* ===== PORTRAIT ===== */
+    .portrait{
+      position:absolute;
+      left:50%;
+      top:50%;
+      transform: translate(-50%, -50%);
+      width: min(420px, 42vw);
+      height: min(640px, 78vh);
+      background: url("images/oldmansittingout.png") center / contain no-repeat;
+      background-color: #000;
+      border: 6px solid rgba(0,0,0,.55);
+      box-shadow: 0 18px 45px rgba(0,0,0,.45);
+      z-index: 2;
+    }
+
+    /* ===== QUESTION TILES ===== */
+    .q-col{
+      position:absolute;
+      left: 18px;
+      top: 18px;
+      bottom: 18px;
+      width: min(300px, 28vw);
+      display:flex;
+      flex-direction: column;
+      gap: 14px;
+      z-index: 5;
+    }
+
+    .q-tile{
+      background: #5aa2e7;
+      color: #fff;
+      border: 3px solid rgba(255,196,0,.9);
+      box-shadow: 0 10px 18px rgba(0,0,0,.25);
+      border-radius: 6px;
+      padding: 18px 14px;
+      font-weight: 900;
+      text-align:center;
+      cursor:pointer;
+      user-select:none;
+
+      outline: 3px solid rgba(46,215,20,.55);
+      animation: glowPulse 1.25s infinite ease-in-out;
+      transition: transform .12s ease, filter .12s ease;
+    }
+
+    .q-tile:hover{
+      filter: brightness(1.05);
+      transform: translateY(-1px);
+    }
+
+    .q-tile:active{
+      transform: translateY(2px) scale(.99);
+      filter: brightness(.98);
+    }
+
+    @keyframes glowPulse{
+      0%,100%{ filter: drop-shadow(0 0 0 rgba(46,215,20,0)); }
+      50%{ filter: drop-shadow(0 0 14px rgba(46,215,20,.55)); }
+    }
+
+    /* ===== PATIENT BUBBLE ===== */
+    .patient-bubble{
+      position:absolute;
+      right: 18%;
+      top: 14%;
+      width: min(360px, 40vw);
+      background: #ffc400;
+      color:#111;
+      border: 4px solid rgba(0,0,0,.35);
+      border-radius: 16px;
+      padding: 16px 18px;
+      font-family: "Roboto Slab", serif;
+      font-weight: 900;
+      font-size: clamp(16px, 1.8vw, 22px);
+      line-height: 1.2;
+      box-shadow: 0 14px 22px rgba(0,0,0,.25);
+      z-index: 50;
+
+      opacity: 0;
+      transform: translate(20px, 12px) scale(.98);
+      pointer-events:none;
+      transition: opacity .2s ease, transform .2s ease;
+    }
+
+    .patient-bubble.is-visible{
+      opacity: 1;
+      transform: translate(0,0) scale(1);
+    }
+
+    .patient-bubble::after{
+      content:"";
+      position:absolute;
+      left: 38px;
+      bottom: -60px;
+      border-left: 22px solid transparent;
+      border-right: 5px solid transparent;
+      border-top: 70px solid #ffc400;
+      transform: rotate(55deg);
+      transform-origin: top center;
+      filter: drop-shadow(0 8px 0 rgba(0,0,0,.18));
+    }
+    
+    /* ===== END TILES ===== */
+    .end-tiles{
+      position:absolute;
+      left:50%;
+      bottom:120px;
+      transform:translateX(-50%);
+      display:flex;
+      gap:16px;
+      z-index: 30;
+    }
+
+    .end-tile{
+      background:#e7ac5a;
+      color:#000000;
+      border: 3px solid rgba(255,196,0,.9);
+      border-radius: 50px;
+      padding: 14px 18px;
+      font-weight: 900;
+      cursor:pointer;
+      text-align:center;
+      box-shadow: 0 10px 18px rgba(0,0,0,.25);
+    }
+
+    .hidden{ display:none; }
+
+    /* ===== NAV ARROW ===== */
+    .next{
+      position:absolute;
+      right: 22px;
+      bottom: 22px;
+      width: 110px;
+      height: 86px;
+      cursor:pointer;
+      z-index: 20;
+      user-select:none;
+      filter: drop-shadow(0 10px 18px rgba(0,0,0,.35));
+      transition: transform .15s ease, filter .2s ease;
+    }
+
+    .next img{
+      width:100%;
+      height:100%;
+      object-fit: contain;
+      display:block;
+    }
+
+    .next:hover{
+      transform: translateY(-2px) scale(1.03);
+      filter: drop-shadow(0 0 12px rgba(255,196,0,.75))
+              drop-shadow(0 12px 18px rgba(0,0,0,.35));
+    }
+
+    /* ===== (1) SUMMARY TRIANGLE + POPOUT ===== */
+    .summary-tab{
+      position:absolute;
+      top:0;
+      right:0;
+      width:0;
+      height:0;
+      border-top: 150px solid rgba(162, 154, 4, 0.873); /* very subtle */
+      border-right: 150px solid transparent;
+      z-index: 50;
+      cursor:pointer;
+      transform: rotate(90deg);
+      filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.25));
+      transition: border-top-color .15s ease;
+    }
+    .summary-tab:hover{
+      border-top-color: rgba(231, 193, 3, 0.904);
+    }
+    .summary-tab span{
+      position:absolute;
+      top: 14px;
+      left: 6px;
+      width: 140px;
+      transform: rotate(-45deg);
+      transform-origin: left top;
+      font-size: 25px;
+      font-weight: 900;
+      color: rgba(255,255,255,.92);
+      text-shadow: 0 2px 6px rgba(0,0,0,.55);
+      user-select:none;
+      pointer-events:none;
+      white-space: nowrap;
+    }
+
+    .summary-panel{
+      position:absolute;
+      top: 18px;
+      right: 18px;
+      width: min(440px, 82vw);
+      max-height: min(540px, 76vh);
+      background: rgba(0,0,0,.78);
+      border: 3px solid rgba(255,196,0,.65);
+      border-radius: 18px;
+      box-shadow: 0 18px 40px rgba(0,0,0,.45);
+      padding: 14px 14px 12px;
+      z-index: 70;
+
+      opacity: 0;
+      transform: translateX(-10px) scale(.98);
+      pointer-events: none;
+      transition: opacity .18s ease, transform .18s ease;
+    }
+    .summary-panel.is-open{
+      opacity: 1;
+      transform: translateX(0) scale(1);
+      pointer-events: auto;
+    }
+    .summary-head{
+      display:flex;
+      align-items:center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+    .summary-title{
+      margin:0;
+      color:#ffc400;
+      font-size: 18px;
+      font-weight: 900;
+    }
+    .summary-close{
+      background: rgba(255,255,255,.12);
+      color:#fff;
+      border: 2px solid rgba(255,196,0,.55);
+      border-radius: 999px;
+      padding: 6px 10px;
+      cursor:pointer;
+      font-weight: 900;
+    }
+    .summary-body{
+      color: rgba(255,255,255,.95);
+      font-size: 14px;
+      line-height: 1.35;
+      overflow:auto;
+      padding-right: 6px;
+    }
+    .summary-body ul{ margin: 10px 0 0 18px; }
+    .summary-body li{ margin: 6px 0; }
+
+    /* ===== (2) VIDEO OVERLAY OVER PORTRAIT ===== */
+    .video-overlay{
+      position:absolute;
+      inset:0;
+      background: rgba(0,0,0,.55);
+      z-index: 80;
+      opacity: 0;
+      pointer-events:none;
+      transition: opacity .18s ease;
+    }
+    .video-overlay.is-open{
+      opacity: 1;
+      pointer-events:auto;
+    }
+    .video-box{
+      position:absolute;
+      left:50%;
+      top:50%;
+      transform: translate(-50%, -50%);
+      width: min(420px, 42vw);
+      height: min(640px, 78vh);
+      border-radius: 10px;
+      overflow:hidden;
+      border: 6px solid rgba(0,0,0,.55);
+      box-shadow: 0 18px 45px rgba(0,0,0,.55);
+      background:#000;
+    }
+    .video-box video{
+      width:100%;
+      height:100%;
+      object-fit: cover; /* change to contain if you prefer */
+      display:block;
+      background:#000;
+    }
+    .video-close{
+      position:absolute;
+      top: 14px;
+      right: 14px;
+      z-index: 90;
+      background: rgba(255,255,255,.12);
+      color:#fff;
+      border: 2px solid rgba(255,196,0,.7);
+      border-radius: 999px;
+      padding: 8px 12px;
+      cursor:pointer;
+      font-weight: 900;
+      box-shadow: 0 10px 18px rgba(0,0,0,.35);
+    }
+
+    /* ===== SMALL SCREENS ===== */
+    @media (max-width: 900px){
+      .portrait{ width: min(360px, 46vw); height: min(560px, 72vh); }
+      .q-col{ width: min(260px, 42vw); }
+      .patient-bubble{ right: 8%; top: 10%; }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="stage">
+
+    <!-- (1) Summary triangle -->
+    <div id="summaryTab" class="summary-tab" title="Summary to date">
+      <span>Summary to date</span>
+    </div>
+
+    <div id="summaryPanel" class="summary-panel" role="dialog" aria-modal="true" aria-label="Summary to date">
+      <div class="summary-head">
+        <h2 class="summary-title">Summary to date</h2>
+        <button id="summaryClose" class="summary-close" type="button">Close</button>
+      </div>
+      <div class="summary-body">
+        <!-- EDIT THIS SUMMARY -->
+        <p><strong>Patrick Brown</strong>, 72.</p>
+        <ul>
+          <li>Sudden onset feeling unwell while watching grandson play.</li>
+          <li>Friend noticed facial droop; ambulance called.</li>
+          <li>No headache. Felt well beforehand.</li>
+          <li>PMH: Diabetes, hypertension (tablet-controlled).</li>
+          <li>Last ate ~11am (approx). It's 6pm now.</li>
+          <li>Ex-smoker (20 pack-years, quit last year). Minimal alcohol.</li>
+          <li>Meds: statin, BP tablet, metformin (unsure).</li>
+          <li>Allergies: none known.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="portrait" aria-hidden="true"></div>
+
+    <div class="q-col">
+      <div class="q-tile" data-reply="I smoked a pack a day for 20 years, but I quit last year. I only have a drink on special occasions." data-duration="3000">
+        Do you smoke or drink?
+      </div>
+
+      <div class="q-tile" data-reply="I think I’m on a statin… a blood pressure tablet… and metformin." data-duration="2500">
+        What medications are you on?
+      </div>
+
+      <div class="q-tile" data-reply="No." data-duration="1200">
+        Are you allergic to anything?
+      </div>
+
+      <!-- (2) This one triggers video -->
+      <div class="q-tile" data-reply="Well, I’m really worried – I can’t move my right arm." data-duration="3200" data-video="true">
+        Have you noticed any other symptoms?
+      </div>
+
+      <div class="q-tile" data-reply="I’m a retired schoolteacher." data-duration="2500">
+        Are you working?
+      </div>
+    </div>
+
+    <div id="bubble" class="patient-bubble"></div>
+
+    <!-- End tiles (3 buttons now) -->
+    <div id="endTiles" class="end-tiles hidden">
+      <button id="moreQsDiscussion" class="end-tile" type="button">
+        I have more<br>questions.
+      </button>
+
+      <button id="noMoreQs" class="end-tile" type="button">
+        I’ve no more<br>questions. I'll<br>leave the rest<br>to the registrar.
+      </button>
+    </div>
+
+    <div class="next" id="nextBtn" title="Continue">
+      <img src="images/nextSlideOrangeShape.png" alt="Next">
+    </div>
+
+    <!-- (2) Video overlay -->
+    <div id="videoOverlay" class="video-overlay" aria-hidden="true">
+      <button id="videoClose" class="video-close" type="button">Close</button>
+
+      <div class="video-box" role="dialog" aria-modal="true" aria-label="Symptoms video">
+        <!-- CHANGE THIS SRC TO YOUR VIDEO FILE -->
+        <video id="symptomVideo"
+               src="videos/oldManRightSidedWeakness.mp4"
+               playsinline
+               muted
+               preload="metadata"></video>
+      </div>
+    </div>
+
+  </div>
+
+  <script type="module">
+    // Keep your timer, but don't let it break the entire slide if missing
+    try {
+      const mod = await import("./js/state.js");
+      mod.ensureTimerStarted?.();
+    } catch (e) {
+      // If state.js isn't present on this slide, everything else still works
+      console.warn("state.js not loaded:", e);
+    }
+
+    const bubble = document.getElementById("bubble");
+    const tiles = document.querySelectorAll(".q-tile");
+    const nextBtn = document.getElementById("nextBtn");
+
+    const endTiles = document.getElementById("endTiles");
+    const noMoreQs = document.getElementById("noMoreQs");
+    const moreQsDiscussion = document.getElementById("moreQsDiscussion");
+
+    // Summary
+    const summaryTab = document.getElementById("summaryTab");
+    const summaryPanel = document.getElementById("summaryPanel");
+    const summaryClose = document.getElementById("summaryClose");
+
+    // Video
+    const videoOverlay = document.getElementById("videoOverlay");
+    const symptomVideo = document.getElementById("symptomVideo");
+    const videoClose = document.getElementById("videoClose");
+
+    let hideTimer = null;
+    let askedCount = 0;
+
+    function showBubble(text, durationMs){
+      if (hideTimer) clearTimeout(hideTimer);
+      bubble.textContent = text;
+      bubble.classList.add("is-visible");
+      hideTimer = setTimeout(() => bubble.classList.remove("is-visible"), durationMs);
+    }
+
+    function openSummary(){ summaryPanel.classList.add("is-open"); }
+    function closeSummary(){ summaryPanel.classList.remove("is-open"); }
+
+    summaryTab.addEventListener("click", openSummary);
+    summaryClose.addEventListener("click", closeSummary);
+
+    async function openVideo(){
+      videoOverlay.classList.add("is-open");
+      videoOverlay.setAttribute("aria-hidden", "false");
+
+      try {
+        symptomVideo.currentTime = 0;
+        symptomVideo.load();   // helps when re-opening
+        await symptomVideo.play();
+      } catch (e) {
+        console.warn("Video play blocked or failed:", e);
+      }
+    }
+
+    function closeVideo(){
+      symptomVideo.pause();
+      videoOverlay.classList.remove("is-open");
+      videoOverlay.setAttribute("aria-hidden", "true");
+    }
+
+    videoClose.addEventListener("click", closeVideo);
+    videoOverlay.addEventListener("click", (e) => {
+      if (e.target === videoOverlay) closeVideo(); // click outside video closes
+    });
+
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") {
+        closeSummary();
+        closeVideo();
+      }
+    });
+
+    // Tile click logic (Slide7-like)
+    tiles.forEach(tile => {
+      tile.addEventListener("click", () => {
+        if (!tile.dataset.asked) {
+          tile.dataset.asked = "true";
+          askedCount++;
+        }
+
+        const reply = tile.dataset.reply || "";
+        const duration = Number(tile.dataset.duration || 2500);
+        showBubble(reply, duration);
+
+        if (tile.dataset.video === "true") {
+          openVideo();
+        }
+
+        if (askedCount >= tiles.length) {
+          endTiles.classList.remove("hidden");
+        }
+      });
+    });
+
+    // End tile links
+    moreQsDiscussion.addEventListener("click", () => {
+      window.location.href = "consultdesk1.html";
+    });
+
+    noMoreQs.addEventListener("click", () => {
+      window.location.href = "physicianmcqslide.html"; // kept as you had it
+    });
+
+    nextBtn.addEventListener("click", () => {
+      window.location.href = "physicianmcqslide.html"; // change if needed
+    });
+  </script>
+</body>
+</html>

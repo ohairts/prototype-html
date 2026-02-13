@@ -1,0 +1,145 @@
+<head>
+  <link rel="stylesheet" href="css/tiles.css">
+  <link rel="stylesheet" href="css/speech-bubble.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>The Bleep</title>
+
+  <!-- Swiper CSS -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@8/swiper-bundle.min.css" />
+
+  <link href="https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Serif:wght@400;700&display=swap" rel="stylesheet">
+  
+  <style>
+    body, html {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background-color: #000;
+      font-family: Arial, sans-serif;
+      overflow: hidden;
+    }
+
+    .yellow-box {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      background: url('images/thebleeptextwithsilhouette.png') no-repeat center center/contain;
+      background-size: cover;
+      z-index: 2;
+    }
+
+    .background-video {
+      position: fixed;
+      inset: 0; 
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    .swiper {
+      width: 110%;
+      max-width: 480px;
+      z-index: 3;
+      position: absolute;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+    }
+
+    .swiper-slide {
+      text-align: center;
+      font-size: 40px;
+      color: white;
+      background: rgba(0, 0, 0, 0.6);
+      border: 4px solid red;
+      border-radius: 16px;
+      padding: 10px 12px;
+      display: table;
+      justify-content: center;
+      align-items: center;
+      cursor: pointer;
+    }
+
+    .role-img {
+    width: 80px;
+    height: 80px;
+    border-radius: 8px;
+    object-fit: cover;
+    border: 8px solid white;
+    margin-bottom: 15px;
+    }
+
+    .role-label {
+    font-size: 20px;
+    font-weight: bold;
+    text-transform: uppercase;
+    color: white;
+    }
+
+
+    .swiper-slide:hover {
+      background: rgba(255, 255, 255, 0.2);
+    }
+  </style>
+</head>
+<body>
+  <video autoplay muted loop playsinline class="background-video">
+    <source src="videos/videoStressedMan.mp4" type="video/mp4" />
+    Your browser does not support the video tag.
+  </video>
+
+  <div class="yellow-box"></div>
+
+  <!-- Swiper container -->
+<!-- Swiper container -->
+<div class="swiper">
+  <div class="swiper-wrapper">
+    <div class="swiper-slide" onclick="goToRole('Physician')">
+      <img src="images/choosePhysician.png" alt="Physician" class="role-img">
+      <div class="role-label">Physician</div>
+    </div>
+    <div class="swiper-slide" onclick="goToRole('Pharmacist')">
+      <img src="images/choosePharmacy.png" alt="Pharmacist" class="role-img">
+      <div class="role-label">Pharmacist</div>
+    </div>
+    <div class="swiper-slide" onclick="goToRole('Nurse')">
+      <img src="images/chooseNurse.png" alt="Nurse" class="role-img">
+      <div class="role-label">Nurse</div>
+    </div>
+    <div class="swiper-slide" onclick="goToRole('Physiotherapist')">
+      <img src="images/choosephysio.png" alt="Physiotherapist" class="role-img">
+      <div class="role-label">Physiotherapist</div>
+    </div>
+  </div>
+</div>
+
+  <!-- Swiper JS -->
+  <script src="https://cdn.jsdelivr.net/npm/swiper@8/swiper-bundle.min.js"></script>
+  <script>
+    const swiper = new Swiper('.swiper', {
+      slidesPerView: 1.2,
+      centeredSlides: true,
+      spaceBetween: 20,
+      loop: true
+    });
+
+    function goToRole(role) {
+      const routes = {
+        'Physician': 'physicianstory.html',
+        'Pharmacist': 'pharmaciststory.html',
+        'Nurse': 'workinprogress.html',
+        'Physiotherapist': 'physiotherapiststory.html'
+      };
+      window.location.href = routes[role];
+    }
+  </script>
+</body>

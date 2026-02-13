@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Workbench</title>
+
+  <link rel="stylesheet" href="css/common.css">
+  <link rel="stylesheet" href="css/nav-arrows.css">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@900&display=swap" rel="stylesheet">
+
+  <style>
+    body{
+      margin:0;
+      background:#0b3b4a;
+      font-family:"Roboto Slab", serif;
+      overflow:hidden;
+    }
+
+    .stage{
+      width:100vw;
+      height:100vh;
+      position:relative;
+      background:#08394a;
+      overflow:hidden;
+      border: 2px solid rgba(0,0,0,.35);
+    }
+
+    .hero{
+      position:absolute;
+      left:50%;
+      top:48%;
+      transform: translate(-50%, -50%);
+      width: 28vw;
+      height: 34vw;
+      background: url("images/stressedinternmalephoneday.png") center / cover no-repeat;
+      border: 3px solid rgba(0,0,0,.45);
+      box-shadow: 0 18px 45px rgba(0,0,0,.45);
+    }
+
+    .panel{
+      position:absolute;
+      left:50%;
+      bottom: 44px;
+      transform: translateX(-50%);
+      width: min(720px, 82vw);
+      background: #d9d9d9;
+      border: 3px solid rgba(0,0,0,.55);
+      box-shadow: 0 14px 26px rgba(0,0,0,.35);
+      padding: 18px 20px;
+      text-align:center;
+      z-index: 5;
+    }
+
+    .panel .title{
+      font-weight: 900;
+      font-size: clamp(18px, 2.4vw, 26px);
+      margin: 0;
+      color:#111;
+      line-height:1.05;
+    }
+
+    .panel .subtitle{
+      margin: 6px 0 0;
+      font-weight: 900;
+      font-size: clamp(14px, 1.7vw, 20px);
+      color:#111;
+      line-height:1.15;
+    }
+
+    /* ✅ Right-side info box (now clickable) */
+    .infoBox{
+      position:absolute;
+      right: 22px;
+      top: 110px;
+      width: min(240px, 22vw);
+      background: #f2c319;
+      color:#111;
+      border: 3px solid rgba(0,0,0,.45);
+      box-shadow: 0 14px 26px rgba(0,0,0,.35);
+      padding: 18px 16px;
+      font-weight: 900;
+      font-size: clamp(14px, 1.4vw, 20px);
+      line-height: 1.2;
+      text-align: center;
+      z-index: 30;
+
+      /* interactivity cues */
+      cursor: pointer;
+      user-select:none;
+      transition: transform .12s ease, filter .12s ease, box-shadow .12s ease;
+    }
+    .infoBox:hover{
+      transform: translateY(-2px);
+      filter: brightness(1.05);
+      box-shadow: 0 18px 34px rgba(0,0,0,.38);
+    }
+    .infoBox:active{
+      transform: translateY(1px) scale(.99);
+      filter: brightness(.98);
+    }
+    .infoBox:focus-visible{
+      outline: 4px solid rgba(46,215,20,.65);
+      outline-offset: 3px;
+    }
+    .infoBox .hint{
+      display:block;
+      margin-top: 10px;
+      font-size: 12px;
+      opacity: .85;
+      letter-spacing: .2px;
+    }
+    /* subtle “tap me” pulse */
+    .infoBox.pulse{
+      animation: infoPulse 2.2s ease-in-out infinite;
+    }
+    @keyframes infoPulse{
+      0%,100%{ box-shadow: 0 14px 26px rgba(0,0,0,.35); }
+      50%{ box-shadow: 0 14px 26px rgba(0,0,0,.35), 0 0 0 6px rgba(255,255,255,.14); }
+    }
+
+    .nav-btn{
+      position:absolute;
+      bottom: 56px;
+      width: 120px;
+      height: 84px;
+      border: 3px solid rgba(0,0,0,.55);
+      box-shadow: 0 14px 26px rgba(0,0,0,.35);
+      display:grid;
+      place-items:center;
+      cursor:pointer;
+      user-select:none;
+      transition: transform .12s ease, filter .12s ease;
+      z-index: 10;
+    }
+    .nav-btn:hover{ transform: translateY(-2px); filter: brightness(1.05); }
+    .nav-btn:active{ transform: translateY(1px) scale(.99); filter: brightness(.98); }
+
+    .nav-btn.return{
+      left: 44px;
+      background: #ffcc00;
+      filter: drop-shadow(0 0 10px rgba(46,215,20,.55));
+    }
+    .nav-btn.return .icon{
+      font-size: 44px;
+      color:#111;
+      line-height:1;
+      transform: translateY(-1px);
+    }
+
+    .nav-btn.next{
+      right: 44px;
+      background: #8d2aa3;
+    }
+    .nav-btn.next::before{
+      content:"";
+      width:0; height:0;
+      border-top: 18px solid transparent;
+      border-bottom: 18px solid transparent;
+      border-left: 34px solid rgba(0,0,0,.55);
+      transform: translateX(3px);
+    }
+    .nav-btn.next::after{
+      content:"";
+      position:absolute;
+      width:0; height:0;
+      border-top: 16px solid transparent;
+      border-bottom: 16px solid transparent;
+      border-left: 30px solid rgba(0,0,0,.18);
+      transform: translateX(7px);
+      opacity:.55;
+      pointer-events:none;
+    }
+
+    /* ===== Kardex popup overlay (ported) ===== */
+    .kardex-modal{
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      display: none;
+    }
+    .kardex-modal.open{ display:block; }
+
+    .kardex-modal .backdrop{
+      position:absolute;
+      inset:0;
+      background: rgba(0,0,0,.72);
+      cursor: zoom-out;
+    }
+
+    .kardex-modal .panel{
+      position:absolute;
+      left:50%;
+      top:50%;
+      transform: translate(-50%, -50%);
+      width: min(1200px, 94vw);
+      height: min(720px, 86vh);
+      background: rgba(10,10,10,.96);
+      border: 3px solid rgba(255,255,255,.18);
+      border-radius: 18px;
+      box-shadow: 0 18px 45px rgba(0,0,0,.55);
+      overflow:hidden;
+      cursor: default;
+    }
+
+    .kardex-modal .close{
+      position:absolute;
+      right:14px;
+      top:14px;
+      width:48px;
+      height:48px;
+      border-radius: 12px;
+      border: 2px solid rgba(255,255,255,.25);
+      background: rgba(255,255,255,.12);
+      color:#fff;
+      font-weight:900;
+      font-size:26px;
+      line-height:1;
+      cursor: zoom-out;
+      z-index:5;
+    }
+    .kardex-modal .close:hover{ filter: brightness(1.08); }
+
+    .kardex-modal .imgs{
+      position:absolute;
+      inset:0;
+      padding:18px;
+      padding-top:70px;
+      display:grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap:14px;
+      box-sizing:border-box;
+    }
+
+    .kardex-modal .imgs img{
+      width:100%;
+      height:100%;
+      object-fit: contain;
+      background:#000;
+      border: 2px solid rgba(255,255,255,.12);
+      border-radius: 12px;
+      box-shadow: 0 10px 18px rgba(0,0,0,.45);
+      cursor: zoom-in;
+      user-select:none;
+      -webkit-user-drag:none;
+    }
+
+    body.modal-open{ overflow:hidden; }
+
+    /* Zoom preview square */
+    #zoomPreview{
+      position: fixed;
+      width: 240px;
+      height: 240px;
+      border-radius: 10px;
+      border: 3px solid rgba(0,0,0,.55);
+      box-shadow: 0 18px 35px rgba(0,0,0,.35);
+      background-repeat: no-repeat;
+      background-color: #fff;
+      z-index: 99999;
+      pointer-events: none;
+      display: none;
+    }
+    #zoomPreview::after{
+      content: "×1.5";
+      position:absolute;
+      right: 8px;
+      bottom: 6px;
+      background: rgba(0,0,0,.65);
+      color:#fff;
+      font-weight:900;
+      font-size: 12px;
+      padding: 3px 7px;
+      border-radius: 8px;
+    }
+
+    @media (max-width: 900px){
+      .kardex-modal .panel{ height: min(760px, 86vh); }
+      .kardex-modal .imgs{ grid-template-columns: 1fr; }
+      #zoomPreview{ width: 200px; height: 200px; }
+    }
+    @media (max-width: 600px){
+      #zoomPreview{ display:none !important; }
+    }
+
+    @media (max-width: 800px){
+      .nav-btn{ bottom: 18px; width: 104px; height: 74px; }
+      .nav-btn.return{ left: 18px; }
+      .nav-btn.next{ right: 18px; }
+      .panel{ bottom: 18px; }
+      .hero{ width: min(820px, 92vw); height: min(520px, 58vh); top:46%; }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="stage">
+
+    <div class="hero" aria-hidden="true"></div>
+
+    <div class="panel">
+      <p class="title">Workbench.</p>
+      <p class="subtitle">(Please explain to facilitator what you are doing.)</p>
+    </div>
+
+    <div id="wbReturn" class="nav-btn return" title="Return to last slide" role="button" tabindex="0">
+      <span class="icon">↩</span>
+    </div>
+
+    <!-- CLICKABLE TILE -->
+    <div id="infoTile" class="infoBox pulse" role="button" tabindex="0"
+         aria-label="Open pharmacist home prescription (kardex)">
+      And handily the Pharmacist has<br>
+      his prescription from home as<br>
+      well.
+      <span class="hint">Click to view</span>
+    </div>
+
+  </div>
+
+  <!-- Kardex popup modal -->
+  <div id="kardexModal" class="kardex-modal" aria-hidden="true">
+    <div class="backdrop" data-close="true"></div>
+    <div class="panel" role="dialog" aria-modal="true" aria-label="Kardex review">
+      <button class="close" type="button" aria-label="Close" data-close="true">✕</button>
+      <div class="imgs" id="kardexImgs"></div>
+    </div>
+  </div>
+
+  <!-- Zoom preview square -->
+  <div id="zoomPreview" aria-hidden="true"></div>
+
+  <script type="module">
+    // Optional timer persistence
+    try{
+      const mod = await import("./js/state.js");
+      mod.ensureTimerStarted?.();
+    }catch(e){}
+
+    const params = new URLSearchParams(window.location.search);
+    const returnToParam = params.get("return");
+    const nextToParam   = params.get("next");
+    const pageParam     = params.get("page"); // optional
+    const ref = document.referrer || "";
+
+    function buildReturnUrl(){
+      if (returnToParam){
+        const joiner = returnToParam.includes("?") ? "&" : "?";
+        let url = returnToParam;
+
+        if (pageParam){
+          url = `${url}${joiner}page=${encodeURIComponent(pageParam)}`;
+          url += `&from=workbench`;
+        } else {
+          url = `${url}${joiner}from=workbench`;
+        }
+
+        return url;
+      }
+    }
+
+    function goReturn(){
+      const url = buildReturnUrl();
+      if (url){
+        window.location.href = url;
+      }else{
+        history.back();
+      }
+    }
+
+    function goNext(){
+      if (nextToParam){
+        window.location.href = nextToParam;
+      }else{
+        history.forward();
+      }
+    }
+
+    document.getElementById("wbReturn").addEventListener("click", goReturn);
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "ArrowLeft") goReturn();
+    });
+
+    // ===== Kardex popup + zoom (triggered by info tile) =====
+    const infoTile  = document.getElementById("infoTile");
+    const kardexModal = document.getElementById("kardexModal");
+    const kardexImgs  = document.getElementById("kardexImgs");
+    const preview     = document.getElementById("zoomPreview");
+    const ZOOM = 1.5;
+
+    // Use your actual filenames here (can be different to draganddrop ones if you want)
+    const KARDEX_IMGS = [
+      "images/draganddroppopup1.png",
+      "images/draganddroppopup2.png",
+      "images/draganddroppopup3.png"
+    ];
+
+    function openKardex(){
+      // stop the pulse once discovered
+      infoTile.classList.remove("pulse");
+
+      kardexImgs.innerHTML = KARDEX_IMGS
+        .map(src => `<img src="${src}" alt="Kardex image">`)
+        .join("");
+
+      kardexModal.classList.add("open");
+      kardexModal.setAttribute("aria-hidden", "false");
+      document.body.classList.add("modal-open");
+
+      wireKardexMagnifier();
+    }
+
+    function closeKardex(){
+      kardexModal.classList.remove("open");
+      kardexModal.setAttribute("aria-hidden", "true");
+      document.body.classList.remove("modal-open");
+      hidePreview();
+    }
+
+    function clamp(n, min, max){ return Math.max(min, Math.min(max, n)); }
+    function showPreview(){ preview.style.display = "block"; }
+    function hidePreview(){ preview.style.display = "none"; }
+
+    function attachMagnifierToImg(imgEl){
+      function onMove(e){
+        showPreview();
+
+        const offset = 18;
+        let left = e.clientX + offset;
+        let top  = e.clientY + offset;
+
+        const pw = preview.offsetWidth || 240;
+        const ph = preview.offsetHeight || 240;
+
+        left = clamp(left, 10, window.innerWidth  - pw - 10);
+        top  = clamp(top, 10, window.innerHeight - ph - 10);
+
+        preview.style.left = left + "px";
+        preview.style.top  = top  + "px";
+
+        preview.style.backgroundImage = `url("${imgEl.src}")`;
+
+        const rect = imgEl.getBoundingClientRect();
+        const nw = imgEl.naturalWidth  || rect.width;
+        const nh = imgEl.naturalHeight || rect.height;
+
+        const scale = Math.min(rect.width / nw, rect.height / nh);
+        const renderedW = nw * scale;
+        const renderedH = nh * scale;
+
+        const padX = (rect.width  - renderedW) / 2;
+        const padY = (rect.height - renderedH) / 2;
+
+        const localX = clamp(e.clientX - rect.left - padX, 0, renderedW);
+        const localY = clamp(e.clientY - rect.top  - padY, 0, renderedH);
+
+        const bgW = renderedW * ZOOM;
+        const bgH = renderedH * ZOOM;
+
+        const px = (localX / renderedW) * bgW;
+        const py = (localY / renderedH) * bgH;
+
+        const centerX = pw / 2;
+        const centerY = ph / 2;
+
+        preview.style.backgroundSize = `${bgW}px ${bgH}px`;
+        preview.style.backgroundPosition = `${centerX - px}px ${centerY - py}px`;
+      }
+
+      imgEl.addEventListener("mousemove", onMove);
+      imgEl.addEventListener("mouseenter", showPreview);
+      imgEl.addEventListener("mouseleave", hidePreview);
+      imgEl.addEventListener("click", (e) => e.preventDefault());
+    }
+
+    function wireKardexMagnifier(){
+      kardexImgs.querySelectorAll("img").forEach(img => attachMagnifierToImg(img));
+    }
+
+    // open on click / keyboard
+    infoTile.addEventListener("click", openKardex);
+    infoTile.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " "){
+        e.preventDefault();
+        openKardex();
+      }
+    });
+
+    // close behaviour (backdrop + X + Esc)
+    kardexModal.addEventListener("click", (e) => {
+      if (e.target?.dataset?.close === "true") closeKardex();
+    });
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && kardexModal.classList.contains("open")) closeKardex();
+    });
+  </script>
+</body>
+</html>

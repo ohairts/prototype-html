@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Vitals Monitor</title>
+
+  <link rel="stylesheet" href="css/common.css">
+  <link rel="stylesheet" href="css/tile.css">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@900&display=swap" rel="stylesheet">
+
+  <style>
+    body{
+      margin:0;
+      width:100vw;
+      height:100vh;
+      background:#0b3b4a;
+      font-family:"Roboto Slab", serif;
+      overflow:hidden;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
+
+    .stage{
+      position:relative;
+      width:min(1200px, 92vw);
+      height:min(720px, 84vh);
+      background:#0b3b4a;
+      border:4px solid rgba(0,0,0,.45);
+      box-shadow:0 26px 55px rgba(0,0,0,.45);
+      overflow:hidden;
+      padding:18px;
+      box-sizing:border-box;
+    }
+
+    /* Monitor “screen” area */
+    .monitor{
+      position:absolute;
+      inset:18px;
+      background:#000;
+      border:2px solid rgba(255,255,255,.25);
+      box-shadow: inset 0 0 0 2px rgba(0,0,0,.35);
+      overflow:hidden;
+    }
+
+    /* Video fills the monitor */
+    #monitorVideo{
+      width:100%;
+      height:100%;
+      object-fit:contain;
+      display:block;
+      background:#000;
+    }
+
+    /* Header tile */
+    .header-tile{
+      position:absolute;
+      top:22px;
+      left:50%;
+      transform:translateX(-50%);
+      z-index:40;
+      width:min(420px, 70%);
+    }
+
+    .header-tile .tile{
+      text-align:center;
+      padding:18px 18px;
+      font-size:1.05rem;
+      line-height:1.1;
+      user-select:none;
+      cursor:pointer;
+    }
+
+    /* --- MAIN FLY-IN (bottom, 4 options) --- */
+    .fly{
+      position:absolute;
+      left:50%;
+      bottom:18px;
+      transform:translateX(-50%) translateY(18px);
+      width:min(1120px, 92%);
+      opacity:0;
+      pointer-events:none;
+      transition:opacity .25s ease, transform .25s ease;
+      z-index:35;
+    }
+    .fly.is-open{
+      opacity:1;
+      transform:translateX(-50%) translateY(0);
+      pointer-events:auto;
+    }
+    .fly-panel{
+      background: rgba(0,0,0,.25);
+      border-radius: 14px;
+      padding: 12px;
+      box-shadow: 0 18px 35px rgba(0,0,0,.35);
+      backdrop-filter: blur(4px);
+    }
+    .fly-grid{
+      display:grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+    }
+
+    /* Fly buttons: make them feel selectable */
+    .fly-btn{
+      appearance:none;
+      border:0;
+      background:rgba(255,255,255,.92);
+      border-radius:12px;
+      font-weight:900;
+      padding:14px 12px;
+      cursor:pointer;
+      transition: transform .12s ease, filter .12s ease, box-shadow .12s ease;
+      box-shadow: 0 10px 20px rgba(0,0,0,.25);
+    }
+    .fly-btn:hover{
+      transform: translateY(-2px) scale(1.02);
+      filter: brightness(1.05);
+      box-shadow: 0 14px 26px rgba(0,0,0,.32);
+    }
+    .fly-btn:active{
+      transform: translateY(0) scale(0.99);
+      box-shadow: 0 8px 16px rgba(0,0,0,.22);
+    }
+    .fly-btn:focus-visible{
+      outline: 3px solid rgba(255,255,255,.85);
+      outline-offset: 3px;
+    }
+    .fly-btn.is-selected{
+      background:#dff7ff;
+      box-shadow: 0 0 0 4px rgba(0,180,255,.35), 0 14px 26px rgba(0,0,0,.32);
+    }
+
+    /* --- RIGHT-SIDE FLY-IN (single tile) --- */
+    .fly-right{
+      position:absolute;
+      right:18px;
+      top:50%;
+      transform: translateY(-50%) translateX(18px);
+      width:min(280px, 28%);
+      opacity:0;
+      pointer-events:none;
+      transition:opacity .25s ease, transform .25s ease;
+      z-index:36;
+    }
+    .fly-right.is-open{
+      opacity:1;
+      transform: translateY(-50%) translateX(0);
+      pointer-events:auto;
+    }
+    .fly-right a{
+      text-decoration:none;
+      display:block;
+      width:100%;
+    }
+
+    /* --- CONFIRM OVERLAY --- */
+    .confirm{
+      position:absolute;
+      inset:0;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      background: rgba(0,0,0,.55);
+      opacity:0;
+      pointer-events:none;
+      transition: opacity .18s ease;
+      z-index:60;
+    }
+    .confirm.is-open{
+      opacity:1;
+      pointer-events:auto;
+    }
+
+    .confirm .confirm-tile{
+      width:min(420px, 82%);
+      text-align:center;
+      padding:22px 18px;
+      border-radius:16px;
+      cursor:pointer;
+      user-select:none;
+
+      /* glow red */
+      background: rgba(120,0,0,.85);
+      color:#fff;
+      font-weight:900;
+      font-size:1.3rem;
+      text-shadow: 0 2px 0 rgba(0,0,0,.35);
+
+      box-shadow:
+        0 0 0 4px rgba(255,60,60,.35),
+        0 0 28px rgba(255,0,0,.55),
+        0 20px 45px rgba(0,0,0,.55);
+      animation: pulseRed 1.15s ease-in-out infinite;
+    }
+
+    @keyframes pulseRed{
+      0%, 100% { transform: scale(1); filter: brightness(1); }
+      50%      { transform: scale(1.03); filter: brightness(1.08); }
+    }
+
+    @media (max-width: 900px){
+      .stage{ height:min(820px, 92vh); }
+      .header-tile{ width:min(520px, 86%); }
+      .fly-grid{ grid-template-columns: 1fr 1fr; }
+      .fly-right{ width:min(320px, 68%); right:12px; }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="stage">
+    <div class="monitor">
+      <video
+        id="monitorVideo"
+        src="videos/anaphylaxismonitor.mp4"
+        preload="auto"
+        playsinline
+        muted
+      ></video>
+    </div>
+
+    <!-- Interactive header tile -->
+    <div class="header-tile">
+      <div class="tile" id="cycleTile" role="button" tabindex="0" aria-label="Click to cycle vitals">
+        CLICK TO CYCLE VITALS
+      </div>
+    </div>
+
+    <!-- ECG audio -->
+    <audio
+      id="ecgAudio"
+      src="audio/audioEcgSimulatorPneumonia.mp3"
+      preload="auto"
+    ></audio>
+
+    <!-- Main fly-ins (bottom) -->
+    <div class="fly" id="fly">
+      <div class="fly-panel">
+        <div class="fly-grid">
+          <!-- +1 social -->
+          <button class="fly-btn" type="button"
+            data-scoretype="social" data-points="1"
+            data-action="redirect" data-url="ptworkbench5.html">
+            Call the intern
+          </button>
+
+          <!-- +2 social -->
+          <button class="fly-btn" type="button"
+            data-scoretype="social" data-points="2"
+            data-action="redirect" data-url="ptworkbench5.html">
+            Call MROC
+          </button>
+
+          <!-- Cardiac Arrest: +3 social AND +3 overall, confirm first -->
+          <button class="fly-btn" type="button"
+            data-action="confirm"
+            data-social="3" data-overall="3"
+            data-url="ptworkbench5.html">
+            Call Cardiac Arrest
+          </button>
+
+          <!-- +2 social -->
+          <button class="fly-btn" type="button"
+            data-scoretype="social" data-points="2"
+            data-action="redirect" data-url="ptworkbench5.html">
+            Call someone else
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right-side fly-in (appears 5s after start) -->
+    <div class="fly-right" id="flyRight">
+      <a href="PTexaminePatAgain.html" id="examineLink" data-overall="2" aria-label="Examine Pat again">
+        <div class="tile">Examine Pat again?</div>
+      </a>
+    </div>
+
+    
+    <!-- Confirm overlay for Cardiac Arrest -->
+    <div class="confirm" id="confirm">
+      <div class="confirm-tile" id="confirmTile" role="button" tabindex="0" aria-label="Are you sure?">
+        Are you sure?
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    // ===== state.js integration (safe) =====
+    let addScore = (n)=>{};
+    let addSocial = (n)=>{};
+    try{
+      const mod = await import("./js/state.js");
+      mod.ensureTimerStarted?.();
+      if (typeof mod.addScore === "function") addScore = mod.addScore;
+      if (typeof mod.addSocial === "function") addSocial = mod.addSocial;
+    }catch(e){
+      console.warn("state.js not loaded:", e);
+    }
+
+    const video = document.getElementById("monitorVideo");
+    const audio = document.getElementById("ecgAudio");
+    const cycleTile = document.getElementById("cycleTile");
+
+    const fly = document.getElementById("fly");
+    const flyRight = document.getElementById("flyRight");
+
+    const confirmOverlay = document.getElementById("confirm");
+    const confirmTile = document.getElementById("confirmTile");
+
+    const examineLink = document.getElementById("examineLink");
+
+    let hasStarted = false;
+
+    // Video loops from 2s
+    const VIDEO_LOOP_START = 2;
+
+    // Audio loops from 5s to 70s, then back to 5s
+    const AUDIO_START = 5;
+    const AUDIO_END = 70;
+
+    // Timings for fly-ins after vitals click
+    const MAIN_FLY_DELAY_MS = 4000;
+    const RIGHT_FLY_DELAY_MS = 5000;
+
+    function safePlay(el){
+      return el.play().catch(() => {});
+    }
+
+    function startVideo(){
+      const seekAndPlay = () => {
+        video.currentTime = VIDEO_LOOP_START;
+        safePlay(video);
+      };
+      if (video.readyState < 1) {
+        video.addEventListener("loadedmetadata", seekAndPlay, { once: true });
+      } else {
+        seekAndPlay();
+      }
+    }
+
+    function startAudio(){
+      const seekAndPlay = () => {
+        audio.currentTime = AUDIO_START;
+        safePlay(audio);
+      };
+      if (audio.readyState < 1) {
+        audio.addEventListener("loadedmetadata", seekAndPlay, { once: true });
+      } else {
+        seekAndPlay();
+      }
+    }
+
+    function enforceAudioWindow(){
+      if (!audio.duration) return;
+
+      if (audio.currentTime < AUDIO_START) {
+        audio.currentTime = AUDIO_START;
+      }
+
+      if (audio.currentTime >= AUDIO_END) {
+        audio.currentTime = AUDIO_START;
+        safePlay(audio);
+      }
+    }
+
+    function enforceVideoLoop(){
+      if (!video.duration) return;
+
+      if (video.currentTime >= video.duration - 0.05) {
+        video.currentTime = VIDEO_LOOP_START;
+        safePlay(video);
+      }
+    }
+
+    audio.addEventListener("timeupdate", enforceAudioWindow);
+    video.addEventListener("timeupdate", enforceVideoLoop);
+
+    function startMonitor(){
+      if (hasStarted) return;
+      hasStarted = true;
+
+      startVideo();
+      startAudio();
+
+      setTimeout(() => fly.classList.add("is-open"), MAIN_FLY_DELAY_MS);
+      setTimeout(() => flyRight.classList.add("is-open"), RIGHT_FLY_DELAY_MS);
+    }
+
+    cycleTile.addEventListener("click", startMonitor);
+    cycleTile.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        startMonitor();
+      }
+    });
+
+    // Confirm overlay helpers
+    function openConfirm(){ confirmOverlay.classList.add("is-open"); }
+    function closeConfirm(){ confirmOverlay.classList.remove("is-open"); }
+
+    confirmOverlay.addEventListener("click", (e) => {
+      if (e.target === confirmOverlay) closeConfirm();
+    });
+
+    // Examine Pat again: +2 overall then navigate
+    if (examineLink){
+      examineLink.addEventListener("click", (e) => {
+        e.preventDefault();
+        const pts = Number(examineLink.dataset.overall || 0);
+        if (pts) addScore(pts);
+        window.location.href = examineLink.getAttribute("href");
+      });
+    }
+
+    // Confirming Cardiac Arrest: +3 social AND +3 overall then redirect
+    confirmTile.addEventListener("click", () => {
+      addSocial(3);
+      addScore(3);
+      window.location.href = "ptworkbench5.html";
+    });
+
+    confirmTile.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        confirmTile.click();
+      }
+    });
+
+    // Main fly-in actions
+    document.querySelectorAll(".fly-btn").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        // Visual selected state
+        document.querySelectorAll(".fly-btn").forEach(b => b.classList.remove("is-selected"));
+        btn.classList.add("is-selected");
+
+        const action = btn.dataset.action; // "redirect" or "confirm"
+
+        // Preferred explicit buckets (for special cases like Cardiac Arrest)
+        const social = Number(btn.dataset.social || 0);
+        const overall = Number(btn.dataset.overall || 0);
+
+        // Legacy support (scoretype/points)
+        const legacyType = btn.dataset.scoretype;
+        const legacyPoints = Number(btn.dataset.points || 0);
+
+        if (social || overall) {
+          if (social) addSocial(social);
+          if (overall) addScore(overall);
+        } else {
+          if (legacyType === "social") addSocial(legacyPoints);
+          if (legacyType === "overall") addScore(legacyPoints);
+        }
+
+        if (action === "redirect") {
+          const url = btn.dataset.url || "ptworkbench5.html";
+          window.location.href = url;
+        } else if (action === "confirm") {
+          openConfirm();
+        }
+      });
+    });
+  </script>
+</body>
+</html>

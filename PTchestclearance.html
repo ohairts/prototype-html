@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Back to Patrick</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@600;800&display=swap" rel="stylesheet">
+
+  <style>
+    :root{
+      --bg:#0b3f53;
+      --orange:#ea7a2c;
+      --white:#fff;
+      --black:#071018;
+      --red:#e01212;
+      --green:#57a82a;
+      --shadow: rgba(0,0,0,0.35);
+    }
+
+    *{box-sizing:border-box}
+    html,body{height:100%;margin:0;background:var(--bg);font-family:"Roboto Slab",serif;overflow:hidden;}
+
+    /* 16:9 stage */
+    .stage{
+      position:relative;
+      width:min(100vw, calc(100vh * 16 / 9));
+      height:min(100vh, calc(100vw * 9 / 16));
+      margin:0 auto;
+      background:var(--bg);
+      overflow:hidden;
+      border: 2px solid rgba(0,0,0,0.35);
+    }
+
+    .title{
+      position:absolute;
+      left: 12%;
+      top: 10%;
+      color: grey;
+      font-weight: 800;
+      font-size: clamp(42px, 5.5vw, 84px);
+      text-shadow: 0 3px 0 rgba(0,0,0,0.25);
+      letter-spacing: 0.5px;
+      white-space: nowrap;
+      z-index: 1;
+    }
+
+    /* Left vertical labels */
+    .vertLabel{
+      position:absolute;
+      left: 5%;
+      width: 4.5%;
+      height: 34%;
+      background: var(--orange);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      box-shadow: 0 10px 18px var(--shadow);
+      z-index: 4;
+    }
+    .vertLabel span{
+      color: var(--white);
+      font-weight: 800;
+      letter-spacing: 1px;
+      font-size: clamp(14px, 1.8vw, 22px);
+      writing-mode: vertical-rl;
+      transform: rotate(180deg);
+      user-select:none;
+    }
+    #labIn{ top: 12%; }
+    #labOut{ bottom: 12%; }
+
+    /* Axis lines */
+    .axisV{
+      position:absolute;
+      left: 10%;
+      top: 10%;
+      width: 4px;
+      height: 80%;
+      background: var(--black);
+      z-index: 2;
+      opacity: 0.9;
+    }
+    .axisH{
+      position:absolute;
+      left: 2%;
+      top: 50%;
+      width: 96%;
+      height: 4px;
+      background: var(--black);
+      z-index: 2;
+      opacity: 0.9;
+    }
+
+    /* Pictures */
+    .imgBox{
+      position:absolute;
+      border-radius: 2px;
+      overflow:hidden;
+      box-shadow: 0 10px 18px var(--shadow);
+      z-index: 1;
+    }
+    #imgLeft{ left: 12%; top: 26%; width: 24%; height: 40%; }
+    #imgMid { left: 40%; top: 24%; width: 20%; height: 46%; }
+    .imgBox img{ width:100%; height:100%; object-fit:cover; display:block; }
+
+    /* Green next button (hidden until 3 clicks) */
+    .nextBtn{
+      position:absolute;
+      right: 4%;
+      top: 18%;
+      width: 6%;
+      height: 44%;
+      background: var(--green);
+      border: 2px solid rgba(0,0,0,0.35);
+      box-shadow: 0 10px 18px var(--shadow);
+      z-index: 6;
+      border-radius: 2px;
+      display:none;
+      cursor:pointer;
+    }
+    .nextBtn.show{
+      display:block;
+      animation: navPulse 650ms ease-in-out infinite;
+    }
+    @keyframes navPulse{
+      0%,100%{ transform: scale(1); filter: brightness(1); }
+      50%{ transform: scale(1.03); filter: brightness(1.15); }
+    }
+    .nextBtn:after{
+      content:"";
+      position:absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-40%,-50%);
+      width:0;height:0;
+      border-top: 22px solid transparent;
+      border-bottom: 22px solid transparent;
+      border-left: 30px solid rgba(0,0,0,0.35);
+    }
+    .nextBtn:before{
+      content:"";
+      position:absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-45%,-50%);
+      width:0;height:0;
+      border-top: 22px solid transparent;
+      border-bottom: 22px solid transparent;
+      border-left: 30px solid rgba(30,70,10,0.45);
+      z-index: 1;
+    }
+
+    /* Wave layer */
+    .waveLayer{
+      position:absolute;
+      inset: 0;
+      width:100%;
+      height:100%;
+      z-index: 2;
+      pointer-events:none;
+      overflow: visible;
+    }
+
+    /* Moving dot */
+    .dot{
+      position:absolute;
+      width: 34px;
+      height: 34px;
+      background: var(--red);
+      border-radius: 50%;
+      box-shadow: 0 10px 18px var(--shadow);
+      z-index: 7;
+      transform: translate(-50%,-50%);
+    }
+
+    /* Clickable circles */
+    .ring{
+      position:absolute;
+      width: 10.5%;
+      aspect-ratio: 1 / 1;
+      border: 3px solid var(--red);
+      border-radius: 50%;
+      z-index: 4;
+      opacity: 0.95;
+      cursor:pointer;
+      pointer-events:auto;
+      background: rgba(255,255,255,0.02);
+    }
+    .ring:hover{ filter: brightness(1.08); }
+    .ring.clicked{
+      filter: brightness(1.12);
+      box-shadow: 0 0 0 4px rgba(255,255,255,0.12);
+    }
+    .ring.locked{
+      pointer-events:none;
+      opacity: 0.75;
+    }
+    .ring.armed{
+      box-shadow: 0 0 0 6px rgba(255,255,255,0.18), 0 0 18px rgba(224,18,18,0.25);
+      filter: brightness(1.15);
+    }
+
+    /* X markers (hidden until clicked) */
+    .xMark{
+      position:absolute;
+      width: 30px;
+      height: 30px;
+      z-index: 5;
+      pointer-events:none;
+      display:none;
+    }
+    .xMark.show{ display:block; }
+    .xMark:before, .xMark:after{
+      content:"";
+      position:absolute;
+      left: 50%;
+      top: 50%;
+      width: 32px;
+      height: 6px;
+      background: var(--red);
+      transform-origin: center;
+      border-radius: 2px;
+      box-shadow: 0 6px 10px rgba(0,0,0,0.25);
+    }
+    .xMark:before{ transform: translate(-50%,-50%) rotate(45deg); }
+    .xMark:after { transform: translate(-50%,-50%) rotate(-45deg); }
+
+    /* +1 score popup images (hidden until clicked) */
+    .scorePopup{
+      position:absolute;
+      width: 56px;
+      height: auto;
+      z-index: 6;
+      filter: drop-shadow(0 8px 14px rgba(0,0,0,0.25));
+      display:none;
+      pointer-events:none;
+    }
+    .scorePopup.show{ display:block; }
+
+    /* Positions */
+    #ringP1{ left: 16%; top: 10%; }
+    #ringP2{ left: 45%; top: 10%; }
+    #ringP3{ left: 72%; top: 10%; }
+
+    #x1{ left: 25.5%; top: 10.5%; }
+    #x2{ left: 54.5%; top: 10.5%; }
+    #x3{ left: 81.5%; top: 10.5%; }
+
+    #ringT1{ left: 28%; top: 60%; }
+    #ringT2{ left: 60%; top: 60%; }
+    #ringT3{ left: 86%; top: 60%; }
+
+    #a1{ left: 36%; top: 72%; }
+    #a2{ left: 67%; top: 72%; }
+    #a3{ left: 93%; top: 72%; }
+
+    /* SVG wave styling */
+    .wavePath{
+      fill: none;
+      stroke: rgba(0,0,0,0.35);
+      stroke-width: 4;
+    }
+
+    /* =========================
+       INTRO OVERLAY (3 seconds)
+       ========================= */
+    .introOverlay{
+      position:absolute;
+      inset:0;
+      background: rgba(180,180,180,0.28);
+      z-index: 999;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
+    .introBox{
+      width: min(78%, 980px);
+      background: rgba(235,235,235,0.95);
+      border: 2px solid rgba(0,0,0,0.25);
+      border-radius: 10px;
+      box-shadow: 0 18px 34px rgba(0,0,0,0.45);
+      padding: 26px 30px;
+      text-align:center;
+      color: #0b0f12;
+    }
+    .introBox .big{
+      font-weight: 900;
+      font-size: clamp(20px, 2.6vw, 34px);
+      line-height: 1.2;
+    }
+    .introBox .small{
+      margin-top: 10px;
+      font-weight: 700;
+      font-size: clamp(16px, 2.0vw, 26px);
+      line-height: 1.25;
+    }
+    .fadeOut{ animation: fadeOut 450ms ease forwards; }
+    @keyframes fadeOut{ to { opacity:0; } }
+  </style>
+</head>
+
+<body>
+  <div class="stage" role="application" aria-label="Back to Patrick slide">
+
+    <!-- Intro overlay -->
+    <div id="introOverlay" class="introOverlay" aria-label="Instructions">
+      <div class="introBox">
+        <div class="big">He’s lying affected side down.</div>
+        <div class="small">
+          Make sure you apply vibrations at full expiration of his breathing.
+          <br/>
+          (select all that apply – three opportunities).
+        </div>
+      </div>
+    </div>
+
+    <div class="title">Back to Patrick</div>
+
+    <div id="labIn" class="vertLabel"><span>Inspiration</span></div>
+    <div id="labOut" class="vertLabel"><span>Expiration</span></div>
+
+    <div class="axisV"></div>
+    <div class="axisH"></div>
+
+    <div id="imgLeft" class="imgBox">
+      <img src="images/oldManWorriedInBedOxygen.png" alt="Patrick with oxygen mask">
+    </div>
+
+    <div id="imgMid" class="imgBox">
+      <img src="images/oldmanabdominalbreathing.png" alt="Chest image">
+    </div>
+
+    <!-- Top circles (buzz + show X on click) -->
+    <div id="ringP1" class="ring" role="button" tabindex="0" data-kind="top" data-target="x1"></div>
+    <div id="x1" class="xMark" aria-hidden="true"></div>
+
+    <div id="ringP2" class="ring" role="button" tabindex="0" data-kind="top" data-target="x2"></div>
+    <div id="x2" class="xMark" aria-hidden="true"></div>
+
+    <div id="ringP3" class="ring" role="button" tabindex="0" data-kind="top" data-target="x3"></div>
+    <div id="x3" class="xMark" aria-hidden="true"></div>
+
+    <!-- Bottom circles (ping + show +1 popup image on click) -->
+    <div id="ringT1" class="ring" role="button" tabindex="0" data-kind="bottom" data-target="a1"></div>
+    <img id="a1" class="scorePopup" src="images/plusonescorepopup.png" alt="+1" aria-hidden="true" />
+
+    <div id="ringT2" class="ring" role="button" tabindex="0" data-kind="bottom" data-target="a2"></div>
+    <img id="a2" class="scorePopup" src="images/plusonescorepopup.png" alt="+1" aria-hidden="true" />
+
+    <div id="ringT3" class="ring" role="button" tabindex="0" data-kind="bottom" data-target="a3"></div>
+    <img id="a3" class="scorePopup" src="images/plusonescorepopup.png" alt="+1" aria-hidden="true" />
+
+    <!-- Green nav arrow (appears after 3 TOTAL selections) -->
+    <a id="nextBtn" class="nextBtn" href="ptpatientrecovery.html" aria-label="Next"></a>
+
+    <!-- Wave + moving dot -->
+    <svg id="waveSvg" class="waveLayer" viewBox="0 0 1600 900" preserveAspectRatio="none" aria-hidden="true">
+      <path id="wavePath" class="wavePath" d=""></path>
+    </svg>
+    <div id="dot" class="dot" aria-label="Moving red dot"></div>
+
+    <!-- Audio SFX -->
+    <audio id="pingAudio" preload="auto">
+      <source src="audio/audioPing.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="buzzAudio" preload="auto">
+      <source src="audio/audioCoughChestClearance.m4a" type="audio/mp4">
+    </audio>
+
+    <!-- ✅ Background bed: tachypnoea (loop, 0.5 volume, 1.5x speed) -->
+    <audio id="tachyBed" preload="auto" loop>
+      <source src="audio/audiotachypnoea.m4a" type="audio/mp4">
+    </audio>
+
+  </div>
+
+<script>
+  (function(){
+    // =========================
+    // INTRO OVERLAY (auto-hide)
+    // =========================
+    const overlay = document.getElementById("introOverlay");
+    window.setTimeout(() => {
+      if (!overlay) return;
+      overlay.classList.add("fadeOut");
+      window.setTimeout(() => { overlay.remove(); }, 500);
+    }, 3000);
+
+    // =========================
+    // state.js scoring (same pattern as your WORKING pages)
+    // Overall-only scoring here (+1 for correct bottom rings)
+    // =========================
+    let addScore = function(){};
+    try{
+      import("./js/state.js")
+        .then((mod)=>{
+          if (mod && typeof mod.ensureTimerStarted === "function") mod.ensureTimerStarted();
+          if (mod && typeof mod.addScore === "function") addScore = mod.addScore;
+        })
+        .catch((e)=>console.warn("state.js not loaded:", e));
+    }catch(e){
+      console.warn("Dynamic import not supported:", e);
+    }
+
+    // =========================
+    // AUDIO: background tachypnoea bed
+    // =========================
+    const tachyBed = document.getElementById("tachyBed");
+
+    function safePlay(a){
+      try { return a.play(); } catch(e){ return Promise.reject(e); }
+    }
+
+    async function startTachyBed(){
+      if (!tachyBed) return;
+
+      tachyBed.volume = 0.5;
+      tachyBed.playbackRate = 1.5;
+      tachyBed.loop = true;
+
+      try { tachyBed.currentTime = 0; } catch(e){}
+
+      try{
+        await safePlay(tachyBed);
+      }catch(e){
+        // autoplay blocked; will be started on first user gesture below
+      }
+    }
+
+    // Try immediately
+    startTachyBed();
+
+    // If blocked, start on first click/tap/key anywhere
+    let bedArmed = false;
+    function armBedOnce(){
+      if (bedArmed) return;
+      bedArmed = true;
+      startTachyBed();
+      window.removeEventListener("pointerdown", armBedOnce, true);
+      window.removeEventListener("keydown", armBedOnce, true);
+    }
+    window.addEventListener("pointerdown", armBedOnce, true);
+    window.addEventListener("keydown", armBedOnce, true);
+
+    // =========================
+    // WAVE + DOT CONFIG
+    // =========================
+    const PERIODS = 3;
+    const LOOP_MS = 5200;
+    const FPS_CAP = 60;
+
+    const xStartPct = 10;
+    const xEndPct   = 100;
+
+    const midYPct   = 40;
+    const ampPct    = 27;
+
+    const stage = document.querySelector(".stage");
+    const dot = document.getElementById("dot");
+    const wavePathEl = document.getElementById("wavePath");
+
+    function pctToPxX(p){ return (p/100) * stage.clientWidth; }
+    function pctToPxY(p){ return (p/100) * stage.clientHeight; }
+
+    function drawWavePath(){
+      const VBW = 1600;
+      const VBH = 900;
+
+      const x0 = (xStartPct / 100) * VBW;
+      const x1 = (xEndPct   / 100) * VBW;
+      const yMid = (midYPct / 100) * VBH;
+      const A = (ampPct     / 100) * VBH;
+
+      const samples = 420;
+      let d = `M ${x0.toFixed(2)} ${yMid.toFixed(2)} `;
+      for (let i = 1; i <= samples; i++){
+        const t = i / samples;
+        const x = x0 + t * (x1 - x0);
+        const y = yMid - A * Math.sin(2 * Math.PI * PERIODS * t);
+        d += `L ${x.toFixed(2)} ${y.toFixed(2)} `;
+      }
+      wavePathEl.setAttribute("d", d.trim());
+    }
+
+    let t0 = performance.now();
+    let last = 0;
+
+    // =========================
+    // SELECTION + DOT-IN-RING HELPERS
+    // =========================
+    const MAX_SELECTIONS = 3;
+    const rings = Array.from(document.querySelectorAll(".ring"));
+    const nextBtn = document.getElementById("nextBtn");
+    let clickedCount = 0;
+
+    function isDotInsideRing(ringEl){
+      const d = dot.getBoundingClientRect();
+      const r = ringEl.getBoundingClientRect();
+
+      const dotCx = d.left + d.width / 2;
+      const dotCy = d.top  + d.height / 2;
+
+      const ringCx = r.left + r.width / 2;
+      const ringCy = r.top  + r.height / 2;
+
+      const ringRadius = r.width / 2;
+      const dx = dotCx - ringCx;
+      const dy = dotCy - ringCy;
+
+      return (dx*dx + dy*dy) <= (ringRadius * ringRadius);
+    }
+
+    function lockAllRemaining(){
+      rings.forEach(r => {
+        r.classList.remove("armed");
+        if (!r.classList.contains("clicked")) r.classList.add("locked");
+      });
+    }
+
+    function tick(now){
+      if (now - last < (1000 / FPS_CAP)) { requestAnimationFrame(tick); return; }
+      last = now;
+
+      const H = stage.clientHeight;
+
+      const x0 = pctToPxX(xStartPct);
+      const x1 = pctToPxX(xEndPct);
+      const yMid = pctToPxY(midYPct);
+      const A = (ampPct/100) * H;
+
+      const elapsed = (now - t0) % LOOP_MS;
+      const u = elapsed / LOOP_MS;
+      const x = x0 + u * (x1 - x0);
+      const y = yMid - A * Math.sin(2*Math.PI*PERIODS*u);
+
+      dot.style.left = x + "px";
+      dot.style.top  = y + "px";
+
+      if (clickedCount < MAX_SELECTIONS){
+        rings.forEach(ringEl => {
+          if (ringEl.classList.contains("clicked")) return;
+          ringEl.classList.toggle("armed", isDotInsideRing(ringEl));
+        });
+      }
+
+      requestAnimationFrame(tick);
+    }
+
+    drawWavePath();
+    requestAnimationFrame(tick);
+
+    let resizeTimer = null;
+    window.addEventListener("resize", () => {
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(drawWavePath, 80);
+    });
+
+    // =========================
+    // AUDIO SFX
+    // =========================
+    const pingAudio = document.getElementById("pingAudio");
+    const buzzAudio = document.getElementById("buzzAudio");
+
+    function playSfx(audioEl){
+      if (!audioEl) return;
+      try {
+        audioEl.currentTime = 0;
+        audioEl.play().catch(()=>{});
+      } catch(e){}
+    }
+
+    // =========================
+    // CIRCLE CLICK LOGIC (gated by dot position)
+    // =========================
+    function handleRingClick(ring){
+      if (ring.classList.contains("clicked")) return;
+      if (clickedCount >= MAX_SELECTIONS) return;
+
+      // ✅ Only trigger when dot is inside THIS ring
+      if (!isDotInsideRing(ring)) return;
+
+      ring.classList.add("clicked");
+      ring.classList.add("locked");
+      clickedCount++;
+
+      const kind = ring.dataset.kind;
+      const targetId = ring.dataset.target;
+      const targetEl = document.getElementById(targetId);
+
+      if (kind === "top"){
+        if (targetEl) targetEl.classList.add("show");
+        playSfx(buzzAudio);
+      } else {
+        if (targetEl) targetEl.classList.add("show");
+        playSfx(pingAudio);
+
+        // ✅ OVERALL SCORE ONLY (+1 for correct bottom ring)
+        addScore(1);
+      }
+
+      if (clickedCount >= MAX_SELECTIONS){
+        lockAllRemaining();
+        nextBtn.classList.add("show");
+      }
+    }
+
+    rings.forEach(ring => {
+      ring.addEventListener("click", () => handleRingClick(ring));
+      ring.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          handleRingClick(ring);
+        }
+      });
+    });
+
+    // If user leaves tab, pause bed (optional)
+    document.addEventListener("visibilitychange", () => {
+      if (document.hidden){
+        try { tachyBed && tachyBed.pause(); } catch(e){}
+      }
+    });
+  })();
+</script>
+</body>
+</html>

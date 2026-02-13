@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Player Summary</title>
+
+<link rel="stylesheet" href="css/common.css">
+<link href="https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@700;900&display=swap" rel="stylesheet">
+
+<style>
+:root{
+  --bg:#052f41;
+  --card:rgba(255,255,255,0.08);
+  --border:rgba(255,255,255,0.18);
+  --white:#fff;
+  --shadow:rgba(0,0,0,0.45);
+}
+
+/* ===== Page ===== */
+html,body{
+  height:100%;
+  margin:0;
+  font-family:"Roboto Slab", serif;
+  background: var(--bg);
+  overflow:hidden;
+}
+
+/* ===== Stronger Glow Lights ===== */
+.glow{
+  position:fixed;
+  width:360px;
+  height:360px;
+  border-radius:50%;
+  filter: blur(80px);
+  opacity:.65;
+  pointer-events:none;
+  mix-blend-mode: screen;
+  z-index:0;
+  animation: glowDrift 6.5s ease-in-out infinite alternate;
+}
+.glow.green{
+  background:#57ff9a;
+  top:8%;
+  left:6%;
+}
+.glow.yellow{
+  background:#ffd84d;
+  bottom:6%;
+  right:8%;
+  animation-delay: .8s;
+}
+@keyframes glowDrift{
+  0%{ transform: translate(0,0) scale(1); opacity:.58; }
+  100%{ transform: translate(14px,-10px) scale(1.08); opacity:.72; }
+}
+
+/* faint vignette for polish */
+.vignette{
+  position:fixed;
+  inset:0;
+  pointer-events:none;
+  z-index:1;
+  background: radial-gradient(1200px 700px at 50% 45%, rgba(255,255,255,0.05), rgba(0,0,0,0.55));
+}
+
+/* ===== Layout ===== */
+.wrap{
+  height:100%;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:26px;
+  position:relative;
+  z-index:2;
+}
+
+/* ===== Session Complete (fade-in) ===== */
+.session{
+  color: rgba(255,255,255,.92);
+  font-weight: 900;
+  letter-spacing: .22em;
+  text-transform: uppercase;
+  font-size: clamp(12px, 1.5vw, 16px);
+  opacity:0;
+  transform: translateY(10px);
+  animation: sessionIn 900ms ease forwards;
+}
+@keyframes sessionIn{
+  to{ opacity:1; transform: translateY(0); }
+}
+
+/* ===== Title ===== */
+.title{
+  color:white;
+  font-size:clamp(34px, 5vw, 62px);
+  font-weight:900;
+  letter-spacing:1px;
+  text-align:center;
+  text-shadow:0 10px 24px rgba(0,0,0,.45);
+  opacity:0;
+  transform: translateY(10px);
+  animation: titleIn 950ms ease forwards;
+  animation-delay: 120ms;
+}
+@keyframes titleIn{
+  to{ opacity:1; transform: translateY(0); }
+}
+
+/* ===== Metrics ===== */
+.metrics{
+  display:flex;
+  gap:22px;
+  flex-wrap:wrap;
+  justify-content:center;
+}
+
+/* Shimmer animation */
+@keyframes shimmer{
+  0%{ transform: translateX(-140%) skewX(-18deg); opacity:0; }
+  15%{ opacity:.55; }
+  40%{ opacity:.25; }
+  100%{ transform: translateX(180%) skewX(-18deg); opacity:0; }
+}
+
+.metric{
+  width:290px;
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:20px;
+  padding:24px 20px;
+  text-align:center;
+  box-shadow:0 18px 40px var(--shadow);
+  position:relative;
+  overflow:hidden;
+
+  /* subtle lift */
+  backdrop-filter: blur(6px);
+  transform: translateY(6px);
+  opacity: 0;
+  animation: cardIn 700ms ease forwards;
+}
+.metric:nth-child(1){ animation-delay: 220ms; }
+.metric:nth-child(2){ animation-delay: 320ms; }
+.metric:nth-child(3){ animation-delay: 420ms; }
+
+@keyframes cardIn{
+  to{ transform: translateY(0); opacity:1; }
+}
+
+/* shimmer overlay */
+.metric::after{
+  content:"";
+  position:absolute;
+  top:-40%;
+  left:-60%;
+  width:60%;
+  height:180%;
+  background: linear-gradient(
+    90deg,
+    rgba(255,255,255,0) 0%,
+    rgba(255,255,255,.20) 45%,
+    rgba(255,255,255,0) 100%
+  );
+  transform: translateX(-140%) skewX(-18deg);
+  animation: shimmer 4.4s ease-in-out infinite;
+  pointer-events:none;
+}
+
+/* ===== Values (kept your colors/sizes) ===== */
+.value{
+  font-size:28px;
+  font-weight:900;
+  color:rgb(0, 0, 0);
+  margin-bottom:6px;
+  font-variant-numeric: tabular-nums;
+}
+
+.value.timer{
+  font-size:28px;
+  letter-spacing:1px;
+}
+
+.label{
+  font-size:16px;
+  font-weight:800;
+  color:rgba(255, 255, 255, 0.8);
+}
+
+/* ===== Reset Buttons ===== */
+.resetRow{
+  display:flex;
+  gap:14px;
+  flex-wrap:wrap;
+  justify-content:center;
+  margin-top: 4px;
+  opacity:0;
+  transform: translateY(10px);
+  animation: controlsIn 700ms ease forwards;
+  animation-delay: 520ms;
+}
+@keyframes controlsIn{
+  to{ opacity:1; transform: translateY(0); }
+}
+
+.resetBtn{
+  padding:14px 18px;
+  font-weight:900;
+  border-radius:14px;
+  border:1px solid rgba(255,255,255,.25);
+  background:rgba(255,255,255,.1);
+  color:white;
+  cursor:pointer;
+  box-shadow:0 10px 24px rgba(0,0,0,.35);
+  transition: all .15s ease;
+}
+
+.resetBtn:hover{
+  transform:translateY(-2px);
+  filter:brightness(1.08);
+}
+.resetBtn:active{
+  transform:translateY(1px) scale(.98);
+}
+
+/* Tiny “tap for audio” hint if autoplay blocked */
+.audioHint{
+  position:fixed;
+  left:50%;
+  bottom:18px;
+  transform:translateX(-50%);
+  background:rgba(0,0,0,.55);
+  border:1px solid rgba(255,255,255,.18);
+  color:rgba(255,255,255,.9);
+  padding:10px 12px;
+  border-radius:12px;
+  font-weight:800;
+  font-size:13px;
+  z-index:5;
+  display:none;
+}
+</style>
+</head>
+
+<body>
+
+<!-- Glow accents -->
+<div class="glow green"></div>
+<div class="glow yellow"></div>
+<div class="vignette"></div>
+
+<!-- Hold music -->
+<audio id="holdMusic" preload="auto" loop>
+  <source src="audio/audioholdmusic.mp3" type="audio/mpeg">
+</audio>
+
+<div id="audioHint" class="audioHint">Tap anywhere to enable audio</div>
+
+<div class="wrap">
+
+  <div class="session">Session Complete</div>
+  <div class="title">PLAYER SUMMARY</div>
+
+  <div class="metrics">
+
+    <div class="metric">
+      <div class="value" id="socialVal">0</div>
+      <div class="label">Social</div>
+    </div>
+
+    <div class="metric">
+      <div class="value timer" id="speedVal">00:00</div>
+      <div class="label">Completion Time</div>
+    </div>
+
+    <div class="metric">
+      <div class="value" id="scoreVal">0</div>
+      <div class="label">Final Score</div>
+    </div>
+
+  </div>
+
+  <div class="resetRow">
+    <button class="resetBtn" id="resetSocial">Reset Social</button>
+    <button class="resetBtn" id="resetSpeed">Reset Time</button>
+    <button class="resetBtn" id="resetScore">Reset Score</button>
+  </div>
+
+</div>
+
+<script type="module">
+/* ===== SAFE STATE LOADING ===== */
+let getScore = ()=>0;
+let setScore = ()=>{};
+let getSocial = ()=>0;
+let resetSocial = ()=>{};
+let getElapsedMs = ()=>0;
+let formatMs = ms=>"00:00";
+let initGame = ()=>{};
+
+try{
+  const mod = await import("./js/state.js");
+  if(mod.getScore) getScore = mod.getScore;
+  if(mod.setScore) setScore = mod.setScore;
+  if(mod.getSocial) getSocial = mod.getSocial;
+  if(mod.resetSocial) resetSocial = mod.resetSocial;
+  if(mod.getElapsedMs) getElapsedMs = mod.getElapsedMs;
+  if(mod.formatMs) formatMs = mod.formatMs;
+  if(mod.initGame) initGame = mod.initGame;
+}catch(e){
+  console.warn("state.js not loaded");
+}
+
+/* ===== Populate Values ===== */
+const scoreVal = document.getElementById("scoreVal");
+const socialVal = document.getElementById("socialVal");
+const speedVal = document.getElementById("speedVal");
+
+scoreVal.textContent = String(getScore());
+socialVal.textContent = String(getSocial());
+speedVal.textContent = String(formatMs(getElapsedMs()));
+
+/* ===== Reset Buttons ===== */
+document.getElementById("resetScore").onclick = ()=>{
+  setScore(0);
+  scoreVal.textContent = "0";
+};
+
+document.getElementById("resetSocial").onclick = ()=>{
+  resetSocial();
+  socialVal.textContent = "0";
+};
+
+document.getElementById("resetSpeed").onclick = ()=>{
+  initGame({ resetScore:false, resetTimer:true });
+  speedVal.textContent = "00:00";
+};
+
+/* ===== Autoplay hold music at 75% (retry on first gesture if blocked) ===== */
+const music = document.getElementById("holdMusic");
+const hint = document.getElementById("audioHint");
+
+function tryPlayMusic(){
+  if (!music) return;
+  music.volume = 0.75;
+  music.loop = true;
+  const p = music.play();
+  if (p && typeof p.then === "function"){
+    p.then(()=>{
+      if (hint) hint.style.display = "none";
+    }).catch(()=>{
+      if (hint) hint.style.display = "block";
+    });
+  }
+}
+
+tryPlayMusic();
+
+// If blocked, retry on first interaction
+const resume = () => {
+  tryPlayMusic();
+  window.removeEventListener("pointerdown", resume, true);
+  window.removeEventListener("keydown", resume, true);
+};
+window.addEventListener("pointerdown", resume, true);
+window.addEventListener("keydown", resume, true);
+</script>
+
+</body>
+</html>

@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Patrick Back on the Sidelines</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@900&display=swap" rel="stylesheet">
+
+  <style>
+    body{
+      margin:0;
+      background:#0b4a60; /* dark teal */
+      font-family:"Roboto Slab", serif;
+      overflow:hidden;
+    }
+
+    .stage{
+      position:relative;
+      width:100vw;
+      height:100vh;
+      background:#0b4a60;
+      overflow:hidden;
+      border: 3px solid rgba(0,0,0,.55);
+      box-sizing:border-box;
+    }
+
+    /* Left yellow rounded note */
+    .note{
+      position:absolute;
+      left: 26px;
+      top: 22px;
+      width: min(260px, 24vw);
+      height: min(420px, 58vh);
+      background: #ffd200;
+      border: 6px solid rgba(45, 26, 10, .85);
+      border-radius: 38px;
+      box-shadow: 0 18px 30px rgba(0,0,0,.22);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding: 26px 20px;
+      z-index: 5;
+    }
+    .note p{
+      margin:0;
+      text-align:center;
+      color:#111;
+      font-weight: 900;
+      font-size: clamp(18px, 2.2vw, 28px);
+      line-height: 1.15;
+    }
+
+    /* Center media frame */
+    .media{
+      position:absolute;
+      left:50%;
+      top:50%;
+      transform: translate(-50%,-50%);
+      width: min(760px, 58vw);
+      height: min(520px, 72vh);
+      border: 4px solid rgba(0,0,0,.65);
+      box-shadow: 0 18px 45px rgba(0,0,0,.45);
+      background:#000;
+      z-index: 3;
+      overflow:hidden;
+    }
+
+    .media video,
+    .media img{
+      position:absolute;
+      inset:0;
+      width:100%;
+      height:100%;
+      object-fit: contain; /* keeps full video/image visible */
+      display:block;
+    }
+
+    /* Fade swap: video -> image */
+    #revealImage{
+      opacity: 0;
+      transition: opacity 1.2s ease;
+    }
+    .show-image #revealImage{
+      opacity: 1;
+    }
+    .show-image #mainVideo{
+      opacity: 0;
+      transition: opacity 0.8s ease;
+    }
+
+    /* Nav arrow bottom-right */
+    .nav{
+      position:absolute;
+      right: 26px;
+      bottom: 22px;
+      width: 120px;
+      height: 96px;
+      z-index: 20;
+      user-select:none;
+      filter: drop-shadow(0 0 10px rgba(46,215,20,.45))
+              drop-shadow(0 12px 18px rgba(0,0,0,.35));
+    }
+    .nav a{ display:block; width:100%; height:100%; }
+    .nav img{
+      width:100%;
+      height:100%;
+      object-fit: contain;
+      display:block;
+    }
+
+    /* Small responsiveness */
+    @media (max-width: 900px){
+      .note{ width: min(260px, 36vw); height: min(420px, 52vh); }
+      .media{ width: min(720px, 62vw); height: min(520px, 56vh); }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="stage">
+
+    <div class="note">
+      <p>
+        Patrick’s back 
+        on the
+        sidelines. <br>He’s
+        enjoying
+        watching his
+        grandkids play.
+      </p>
+    </div>
+
+    <!-- Center video that fades to image on finish -->
+    <div id="media" class="media" aria-label="Video then image">
+      <!-- CHANGE src to your video file -->
+      <video id="mainVideo" src="videos/oldManWalkingOut.mp4" autoplay muted playsinline></video>
+
+      <!-- CHANGE src to your reveal png -->
+      <img id="revealImage" src="images/oldManHappyAtPitch.docx.png" alt="Patrick reveal">
+    </div>
+
+    <!-- Nav arrow -->
+    <div class="nav" title="Continue">
+      <a href="slidescore.html" aria-label="Go to slide score">
+        <!-- Use your existing arrow asset, or swap to match the screenshot -->
+        <img src="images/nextSlideGreenShape.png" alt="Next">
+      </a>
+    </div>
+
+  </div>
+
+  <script>
+    const media = document.getElementById("media");
+    const vid = document.getElementById("mainVideo");
+
+    // Ensure autoplay works as much as possible across browsers
+    // (muted + playsinline already helps)
+    vid.addEventListener("ended", () => {
+      media.classList.add("show-image");
+    });
+
+    // Fallback: if autoplay is blocked, user interaction starts video
+    // (doesn't add interactivity beyond making it work)
+    document.addEventListener("click", () => {
+      if (vid.paused) vid.play().catch(()=>{});
+    }, { once: true });
+  </script>
+</body>
+</html>

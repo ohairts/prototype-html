@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slide 2 - MCQ</title>
+
+  <link rel="stylesheet" href="css/common.css">
+  <link rel="stylesheet" href="css/fly-in-options.css">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@900&display=swap" rel="stylesheet">
+
+  <style>
+    .mcq-wrap{
+      width: 100%;
+      height: 100%;
+      padding: 26px;
+      position: relative;
+      font-family: "Roboto Slab", serif;
+      color: #fff;
+    }
+
+    .frame{
+      width: min(980px, 96vw);
+      margin: 0 auto;
+      background: #0a0a0a;
+      border: 2px solid rgba(255,255,255,.35);
+      padding: 26px 22px;
+      position: relative;
+      z-index: 2;
+    }
+
+    .prompt{
+      width: 100%;
+      margin: 0 auto 18px;
+      background: #121a8a;
+      border: 2px solid rgba(255,255,255,.35);
+      border-radius: 999px;
+      padding: 24px 22px;
+      text-align: center;
+      font-weight: 900;
+      letter-spacing: .4px;
+    }
+
+    .answers{
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+
+    .answer{
+      background: #121a8a;
+      border: 2px solid rgba(255,255,255,.35);
+      border-radius: 999px;
+      padding: 18px 18px;
+      text-align: center;
+      cursor: pointer;
+      user-select: none;
+      font-weight: 900;
+    }
+
+    .answer:hover{ filter: brightness(1.05); }
+    .answer.locked{ cursor: default; opacity: .95; }
+
+    .answer.correct{
+      outline: 4px solid rgba(255,196,0,.85);
+      filter: brightness(1.08);
+    }
+
+    .answer.wrong{ opacity: .65; }
+
+    .toast{
+      position: absolute;
+      left: 50%;
+      bottom: 26px;
+      transform: translateX(-50%);
+      background: rgba(0,0,0,.75);
+      border: 1px solid rgba(255,255,255,.25);
+      padding: 10px 14px;
+      border-radius: 10px;
+      font-weight: 800;
+      z-index: 50;
+    }
+
+    .hidden{ display: none; }
+
+    /* Green nav arrow (shared) */
+    .next-green{
+      position:absolute;
+      right: 22px;
+      bottom: 22px;
+      width: 110px;
+      height: 86px;
+      cursor:pointer;
+      z-index: 95;
+      user-select:none;
+      filter: drop-shadow(0 10px 18px rgba(0,0,0,.35));
+      transition: transform .15s ease, filter .2s ease;
+    }
+    .next-green img{
+      width:100%;
+      height:100%;
+      object-fit: contain;
+      display:block;
+    }
+    .next-green:hover{
+      transform: translateY(-2px) scale(1.03);
+      filter: drop-shadow(0 0 12px rgba(46,215,20,.55))
+              drop-shadow(0 12px 18px rgba(0,0,0,.35));
+    }
+
+    /* ========= FLY-IN: horizontal options, different colour scheme, no overlap ========= */
+    .fly{ z-index: 200; }
+
+    .fly__backdrop{
+      position: fixed !important;
+      inset: 0 !important;
+      background: rgba(0,0,0,.35); /* subtle */
+    }
+
+    /* Panel sits BELOW the MCQ frame area and above nav arrow */
+    .fly__panel{
+      position: fixed !important;
+      left: 50% !important;
+      top: auto !important;
+      bottom: 130px !important;
+      transform: translateX(-50%) !important;
+
+      width: min(980px, 92vw) !important;
+      max-height: min(34vh, 260px) !important;
+      overflow: hidden !important;
+
+      /* different scheme from MCQ */
+      background: rgba(9, 65, 58, .96) !important;      /* teal */
+      border: 2px solid rgba(255,255,255,.22) !important;
+      box-shadow: 0 18px 35px rgba(0,0,0,.45) !important;
+      border-radius: 18px !important;
+    }
+
+    .fly__header{
+      padding: 14px 16px !important;
+      border-bottom: 1px solid rgba(255,255,255,.18) !important;
+      background: rgba(0,0,0,.10) !important;
+    }
+
+    .fly__title{
+      margin: 0 !important;
+      color: #fff !important;
+      font-weight: 900 !important;
+      letter-spacing: .3px !important;
+      font-size: 18px !important;
+    }
+
+    .fly__subtitle{
+      margin: 6px 0 0 !important;
+      color: rgba(255,255,255,.92) !important;
+      font-weight: 800 !important;
+      font-size: 13px !important;
+      line-height: 1.2 !important;
+    }
+
+    .fly__close{
+      background: rgba(255,255,255,.14) !important;
+      color: #fff !important;
+      border: 1px solid rgba(255,255,255,.25) !important;
+      border-radius: 12px !important;
+      padding: 10px 12px !important;
+      font-weight: 900 !important;
+      cursor: pointer !important;
+    }
+    .fly__close:hover{ filter: brightness(1.06); }
+
+    /* Horizontal row of options */
+    .fly__grid{
+      display: grid !important;
+      grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+      gap: 12px !important;
+      padding: 14px 16px 16px !important;
+      align-items: stretch !important;
+    }
+
+    /* Different option styling (not like MCQs) */
+    .fly__opt{
+      background: rgba(255,255,255,.92) !important;
+      color: #0a2f2a !important;
+      border: 2px solid rgba(255,255,255,.25) !important;
+      border-radius: 14px !important;
+      padding: 14px 12px !important;
+      font-weight: 900 !important;
+      cursor: pointer !important;
+      text-align: center !important;
+      box-shadow: 0 10px 16px rgba(0,0,0,.25) !important;
+      transition: transform .12s ease, filter .12s ease, box-shadow .12s ease !important;
+    }
+
+    .fly__opt:hover{
+      transform: translateY(-2px) !important;
+      filter: brightness(1.03) !important;
+      box-shadow: 0 14px 20px rgba(0,0,0,.30) !important;
+    }
+
+    .fly__opt:active{
+      transform: translateY(1px) scale(.99) !important;
+      filter: brightness(.98) !important;
+    }
+
+    .fly__opt.is-picked{
+      outline: 4px solid rgba(255,196,0,.85) !important;
+      filter: brightness(1.02) !important;
+    }
+
+    /* Ensure it doesn't get too tall on small screens */
+    @media (max-width: 900px){
+      .fly__panel{
+        bottom: 140px !important;
+        max-height: 40vh !important;
+      }
+      .fly__grid{
+        grid-template-columns: 1fr !important; /* stack if needed */
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="mcq-wrap">
+    <div class="frame" id="mcqFrame">
+      <div class="prompt">What do you think Patrick has?</div>
+
+      <div class="answers" id="answers">
+        <div class="answer" data-correct="false">a. A urine infection</div>
+        <div class="answer" data-correct="false">b. Hypoglycaemia</div>
+        <div class="answer" data-correct="true">c. Cerebrovascular accident</div>
+        <div class="answer" data-correct="false">d. Seizure</div>
+      </div>
+    </div>
+
+    <div id="toast" class="toast hidden"></div>
+  </div>
+
+  <audio id="pingSound" preload="auto">
+    <source src="audio/audioPing.mp3" type="audio/mp3">
+  </audio>
+
+  <div id="flyOptions" class="fly" aria-hidden="true">
+    <div class="fly__backdrop" data-fly-close="true"></div>
+
+    <div class="fly__panel" role="dialog" aria-modal="true" aria-label="Call options">
+      <div class="fly__header">
+        <div>
+          <h2 class="fly__title" id="flyTitle">Choose your approach</h2>
+          <p class="fly__subtitle" id="flySubtitle">
+            Pick one. This may affect overall points and social score.
+          </p>
+        </div>
+        <button class="fly__close" type="button" data-fly-close="true">Close</button>
+      </div>
+
+      <div class="fly__grid" id="flyGrid">
+        <button class="fly__opt" type="button" data-social="0">Call his pharmacist</button>
+        <button class="fly__opt" type="button" data-social="2">Call intern on call</button>
+        <button class="fly__opt" type="button" data-social="3">Call the medical registrar</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="navGreen" class="next-green hidden" title="Continue">
+    <img src="images/nextSlideGreenShape.png" alt="Next">
+  </div>
+
+  <script type="module">
+    const DEBUG = false;
+    const pingSound = document.getElementById("pingSound");
+
+    // --- state.js integration (safe) ---
+    let addScore = (n)=>{};
+    let addSocial = (n)=>{};
+    try{
+      const mod = await import("./js/state.js");
+      mod.ensureTimerStarted?.();
+      if (typeof mod.addScore === "function") addScore = mod.addScore;
+      if (typeof mod.addSocial === "function") addSocial = mod.addSocial;
+    }catch(e){
+      console.warn("state.js not loaded:", e);
+    }
+
+    // --- Nav arrow routing ---
+    const navGreen = document.getElementById("navGreen");
+    let navTarget = null;
+
+    function showNav(to){
+      navTarget = to;
+      navGreen.classList.remove("hidden");
+      if (DEBUG) console.log("[Nav] target:", navTarget);
+    }
+
+    navGreen.addEventListener("click", () => {
+      if (!navTarget) return;
+      window.location.href = navTarget;
+    });
+
+    // --- Toast ---
+    const toast = document.getElementById("toast");
+    function showToast(msg){
+      toast.textContent = msg;
+      toast.classList.remove("hidden");
+      setTimeout(() => toast.classList.add("hidden"), 1200);
+    }
+
+    // --- MCQ wiring ---
+    const answersEl = document.getElementById("answers");
+    const CORRECT_POINTS = 3;
+
+    let mcqLocked = false;
+    let mcqPointAwarded = false;
+
+    answersEl.addEventListener("click", (e) => {
+      const btn = e.target.closest(".answer");
+      if (!btn || mcqLocked) return;
+
+      const isCorrect = btn.dataset.correct === "true";
+      mcqLocked = true;
+
+      [...answersEl.querySelectorAll(".answer")].forEach(a => a.classList.add("locked"));
+      btn.classList.add(isCorrect ? "correct" : "wrong");
+      [...answersEl.querySelectorAll(".answer")].forEach(a => {
+        if (a !== btn) a.classList.add("wrong");
+      });
+
+      if (isCorrect) {
+        if (!mcqPointAwarded) {
+          addScore(CORRECT_POINTS);
+          mcqPointAwarded = true;
+        }
+        pingSound.currentTime = -1;
+        pingSound.play().catch(() => {});
+        showToast(`+${CORRECT_POINTS}`);
+
+        // correct -> rushtoresus
+        showNav("PTworkbench2.html");
+      } else {
+        showToast("Not quite");
+        // wrong -> workbench2
+        showNav("PTworkbench2.html");
+      }
+    });
+
+    // --- Fly-in wiring ---
+    const fly = document.getElementById("flyOptions");
+    const flyGrid = document.getElementById("flyGrid");
+
+    function openFly(){
+      fly.classList.add("is-open");
+      fly.setAttribute("aria-hidden","false");
+    }
+    function closeFly(){
+      fly.classList.remove("is-open");
+      fly.setAttribute("aria-hidden","true");
+    }
+
+    fly.addEventListener("click",(e)=>{
+      if (e.target?.dataset?.flyClose === "true") closeFly();
+    });
+
+    document.addEventListener("keydown",(e)=>{
+      if (e.key === "Escape") closeFly();
+    });
+
+    flyGrid.addEventListener("click",(e)=>{
+      const opt = e.target.closest(".fly__opt");
+      if(!opt) return;
+
+      [...flyGrid.querySelectorAll(".fly__opt")].forEach(b=>b.classList.remove("is-picked"));
+      opt.classList.add("is-picked");
+
+      const social  = Number(opt.dataset.social  || 0);
+
+      if (social) addSocial(social);
+
+      // Any fly-in option -> workbench2
+      showNav("PTworkbench1.html");
+
+      if (DEBUG) console.log("[Fly-in] social +", social);
+
+      setTimeout(closeFly, 220);
+    });
+
+    setTimeout(openFly, 4000);
+  </script>
+</body>
+</html>

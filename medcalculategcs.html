@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>medcalculategcs</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@600;800&display=swap" rel="stylesheet">
+
+<style>
+  :root{
+    --bg:#07384f;
+    --yellow:#f2c319;
+    --yellowDark:#c99f00;
+    --panelShadow: 0 14px 30px rgba(0,0,0,.35);
+
+    --tile:#bdbdbd;
+    --tileBorder:#7f7f7f;
+
+    /* Orange “pending” selection */
+    --pending:#ffb347;
+    --pendingBorder:#c26a00;
+
+    /* Green “locked correct” state */
+    --selected:#79e08a;
+    --selectedBorder:#1f7a2f;
+
+    --ringGlow: 0 0 0 6px rgba(45,160,60,.55), 0 0 22px rgba(45,160,60,.55);
+  }
+
+  *{ box-sizing:border-box; }
+  html,body{ height:100%; margin:0; }
+  body{
+    font-family: "Roboto Slab", serif;
+    background: var(--bg);
+    overflow:hidden;
+  }
+
+  .bgPhoto{
+    position:fixed;
+    inset:0;
+    background: url("images/oldmaninhospitalbed.png") center/cover no-repeat;
+    opacity:.38;
+    filter: saturate(1.05) contrast(1.05);
+    pointer-events:none;
+  }
+
+  .stage{
+    position:relative;
+    height:100vh;
+    width:100vw;
+    padding: 22px 22px 18px;
+  }
+
+  .topRow{
+    display:grid;
+    grid-template-columns: 220px 1fr 220px;
+    align-items:center;
+    gap: 18px;
+  }
+
+  .circleBtn{
+    width: 185px;
+    height: 185px;
+    border-radius: 50%;
+    background: #5aa0e6;
+    color: #fff;
+    font-weight: 800;
+    font-size: 26px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+    padding: 18px;
+    cursor:pointer;
+    user-select:none;
+
+    border: 4px solid rgba(255,255,255,.35);
+    box-shadow: var(--ringGlow), var(--panelShadow);
+    transition: transform .08s ease, filter .12s ease;
+    position:relative;
+  }
+  .circleBtn:hover{ filter: brightness(1.05); transform: translateY(-2px); }
+  .circleBtn:active{ transform: translateY(1px) scale(.99); }
+
+  .qMark{
+    position:absolute;
+    right: 22px;
+    top: 18px;
+    width: 46px;
+    height: 46px;
+    border-radius: 50%;
+    background: rgba(0,0,0,.25);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size: 28px;
+    border: 2px solid rgba(255,255,255,.4);
+  }
+
+  .headerBar{
+    background: var(--yellow);
+    border: 2px solid rgba(0,0,0,.35);
+    box-shadow: var(--panelShadow);
+    padding: 18px 18px;
+    font-weight:800;
+    font-size: clamp(20px, 2.4vw, 34px);
+    text-align:center;
+  }
+
+  /* Live total calculator (bottom-left) */
+  .gcsCalc{
+    position: fixed;
+    left: 300px;
+    bottom: 18px;
+    z-index: 60;
+    background: rgba(54, 240, 63, 0.838);
+    color: #000000;
+    border: 2px solid rgba(255,255,255,.25);
+    border-color: #fff8;
+    border-radius: 2px;
+    border-width: 10px;
+    padding: 12px 14px;
+    text-align: center;
+    box-shadow: 0 14px 30px rgba(0,0,0,.35);
+    min-width: 220px;
+    user-select: none;
+  }
+  .gcsCalc .label{
+    font-weight: 800;
+    font-size: 14px;
+    opacity: .9;
+    margin-bottom: 6px;
+  }
+  .gcsCalc .total{
+    font-weight: 900;
+    font-size: 30px;
+    line-height: 1;
+  }
+  .gcsCalc .breakdown{
+    margin-top: 6px;
+    font-weight: 800;
+    font-size: 14px;
+    opacity: .92;
+  }
+
+  .grid{
+    margin-top: 18px;
+    display:grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 18px;
+    align-items:start;
+  }
+
+  .col{
+    display:flex;
+    flex-direction:column;
+    gap: 12px;
+    min-width: 0;
+  }
+
+  .colHeader{
+    background: var(--yellow);
+    border: 2px solid rgba(0,0,0,.35);
+    box-shadow: var(--panelShadow);
+    padding: 20px 14px;
+    font-weight:800;
+    font-size: clamp(22px, 2.5vw, 40px);
+    text-align:center;
+  }
+
+  .option{
+    background: var(--tile);
+    border: 2px solid var(--tileBorder);
+    border-radius: 10px;
+    box-shadow:
+      inset 2px 2px 0 rgba(255,255,255,.55),
+      inset -2px -2px 0 rgba(0,0,0,.18),
+      0 10px 22px rgba(0,0,0,.30);
+    padding: 14px 14px;
+    font-weight:800;
+    font-size: clamp(18px, 1.6vw, 30px);
+    text-align:center;
+    cursor:pointer;
+    user-select:none;
+    transition: transform .08s ease, filter .12s ease, background .15s ease, border-color .15s ease;
+  }
+  .option:hover{ filter: brightness(1.03); transform: translateY(-2px); }
+  .option:active{
+    transform: translateY(1px);
+    box-shadow:
+      inset 2px 2px 0 rgba(0,0,0,.22),
+      inset -2px -2px 0 rgba(255,255,255,.35),
+      0 6px 14px rgba(0,0,0,.25);
+  }
+
+  /* ORANGE when selected (pending) */
+  .option.selected{
+    background: var(--pending);
+    border-color: var(--pendingBorder);
+    box-shadow:
+      inset 2px 2px 0 rgba(255,255,255,.45),
+      inset -2px -2px 0 rgba(0,0,0,.18),
+      0 10px 22px rgba(0,0,0,.30);
+  }
+
+  /* GREEN only when “perfect trio” achieved */
+  .option.correctLock{
+    background: var(--selected) !important;
+    border-color: var(--selectedBorder) !important;
+    box-shadow:
+      inset 2px 2px 0 rgba(255,255,255,.45),
+      inset -2px -2px 0 rgba(0,0,0,.18),
+      0 10px 22px rgba(0,0,0,.30),
+      0 0 0 5px rgba(45,160,60,.55) !important;
+  }
+
+  /* Lock after perfect achieved */
+  .option.locked{
+    pointer-events: none;
+    opacity: 1;
+    filter: none;
+  }
+
+  /* Return arrow (hidden until all three columns have a pick) */
+  .nextArrow{
+    position:fixed;
+    left: 34px;
+    bottom: 26px;
+    width: 110px;
+    height: auto;
+    display:none;
+    cursor:pointer;
+    user-select:none;
+    filter: drop-shadow(0 12px 18px rgba(0,0,0,.40));
+    transition: transform .08s ease, filter .12s ease;
+    z-index: 50;
+  }
+  .nextArrow.show{ display:block; }
+  .nextArrow:hover{ transform: translateY(-2px); filter: drop-shadow(0 16px 22px rgba(0,0,0,.45)); }
+  .nextArrow:active{ transform: translateY(1px) scale(.99); }
+
+  /* Overlay */
+  .overlay{
+    position:fixed;
+    inset:0;
+    background: rgba(0,0,0,.45);
+    display:none;
+    align-items:center;
+    justify-content:center;
+    z-index: 1000;
+    padding: 22px;
+  }
+
+  .overlayCard{
+    width: min(1200px, 95vw);
+    height: min(680px, 86vh);
+    background: rgba(0,0,0,.12);
+    border-radius: 16px;
+    display:grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    padding: 16px;
+  }
+
+  .mediaPane{
+    background: rgba(255,255,255,.08);
+    border-radius: 14px;
+    border: 3px solid rgba(255,255,255,.25);
+    box-shadow: 0 18px 38px rgba(0,0,0,.55);
+    overflow:hidden;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+
+  .mediaPane img,
+  .mediaPane video{
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display:block;
+    background: rgba(0,0,0,.12);
+  }
+
+  .videoPane{
+    position: relative;
+    z-index: 1;
+  }
+
+  .overlayHeading{
+    position: absolute;
+    top: 16px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 10;
+
+    background: rgba(242,195,25,.96);
+    border: 2px solid rgba(0,0,0,.35);
+    box-shadow: 0 14px 30px rgba(0,0,0,.35);
+    padding: 14px 22px;
+
+    font-weight: 800;
+    font-size: clamp(18px, 2vw, 30px);
+    text-align: center;
+    width: calc(100% - 32px);
+
+    pointer-events: none;
+    display: none;
+  }
+
+  .overlayHint{
+    position:fixed;
+    bottom: 22px;
+    left: 50%;
+    transform: translateX(-50%);
+    color: rgba(255,255,255,.9);
+    font-weight:800;
+    font-size: 16px;
+    text-shadow: 0 2px 8px rgba(0,0,0,.55);
+    user-select:none;
+    z-index: 1001;
+    pointer-events:none;
+  }
+
+  @media (max-width: 1100px){
+    .topRow{ grid-template-columns: 200px 1fr 200px; }
+    .circleBtn{ width:160px; height:160px; font-size:22px; }
+  }
+
+  @media (max-width: 900px){
+    body{ overflow:auto; }
+    .grid{ grid-template-columns: 1fr; }
+    .overlayCard{
+      grid-template-columns: 1fr;
+      height: auto;
+      max-height: none;
+    }
+    .mediaPane{ height: min(46vh, 420px); }
+    .nextArrow{ position:static; margin: 18px 0 0 18px; }
+  }
+</style>
+</head>
+
+<body>
+<div class="bgPhoto"></div>
+
+<div class="stage">
+  <div class="topRow">
+    <div id="btnReview" class="circleBtn">Review<br>patient<br>GCS again</div>
+
+    <div class="headerBar">
+      Please calculate the GCS:<br>
+      (Choose one from each column then move to next slide)
+    </div>
+
+    <div id="btnCall" class="circleBtn">
+      Call<br>someone
+      <div class="qMark">?</div>
+    </div>
+  </div>
+
+  <div class="grid" style="margin-top:18px;">
+    <div class="col" data-group="eyes">
+      <div class="colHeader">Eyes</div>
+      <div class="option" data-value="4">Eyes open spontaneously (+4)</div>
+      <div class="option" data-value="3">Eyes open to sound (+3)</div>
+      <div class="option" data-value="2">Eyes open to pain (+2)</div>
+      <div class="option" data-value="1">No response (+1)</div>
+    </div>
+
+    <div class="col" data-group="voice">
+      <div class="colHeader">Voice</div>
+      <div class="option" data-value="5">Oriented (+5)</div>
+      <div class="option" data-value="4">Confused (+4)</div>
+      <div class="option" data-value="3">Inappropriate words (+3)</div>
+      <div class="option" data-value="2">Incomprehensible sounds (+2)</div>
+      <div class="option" data-value="1">No verbal response (+1)</div>
+    </div>
+
+    <div class="col" data-group="motor">
+      <div class="colHeader">Motor</div>
+      <div class="option" data-value="6">Obeys commands (+6)</div>
+      <div class="option" data-value="5">Localizes pain (+5)</div>
+      <div class="option" data-value="4">Withdrawal from pain (+4)</div>
+      <div class="option" data-value="3">Flexion to pain (+3)</div>
+      <div class="option" data-value="2">Extension to pain (+2)</div>
+      <div class="option" data-value="1">No motor response (+1)</div>
+    </div>
+  </div>
+</div>
+
+<!-- Return button (only appears when all 3 chosen) -->
+<img id="btnNext"
+     class="nextArrow"
+     src="images/returnLastSlideOrangeShape.png"
+     alt="Return to last slide">
+
+<!-- Overlay: LEFT image, RIGHT autoplay video -->
+<div id="overlay" class="overlay" aria-hidden="true">
+  <div class="overlayCard" role="dialog" aria-label="GCS review">
+    <div class="mediaPane">
+      <img id="overlayImgLeft" src="" alt="GCS review image">
+    </div>
+
+    <div class="mediaPane videoPane">
+      <div id="overlayHeading" class="overlayHeading">
+        Can you move your arm for me?
+      </div>
+      <video id="overlayVideoRight" playsinline muted autoplay loop></video>
+    </div>
+  </div>
+  <div class="overlayHint">Click anywhere to close</div>
+</div>
+
+<!-- Live calculator (ALWAYS visible) -->
+<div id="gcsCalc" class="gcsCalc" aria-label="Live GCS calculator">
+  <div class="label">GCS total</div>
+  <div id="gcsTotal" class="total">0</div>
+  <div id="gcsBreakdown" class="breakdown">E:0 • V:0 • M:0</div>
+</div>
+
+<!-- Award ping (when all 3 correct) -->
+<audio id="awardPing" preload="auto">
+  <source src="audio/audioping.mp3" type="audio/mpeg">
+</audio>
+
+<script type="module">
+  // ===== LINKS =====
+  const HELP_HREF = "medworkbench6.html";
+  const NEXT_HREF = "medatoeassessment.html"; // return to last page
+
+  // ===== Correct picks for scoring =====
+  const CORRECT = { eyes: "4", voice: "4", motor: "6" };
+
+  // ===== state.js scoring integration =====
+  const scoreKey = "overallScore";
+  function addScoreLocal(n){
+    const current = parseFloat(localStorage.getItem(scoreKey) || "0") || 0;
+    localStorage.setItem(scoreKey, String(current + n));
+    window.dispatchEvent(new Event("storage"));
+  }
+
+  let addScoreFn = addScoreLocal;
+  try{
+    const mod = await import("./js/state.js");
+    mod.ensureTimerStarted?.();
+    if (typeof mod.addScore === "function") addScoreFn = mod.addScore;
+  }catch(e){
+    console.warn("state.js not loaded:", e);
+  }
+
+  // ===== Elements =====
+  const btnReview = document.getElementById("btnReview");
+  const btnCall   = document.getElementById("btnCall");
+  const btnNext   = document.getElementById("btnNext");
+
+  const overlay           = document.getElementById("overlay");
+  const overlayImgLeft    = document.getElementById("overlayImgLeft");
+  const overlayVideoRight = document.getElementById("overlayVideoRight");
+  const overlayHeading    = document.getElementById("overlayHeading");
+
+  const awardPing = document.getElementById("awardPing");
+
+  // Live calculator
+  const gcsTotalEl = document.getElementById("gcsTotal");
+  const gcsBreakdownEl = document.getElementById("gcsBreakdown");
+
+  // ===== MEDIA SOURCES =====
+  const POP_LEFT_IMG = "images/gcscheck1.png";
+  const POP_RIGHT_VIDEO = "videos/leftarmweakness.mp4";
+
+  // ===== Reset behaviour (fresh every page load) =====
+  localStorage.removeItem("gcs_eyes");
+  localStorage.removeItem("gcs_voice");
+  localStorage.removeItem("gcs_motor");
+
+  // Prevent double-awarding during a single visit
+  const awarded = { eyes:false, voice:false, motor:false };
+  let perfectLocked = false;
+
+  function getSelections(){
+    return {
+      eyes:  localStorage.getItem("gcs_eyes"),
+      voice: localStorage.getItem("gcs_voice"),
+      motor: localStorage.getItem("gcs_motor")
+    };
+  }
+
+  function allChosen(sel){
+    return !!(sel.eyes && sel.voice && sel.motor);
+  }
+
+  function allCorrect(sel){
+    return sel.eyes === CORRECT.eyes &&
+           sel.voice === CORRECT.voice &&
+           sel.motor === CORRECT.motor;
+  }
+
+  function updateCalculator(){
+    const sel = getSelections();
+    const e = Number(sel.eyes || 0);
+    const v = Number(sel.voice || 0);
+    const m = Number(sel.motor || 0);
+    const total = e + v + m;
+
+    gcsTotalEl.textContent = String(total);
+    gcsBreakdownEl.textContent = `E:${e} • V:${v} • M:${m}`;
+  }
+
+  function showReturnButton(){
+    const sel = getSelections();
+    if (allChosen(sel)) btnNext.classList.add("show");
+    else btnNext.classList.remove("show");
+  }
+
+  function awardIfCorrect(group, value){
+    if (awarded[group]) return;
+    if (value === CORRECT[group]){
+      awarded[group] = true;
+      addScoreFn(1);
+    }
+  }
+
+  function lockSelectedInGreen(){
+    document.querySelectorAll(".col").forEach(col => {
+      col.querySelectorAll(".option").forEach(opt => {
+        if (opt.classList.contains("selected")){
+          opt.classList.add("correctLock");
+          opt.classList.add("locked");
+        }
+      });
+    });
+  }
+
+  function maybePerfectLock(){
+    const sel = getSelections();
+    if (perfectLocked) return;
+
+    if (allChosen(sel) && allCorrect(sel)){
+      perfectLocked = true;
+
+      // Ping
+      try{
+        awardPing.currentTime = 0;
+        awardPing.play().catch(()=>{});
+      }catch(e){}
+
+      // Turn all three selected to GREEN at once + lock
+      lockSelectedInGreen();
+    }
+  }
+
+  // ===== Single-select per column =====
+  document.querySelectorAll(".col").forEach(col => {
+    const group = col.dataset.group;
+    const options = col.querySelectorAll(".option");
+
+    options.forEach(opt => {
+      opt.addEventListener("click", () => {
+        if (perfectLocked) return;
+
+        // clear existing selection (back to grey)
+        options.forEach(o => {
+          o.classList.remove("selected","correctLock","locked");
+        });
+
+        // set new selection (ORANGE)
+        opt.classList.add("selected");
+
+        const val = opt.dataset.value;
+        localStorage.setItem("gcs_" + group, val);
+
+        // scoring: +1 if this pick is the correct one for that column (once per column)
+        awardIfCorrect(group, val);
+
+        updateCalculator();
+        showReturnButton();
+        maybePerfectLock();
+      });
+    });
+  });
+
+  // Initial UI state
+  updateCalculator();
+  showReturnButton();
+
+  // ===== Overlay (review) =====
+  function openOverlay(){
+    overlay.style.display = "flex";
+    overlay.setAttribute("aria-hidden", "false");
+
+    overlayHeading.style.display = "block";
+    overlayImgLeft.src = POP_LEFT_IMG;
+
+    overlayVideoRight.src = POP_RIGHT_VIDEO;
+    overlayVideoRight.currentTime = 0;
+    overlayVideoRight.play().catch(()=>{});
+  }
+
+  function closeOverlay(){
+    overlay.style.display = "none";
+    overlay.setAttribute("aria-hidden", "true");
+
+    overlayHeading.style.display = "none";
+    overlayImgLeft.src = "";
+
+    overlayVideoRight.pause();
+    overlayVideoRight.removeAttribute("src");
+    overlayVideoRight.load();
+  }
+
+  btnReview.addEventListener("click", openOverlay);
+  overlay.addEventListener("click", closeOverlay);
+  window.addEventListener("keydown", (e) => {
+    if(e.key === "Escape" && overlay.style.display === "flex") closeOverlay();
+  });
+
+  // ===== Navigation =====
+// ===== Social scoring (safe import like addScore) =====
+let addSocialFn = (n) => {
+  // fallback if state.js missing
+  const k = "socialScore";
+  const cur = parseFloat(localStorage.getItem(k) || "0") || 0;
+  localStorage.setItem(k, String(cur + n));
+  window.dispatchEvent(new Event("storage"));
+};
+
+try{
+  const mod = await import("./js/state.js");
+  if (typeof mod.addSocial === "function") addSocialFn = mod.addSocial;
+}catch(e){
+  console.warn("state.js addSocial not loaded:", e);
+}
+
+// ===== Navigation + social scoring =====
+btnCall.addEventListener("click", () => {
+  addSocialFn(1);                 // ✅ +1 social for “Call someone”
+  setTimeout(() => { window.location.href = HELP_HREF; }, 60);
+});
+
+
+  btnNext.addEventListener("click", () => {
+    const sel = getSelections();
+    if (allChosen(sel)) window.location.href = NEXT_HREF;
+  });
+</script>
+
+</body>
+</html>

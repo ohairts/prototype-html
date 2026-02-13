@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Kardex Info + Hotspots</title>
+
+  <link rel="stylesheet" href="css/common.css">
+  <link rel="stylesheet" href="css/tile.css">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@900&display=swap" rel="stylesheet">
+
+  <style>
+    body{
+      margin:0;
+      background:#08394a;
+      font-family:"Roboto Slab", serif;
+      overflow:hidden;
+      color:#fff;
+    }
+    .stage{
+      position:relative;
+      width:100vw;
+      height:100vh;
+      overflow:hidden;
+      border: 3px solid rgba(0,0,0,.35);
+      box-sizing:border-box;
+    }
+
+    /* ===== main image (kardex) ===== */
+    .kardex{
+      position:absolute;
+      left:50%;
+      top:50%;
+      transform: translate(-50%,-50%);
+      width: min(520px, 42vw);
+      height: min(720px, 88vh);
+      background: #000 url("images/kardexWithMistakes.png") center / contain no-repeat;
+      border: 3px solid rgba(0,0,0,.55);
+      box-shadow: 0 18px 45px rgba(0,0,0,.45);
+      z-index: 2;
+      user-select:none;
+    }
+
+    /* ===== interactive layer above kardex ===== */
+    .kardex-hitlayer{
+      position:absolute;
+      left:50%;
+      top:50%;
+      transform: translate(-50%,-50%);
+      width: min(520px, 42vw);
+      height: min(720px, 88vh);
+      z-index: 4; /* above kardex, below scraps + arrow */
+      pointer-events: auto;
+    }
+
+    .k-hit{
+      position:absolute;
+      border-radius: 8px;
+      background: rgba(0,0,0,0);
+      border: 3px solid rgba(0,0,0,0);
+      transition: background .15s ease, border-color .15s ease, filter .15s ease;
+    }
+    .k-hit.correct{
+      background: rgba(46,215,20,.22);
+      border-color: rgba(46,215,20,.85);
+      filter: drop-shadow(0 0 10px rgba(46,215,20,.35));
+      cursor: default;
+    }
+    .k-hit.wrong{
+      background: rgba(255,140,0,.18);
+      border-color: rgba(255,140,0,.85);
+      filter: drop-shadow(0 0 10px rgba(255,140,0,.28));
+      pointer-events:none;
+    }
+
+    /* disable kardex interaction when any popup is open */
+    body.popups-open .kardex-hitlayer{
+      pointer-events:none;
+    }
+
+    /* ===== left prompt header + tiles ===== */
+    .left-header{
+      position:absolute;
+      left: 22px;
+      top: 22px;
+      width: min(280px, 26vw);
+      background:#ffc400;
+      color:#111;
+      border: 4px solid rgba(0,0,0,.35);
+      border-radius: 12px;
+      padding: 14px 14px;
+      text-align:center;
+      font-weight: 900;
+      box-shadow: 0 14px 22px rgba(0,0,0,.25);
+      z-index: 6;
+      line-height: 1.1;
+    }
+
+/* ===== RIGHT HEADER (top-right) ===== */
+.right-header{
+  position:absolute;
+  top: 42px;
+  right: 22px;
+  width: min(320px, 26vw);
+  padding: 10px 10px;
+  background:#ffc400;
+  color:#111;
+  border: 4px solid rgba(0,0,0,.35);
+  border-radius: 12px;
+  text-align:center;
+  font-weight: 900;
+  line-height: 1.1;
+  box-shadow: 0 14px 22px rgba(0,0,0,.25);
+  z-index: 30;
+}
+
+/* ===== RIGHT-SIDE "DISCUSS" TILE ===== */
+/* now it's an <a>, so include text-decoration + color */
+.right-discuss{
+  position:absolute;
+  right: 22px;
+
+  /* move it slightly UP and reduce height to make space for nav arrow */
+  top: 56%;
+  transform: translateY(-50%);
+  width: 18vw;
+  min-width: 140px;
+
+  /* reduced height */
+  height: min(260px, 38vh);
+
+  border-radius: 28px;
+
+  background: #35e000;
+  box-shadow:
+    0 18px 35px rgba(0,0,0,.35),
+    0 0 0 3px rgba(0,0,0,.18) inset;
+
+  display:flex;
+  align-items:center;
+  justify-content:center;
+
+  cursor:pointer;
+  user-select:none;
+  z-index: 25;
+
+  text-decoration:none;
+  color: inherit;
+
+  transition: transform .12s ease, filter .12s ease;
+}
+.right-discuss:hover{
+  transform: translateY(-50%) scale(1.02);
+  filter: brightness(1.03);
+}
+.right-discuss:active{
+  transform: translateY(-50%) scale(.99);
+}
+
+/* inner white panel */
+.right-discuss-inner{
+  width: calc(100% - 26px);
+  height: calc(100% - 26px);
+  background: #f3f3f3;
+  color:#111;
+  border-radius: 22px;
+  border: 2px solid rgba(0,0,0,.35);
+  box-shadow: inset 0 10px 18px rgba(0,0,0,.25);
+
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+
+  font-weight: 900;
+  line-height: 1.05;
+  font-size: clamp(18px, 1.9vw, 28px);
+  padding: 10px;
+}
+
+/* keyboard focus */
+.right-discuss:focus{
+  outline: 3px solid rgba(255,255,255,.85);
+  outline-offset: 6px;
+}
+
+/* ===== RESPONSIVE TWEAKS ===== */
+@media (max-width: 900px){
+  .right-header{ right: 14px; top: 14px; width: min(320px, 40vw); }
+  .right-discuss{ right: 14px; width: min(240px, 34vw); }
+}
+
+    .tiles{
+      position:absolute;
+      left: 22px;
+      top: 180px;
+      bottom: 22px;
+      width: min(300px, 28vw);
+      display:flex;
+      flex-direction: column;
+      gap: 18px;
+      z-index: 6;
+    }
+
+    .info-tile{
+      background:#0f78c7;
+      color:#fff;
+      border: 3px solid rgba(46,215,20,.55);
+      border-radius: 10px;
+      padding: 20px 16px;
+      text-align:center;
+      font-weight: 900;
+      cursor:pointer;
+      user-select:none;
+      box-shadow: 0 12px 18px rgba(0,0,0,.25);
+      transition: transform .12s ease, filter .12s ease;
+    }
+    .info-tile:hover{ transform: translateY(-2px); filter: brightness(1.05); }
+    .info-tile:active{ transform: translateY(2px) scale(.99); filter: brightness(.98); }
+
+    /* ===== scrap popups ===== */
+    .scraps{
+      position:absolute;
+      inset:0;
+      z-index: 10;
+      pointer-events:none;
+    }
+
+    .scrap{
+      position:absolute;
+      width: min(420px, 40vw);
+      background: #f5f1df;
+      color:#111;
+      border: 2px solid rgba(0,0,0,.25);
+      border-radius: 10px;
+      padding: 16px 18px;
+      box-shadow: 0 18px 35px rgba(0,0,0,.35);
+      pointer-events:auto;
+      cursor:pointer;
+      user-select:none;
+      background-image:
+        linear-gradient(0deg, rgba(0,0,0,.03), rgba(0,0,0,0)),
+        repeating-linear-gradient(0deg, rgba(0,0,0,.025), rgba(0,0,0,.025) 1px, transparent 1px, transparent 24px);
+    }
+
+    .scrap .hand{
+      font-family: "Comic Sans MS", "Bradley Hand", "Segoe Script", "Snell Roundhand", cursive;
+      font-weight: 600;
+      font-size: clamp(16px, 1.55vw, 20px);
+      line-height: 1.25;
+      white-space: pre-wrap;
+    }
+
+    .scrap[data-rot="a"]{ transform: rotate(-2deg); }
+    .scrap[data-rot="b"]{ transform: rotate(1.5deg); }
+    .scrap[data-rot="c"]{ transform: rotate(-1deg); }
+    .scrap[data-rot="d"]{ transform: rotate(2deg); }
+
+    .pos-details{ left: 44%; top: 14%; width: min(420px, 36vw); }
+    .pos-bg     { left: 44%; top: 26%; width: min(430px, 36vw); }
+    .pos-meas   { left: 58%; top: 18%; width: min(320px, 30vw); }
+    .pos-bloods { left: 58%; top: 10%; width: min(520px, 40vw); }
+
+    /* ===== NAV ARROW (hidden until correct click) ===== */
+    .next-green{
+      position:absolute;
+      right: 22px;
+      top: 78%;
+      transform: translateY(-50%);
+      width: 110px;
+      height: 86px;
+      cursor:pointer;
+      z-index: 999; /* above everything */
+      user-select:none;
+      filter: drop-shadow(0 10px 18px rgba(0,0,0,.35));
+      transition: transform .15s ease, filter .2s ease;
+    }
+    .next-green img{
+      width:100%;
+      height:100%;
+      object-fit: contain;
+      display:block;
+    }
+    .next-green:hover{
+      transform: translateY(-50%) scale(1.03);
+      filter: drop-shadow(0 0 12px rgba(46,215,20,.55))
+              drop-shadow(0 12px 18px rgba(0,0,0,.35));
+    }
+    .hidden{ display:none; }
+
+    /* ===== Bottom-right “There are no errors” tile ===== */
+    .no-errors{
+      position:absolute;
+      right: 22px;
+      bottom: 32px;
+      z-index: 20;
+      width: 22vw;
+      min-width: 220px;
+      max-width: 320px;
+      cursor:pointer;
+    }
+    /* Prevent tile.css hover transform from moving it
+    .no-errors:hover,
+    .no-errors:active,
+    .no-errors:focus{
+      transform: none;
+    } */
+
+    @media (max-width: 900px){
+      .kardex, .kardex-hitlayer{
+        width: min(520px, 60vw);
+        height: min(720px, 78vh);
+      }
+      .no-errors{ right: 14px; bottom: 14px; width: min(320px, 40vw); }
+      .next-green{ right: 14px; }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="stage">
+
+    <div class="left-header">
+      Click options<br>below to view<br><b>AND</b><br>to remove information
+    </div>
+
+    <div class="tiles" id="tiles">
+      <div class="info-tile" data-popup="details">Patient details</div>
+      <div class="info-tile" data-popup="background">Past medical history</div>
+      <div class="info-tile" data-popup="measurements">Patient<br>measurements</div>
+      <div class="info-tile" data-popup="bloods">Key blood results</div>
+    </div>
+
+    <!-- Main kardex -->
+    <div class="kardex" aria-hidden="true"></div>
+
+    <!-- Hotspot interaction layer -->
+    <div id="kardexHitLayer" class="kardex-hitlayer" aria-label="Kardex interactive layer"></div>
+
+    <!-- Popups -->
+    <div id="scraps" class="scraps"></div>
+
+    <!-- Nav arrow (appears after ANY correct click)
+    <div id="navGreen" class="next-green hidden" title="Continue to workbench">
+      <a href="workbench5.html">
+        <img src="images/nextSlideGreenShape.png" alt="Next">
+      </a>
+    </div> -->
+
+    <!-- Bottom-right tile: There are no errors -->
+    <div class="tile no-errors" id="noErrorsTile" role="button" tabindex="0">
+      There are no errors...<br> Click here.
+    </div>
+
+<!-- RIGHT-SIDED HEADER (top-right) -->
+<div class="right-header" aria-label="Instruction">
+  Please click on<br>
+  any errors you see<br>
+  on the prescription…
+  <br><br>(Hint: Consider his bloods as well)
+</div>
+
+<!-- RIGHT-SIDE DISCUSS TILE (click awards +3 then navigates) -->
+<a class="right-discuss" id="discussTile" data-social="1" href="workbench5.html"
+   aria-label="Discuss errors with the intern on call">
+  <div class="right-discuss-inner">
+    Discuss any errors with the intern on call<br>
+    (Click here)
+  </div>
+</a>
+
+  </div>
+
+<script type="module">
+  // Optional: keep timer continuity if you use it globally
+  try{
+    const mod = await import("./js/state.js");
+    mod.ensureTimerStarted?.();
+  }catch(e){}
+
+  // ---------- state.js scoring (safe) ----------
+  // DO NOT modify state.js — we just read its exports here.
+  let addScore = (n)=>{};
+  let addSocial = (n)=>{};
+  try{
+    const mod = await import("./js/state.js");
+    if (typeof mod.addScore === "function") addScore = mod.addScore;
+    if (typeof mod.addSocial === "function") addSocial = mod.addSocial;
+  }catch(e){
+    console.warn("state.js not loaded:", e);
+  }
+
+  // ----- Discuss tile: award social/overall once, then navigate via href -----
+  const discussTile = document.getElementById("discussTile");
+
+  // Persist so it doesn't re-award if they return to this page
+  const DISCUSS_SOCIAL_KEY  = "kardex_pX_discuss_intern_social_awarded";
+  const DISCUSS_OVERALL_KEY = "kardex_pX_discuss_intern_overall_awarded";
+
+  discussTile.addEventListener("click", () => {
+    // Social score from HTML attribute (you already have data-social="1")
+    const social = Number(discussTile.dataset.social || 0);
+    if (social && localStorage.getItem(DISCUSS_SOCIAL_KEY) !== "1"){
+      addSocial(social);
+      localStorage.setItem(DISCUSS_SOCIAL_KEY, "1");
+    }
+
+    // Optional overall score if you ever add data-overall="X"
+    const overall = Number(discussTile.dataset.overall || 0);
+    if (overall && localStorage.getItem(DISCUSS_OVERALL_KEY) !== "1"){
+      addScore(overall);
+      localStorage.setItem(DISCUSS_OVERALL_KEY, "1");
+    }
+
+    // allow normal navigation via href (no preventDefault)
+  });
+
+  const scraps = document.getElementById("scraps");
+  const tiles = document.getElementById("tiles");
+  const hitLayer = document.getElementById("kardexHitLayer");
+
+  // ----- bottom-right tile navigation -----
+  const noErrorsTile = document.getElementById("noErrorsTile");
+  const goNoErrors = () => window.location.href = "painfulknee.html";
+  noErrorsTile.addEventListener("click", goNoErrors);
+  noErrorsTile.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" || e.key === " ") goNoErrors();
+  });
+
+  // ---------- POPUPS (scraps) ----------
+  const POPUPS = {
+    details: {
+      cls: "pos-details",
+      rot: "a",
+      text:
+`Details:
+
+Patrick Brown
+DOB: 14/01/1953
+MRN: 478567
+17 Hospital Grove, Hospital Rd, Dublin
+Ph: 0872756242
+
+Next of kin:
+Mary Brown
+Ph: 01-8302479`
+    },
+    background: {
+      cls: "pos-bg",
+      rot: "b",
+      text:
+`Background:
+T2DM
+HTN
+High cholesterol
+Left knee replacement 2016
+
+Med Rec:
+Aspirin 75mg OD
+Metformin 1g OD
+Ramipril 5mg OD
+Ranolazine 375mg OD
+Paracetamol 1g QDS PRN`
+    },
+    measurements: {
+      cls: "pos-meas",
+      rot: "c",
+      text:
+`Measurements:
+
+Height: 178cm
+Weight: 95kg
+BMI: 30`
+    },
+    bloods: {
+      cls: "pos-bloods",
+      rot: "d",
+      img: "images/kardexreviewbloodresults.png"
+    }
+  };
+
+  function updatePopupLock(){
+    const any = scraps.querySelector(".scrap") !== null;
+    document.body.classList.toggle("popups-open", any);
+  }
+
+  function existing(id){
+    return scraps.querySelector(`[data-id="${id}"]`);
+  }
+
+  function makeScrap(id){
+    const cfg = POPUPS[id];
+    const el = document.createElement("div");
+    el.className = `scrap ${cfg.cls}`;
+    el.dataset.id = id;
+    el.dataset.rot = cfg.rot;
+    el.title = "Click to close";
+
+    if (cfg.img){
+      el.innerHTML = `<img src="${cfg.img}" alt="" style="width:100%;height:auto;display:block;object-fit:contain;">`;
+    }else{
+      el.innerHTML = `<div class="hand"></div>`;
+      el.querySelector(".hand").textContent = cfg.text;
+    }
+
+    el.addEventListener("click", () => {
+      el.remove();
+      updatePopupLock();
+    });
+
+    return el;
+  }
+
+  tiles.addEventListener("click", (e) => {
+    const tile = e.target.closest(".info-tile");
+    if (!tile) return;
+
+    const id = tile.dataset.popup;
+    const cur = existing(id);
+
+    if (cur){
+      cur.remove();
+    }else{
+      scraps.appendChild(makeScrap(id));
+    }
+    updatePopupLock();
+  });
+
+  // ---------- HOTSPOTS ----------
+  const HOTSPOTS = [
+    { id:"metformin", label:"Metformin", x: 10, y: 14.5, w: 20, h: 4, points: 1 },
+    { id:"ramipril",  label:"Ramipril",  x: 10, y: 46.5, w: 20, h: 4, points: 1 },
+    { id:"lipitor",   label:"Lipitor",   x: 10, y: 80,   w: 20, h: 4, points: 1 },
+    { id:"dose2g",    label:"2g",        x: 30, y: 14.5, w: 8,  h: 4, points: 1 },
+    { id:"dose75",    label:"7.5mg",     x: 30, y: 46.5, w: 8,  h: 4, points: 1 },
+    { id:"dose20",    label:"20mg",      x: 30, y: 80,   w: 8,  h: 4, points: 1 },
+  ];
+
+  function buildHotspots(){
+    HOTSPOTS.forEach(h => {
+      const el = document.createElement("div");
+      el.className = "k-hit";
+      el.dataset.id = h.id;
+      el.dataset.points = String(h.points);
+
+      el.style.left = `${h.x}%`;
+      el.style.top = `${h.y}%`;
+      el.style.width = `${h.w}%`;
+      el.style.height = `${h.h}%`;
+
+      el.addEventListener("click", (e) => {
+        e.stopPropagation();
+
+        // award once
+        if (el.classList.contains("correct")) return;
+
+        el.classList.add("correct");
+        addScore(Number(el.dataset.points || 0));
+      });
+
+      hitLayer.appendChild(el);
+    });
+  }
+
+  // wrong click marker (temporary orange)
+  function showWrongAt(clientX, clientY){
+    const rect = hitLayer.getBoundingClientRect();
+    const xPct = ((clientX - rect.left) / rect.width) * 100;
+    const yPct = ((clientY - rect.top) / rect.height) * 100;
+
+    const mark = document.createElement("div");
+    mark.className = "k-hit wrong";
+    mark.style.left = `${Math.max(0, xPct - 6)}%`;
+    mark.style.top  = `${Math.max(0, yPct - 2.5)}%`;
+    mark.style.width  = `12%`;
+    mark.style.height = `5%`;
+
+    hitLayer.appendChild(mark);
+    setTimeout(() => mark.remove(), 900);
+  }
+
+  hitLayer.addEventListener("click", (e) => {
+    showWrongAt(e.clientX, e.clientY);
+  });
+
+  buildHotspots();
+  updatePopupLock();
+</script>
+
+</body>
+</html>

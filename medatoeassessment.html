@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>A–E Assessment</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@600;800&display=swap" rel="stylesheet">
+
+<style>
+  :root{
+    --bg:#08384f;
+    --shadow:0 10px 24px rgba(0,0,0,.28);
+
+    --statusDefault:#bfefff;
+    --statusAirway:#7ecbff;
+    --statusBreathing:#f4b6c2;
+    --statusCirculation:#b6f2c2;
+    --statusDisability:#f2c2b6; /* ✅ added */
+    --statusExtra:#fff2a8;
+
+    --greenBtn:#2f5f1d;
+    --popupBlue:#aee8ff;
+  }
+
+  *{ box-sizing:border-box; }
+  html,body{ height:100%; margin:0; }
+  body{ background:var(--bg); font-family:"Roboto Slab", serif; overflow:hidden; }
+
+  .stage{
+    height:100vh;
+    display:grid;
+    grid-template-columns: minmax(320px, 44vw) 1fr;
+    gap: 24px;
+    padding: 24px;
+    align-items: center;
+  }
+
+  .left{ height: 100%; display:flex; align-items:center; justify-content:center; position: relative; }
+  .imgWrap{
+    position:relative;
+    width: min(560px, 100%);
+    height: min(86vh, 900px);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+  .imgWrap img{ width: 100%; height: 100%; object-fit: contain; display:block; }
+
+  .hotspot{
+    position:absolute;
+    border-radius:50%;
+    cursor:pointer;
+    background: rgba(255,255,255,0);
+    border: 0;
+    padding:0;
+    outline:none;
+    transition: transform .08s ease, filter .12s ease, box-shadow .12s ease, background .12s ease;
+  }
+  .hotspot:hover{
+    background: rgba(120,220,255,0.18);
+    box-shadow: 0 0 0 3px rgba(255,255,255,0.65), 0 0 18px rgba(120,220,255,0.55);
+    filter: brightness(1.05);
+    transform: scale(1.02);
+  }
+  .hotspot:active{
+    transform: scale(0.97);
+    box-shadow: 0 0 0 3px rgba(255,255,255,0.85), 0 0 10px rgba(0,0,0,0.25) inset;
+  }
+
+  .right{ height: 100%; display:flex; flex-direction:column; justify-content:flex-start; padding-right: 10px; }
+
+  .bevel{
+    border: 2px solid rgba(0,0,0,.35);
+    box-shadow:
+      inset 2px 2px 0 rgba(255,255,255,.55),
+      inset -2px -2px 0 rgba(0,0,0,.22),
+      0 10px 24px rgba(0,0,0,.28);
+  }
+
+  .header{
+    align-self:center;
+    width: min(820px, 100%);
+    background:#fff;
+    padding: 22px 26px;
+    border-radius: 16px;
+    text-align:center;
+    font-weight:800;
+    font-size: clamp(22px, 3vw, 44px);
+    box-shadow: 0 0 0 6px #2b7a2b, var(--shadow);
+    margin-top: 6px;
+  }
+
+  .statusRow{
+    margin-top: 34px;
+    display:flex;
+    gap: 18px;
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .status{
+    flex: 1 1 520px;
+    background: var(--statusDefault);
+    padding: 30px 28px;
+    border-radius: 22px;
+    font-weight:800;
+    font-size: clamp(18px, 2.2vw, 34px);
+    min-height: 130px;
+    text-align: center;
+    transition: background .25s ease, opacity .2s ease, transform .08s ease;
+  }
+
+/* Make the scorable popup more dramatic */
+.popupTile{
+  flex: 0 0 280px;
+  display:none;
+
+  /* more dramatic look */
+  background: linear-gradient(180deg, #b9f2ff 0%, #5bd4ff 55%, #2ab6ff 100%);
+  color: #062433;
+  border: 3px solid rgba(255,255,255,.65);
+  border-radius: 22px;
+  padding: 22px 18px;
+  font-weight: 900;
+  letter-spacing: .3px;
+  text-transform: uppercase;
+
+  text-align:center;
+  cursor:pointer;
+  user-select:none;
+
+  box-shadow:
+    0 0 0 4px rgba(46,215,20,.35),
+    0 0 26px rgba(46,215,20,.45),
+    0 18px 35px rgba(0,0,0,.35);
+
+  transform: translateY(6px) scale(.98);
+  opacity: 0;
+  transition: transform .18s ease, filter .18s ease, box-shadow .18s ease, opacity .18s ease;
+}
+
+/* When shown */
+.popupTile.is-visible{
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  animation: popupPulse 1.05s ease-in-out infinite;
+}
+
+@keyframes popupPulse{
+  0%, 100% { filter: brightness(1); }
+  50%      { filter: brightness(1.12); }
+}
+
+.popupTile:hover{
+  filter: brightness(1.10);
+  transform: translateY(-2px) scale(1.02);
+  box-shadow:
+    0 0 0 5px rgba(46,215,20,.45),
+    0 0 34px rgba(46,215,20,.55),
+    0 22px 42px rgba(0,0,0,.40);
+}
+
+.popupTile:active{
+  transform: translateY(1px) scale(.99);
+}
+
+
+  .buttons{
+    margin-top: auto;
+    padding-bottom: 18px;
+    display:flex;
+    gap: 28px;
+    width: min(920px, 100%);
+    align-self:center;
+  }
+
+  .button{
+    flex:1;
+    background: var(--greenBtn);
+    color:#fff;
+    padding: 24px 20px;
+    border-radius: 18px;
+    font-weight:800;
+    font-size: clamp(16px, 1.8vw, 28px);
+    text-align:center;
+    justify-content: center;
+    align-items: center;
+    display:flex;
+    cursor:pointer;
+    user-select:none;
+    transition: transform .08s ease, filter .12s ease, box-shadow .12s ease;
+  }
+  .button:hover{ filter:brightness(1.08); transform: translateY(-2px); }
+  .button:active{
+    transform: translateY(1px);
+    box-shadow: inset 2px 2px 0 rgba(0,0,0,.22), inset -2px -2px 0 rgba(255,255,255,.22);
+  }
+
+  /* TEMP IMAGE */
+  .actionImg{
+    position:fixed;
+    left: 42vw;
+    bottom: 128px;
+    width: 50%;
+    max-width: 320px;
+    display:none;
+    z-index: 999;
+    filter: drop-shadow(0 18px 22px rgba(0,0,0,.35));
+  }
+
+  @media (max-width: 900px){
+    body{ overflow:auto; }
+    .stage{ grid-template-columns: 1fr; height:auto; min-height:100vh; }
+    .imgWrap{ height: min(70vh, 700px); }
+    .buttons{ flex-direction:column; }
+    .popupTile{ flex: 1 1 260px; }
+    .actionImg{ width: min(240px, 55vw); }
+  }
+</style>
+</head>
+
+<body>
+<audio id="bgAudio" src="audio/audioEcgSimulatorPneumonia.mp3" playsinline></audio>
+<audio id="pingAudio" src="audio/audioPing.mp3" preload="auto"></audio>
+
+<div class="stage">
+  <div class="left">
+    <div class="imgWrap" id="imgWrap">
+      <img src="images/silhouetteManwithrings.png" alt="A to E silhouette">
+
+      <button class="hotspot" id="hsAirway" style="left:24%; top:8%; width:22%; height:15%;" aria-label="Airway"></button>
+      <button class="hotspot" id="hsBreathing" style="left:53%; top:17%; width:37%; height:26%;" aria-label="Breathing"></button>
+      <button class="hotspot" id="hsCirculation" style="left:21%; top:25%; width:25%; height:16%;" aria-label="Circulation"></button>
+      <button class="hotspot" id="hsDisability" style="left:62%; top:1%; width:22%; height:14%;" aria-label="Disability"></button>
+      <button class="hotspot" id="hsExtra" style="left:3%; top:84%; width:18%; height:14%;" aria-label="Extra"></button>
+    </div>
+  </div>
+
+  <div class="right">
+    <div class="header">PROCEED WITH A TO E<br>ASSESSMENT</div>
+
+    <div class="statusRow">
+      <div id="status" class="status bevel">Please select in a stepwise fashion.</div>
+      <div id="popupTile" class="popupTile bevel" role="button" tabindex="0"></div>
+    </div>
+
+    <div class="buttons">
+      <div class="button bevel" id="btnAbg">I want an ABG before I do anything?</div>
+      <!-- ✅ removed Calculate GCS tile -->
+    </div>
+  </div>
+</div>
+
+<img id="actionImg" class="actionImg" alt="Action feedback">
+
+<script type="module">
+  (async function(){
+    // ===== state.js scoring integration (same logic as other pages) =====
+    const scoreKey = "overallScore";
+
+    function addScoreLocal(n){
+      const current = parseFloat(localStorage.getItem(scoreKey) || "0") || 0;
+      localStorage.setItem(scoreKey, String(current + n));
+    }
+
+    let addScoreFn = addScoreLocal;
+
+    try{
+      const mod = await import("./js/state.js");
+      mod.ensureTimerStarted?.();
+      if (typeof mod.addScore === "function") addScoreFn = mod.addScore;
+    }catch(e){
+      console.warn("state.js not loaded:", e);
+    }
+
+    // ===== scoring rules requested =====
+    // - +3 overall once if hotspot order is Airway -> Breathing -> Circulation -> Disability
+    // - +1 overall when oxygen OR fluids is given (popup click), and keep existing behaviours
+    // - Disability popup "Check GCS?" gives +1 overall and navigates to medcalculategcs.html
+
+    const ORDER_TARGET = ["airway","breathing","circulation","disability"];
+    const orderProgress = [];
+    let orderBonusAwarded = false;
+
+    // ensure oxygen/fluids only score once each
+    let oxygenAwarded = false;
+    let fluidsAwarded = false;
+
+    function scorePlus(n){
+      addScoreFn(n);
+    }
+
+    function recordOrder(step){
+      // avoid duplicate taps spamming the sequence
+      if (orderProgress[orderProgress.length - 1] === step) return;
+
+      orderProgress.push(step);
+
+      // keep only last 4 steps
+      if (orderProgress.length > 4) orderProgress.shift();
+
+      if (!orderBonusAwarded && orderProgress.length === 4){
+        const ok = ORDER_TARGET.every((v, i) => orderProgress[i] === v);
+        if (ok){
+          orderBonusAwarded = true;
+          scorePlus(3);
+        }
+      }
+    }
+
+    const status = document.getElementById("status");
+    const popupTile = document.getElementById("popupTile");
+
+    const hsAirway = document.getElementById("hsAirway");
+    const hsBreathing = document.getElementById("hsBreathing");
+    const hsCirculation = document.getElementById("hsCirculation");
+    const hsDisability = document.getElementById("hsDisability");
+    const hsExtra = document.getElementById("hsExtra");
+
+    const actionImg = document.getElementById("actionImg");
+    const pingAudio = document.getElementById("pingAudio");
+    const bgAudio = document.getElementById("bgAudio");
+
+    const LOOP_START = 10;
+    const LOOP_END = 30;
+
+    document.getElementById("btnAbg").onclick = () => location.href = "medabgreview.html";
+
+    const DEFAULT_TEXT = "Please select in a stepwise fashion.";
+    const DEFAULT_COLOR = getComputedStyle(document.documentElement).getPropertyValue('--statusDefault').trim() || "#bfefff";
+
+    let activeTimer = null;
+    let popupTimer = null;
+    let actionImgTimer = null;
+
+    function clearTimers(){
+      if(activeTimer) clearTimeout(activeTimer);
+      if(popupTimer) clearTimeout(popupTimer);
+      if(actionImgTimer) clearTimeout(actionImgTimer);
+      activeTimer = null; popupTimer = null; actionImgTimer = null;
+    }
+
+    function resetStatus(){
+      status.style.background = DEFAULT_COLOR;
+      status.textContent = DEFAULT_TEXT;
+    }
+
+function hidePopup(){
+  popupTile.classList.remove("is-visible"); // ✅ add
+  popupTile.style.display = "none";
+  popupTile.onclick = null;
+}
+
+
+function showPopup(text, onClick, durationMs){
+  popupTile.textContent = text;
+  popupTile.style.display = "block";
+  popupTile.classList.add("is-visible");   // ✅ add
+  popupTile.onclick = onClick || null;
+
+  if(durationMs){
+    popupTimer = setTimeout(hidePopup, durationMs);
+  }
+}
+
+
+    function pressFlash(el){
+      el.style.transform = "translateY(1px) scale(0.995)";
+      setTimeout(()=>{ el.style.transform = ""; }, 120);
+    }
+
+    function playPing(){
+      try{ pingAudio.currentTime = 0; pingAudio.play(); }catch(e){}
+    }
+
+    function showActionImage(src, ms){
+      actionImg.src = src;
+      actionImg.style.display = "block";
+      if(actionImgTimer) clearTimeout(actionImgTimer);
+      actionImgTimer = setTimeout(() => {
+        actionImg.style.display = "none";
+        actionImg.src = "";
+      }, ms);
+    }
+
+    function resolveActionAndReset(actionImageSrc){
+      clearTimers();
+      hidePopup();
+      resetStatus();
+      playPing();
+      showActionImage(actionImageSrc, 2000);
+    }
+
+    // --- Audio segment loop 10s -> 30s ---
+    function startSegmentLoop(){
+      const start = () => {
+        bgAudio.currentTime = LOOP_START;
+        bgAudio.play().catch(()=>{});
+      };
+
+      if (bgAudio.readyState >= 1) start();
+      else bgAudio.addEventListener("loadedmetadata", start, { once:true });
+    }
+
+    bgAudio.addEventListener("timeupdate", () => {
+      if (bgAudio.currentTime >= LOOP_END) bgAudio.currentTime = LOOP_START;
+    });
+
+    window.addEventListener("load", startSegmentLoop, { once:true });
+    window.addEventListener("pointerdown", startSegmentLoop, { once:true });
+
+    // --- Hotspot actions ---
+    hsAirway.onclick = () => {
+      pressFlash(hsAirway);
+      recordOrder("airway");
+
+      clearTimers();
+      hidePopup();
+      status.style.background = getComputedStyle(document.documentElement).getPropertyValue('--statusAirway').trim() || "#7ecbff";
+      status.textContent = "He seems to be managing his own airway at present";
+      activeTimer = setTimeout(resetStatus, 2000);
+    };
+
+    hsBreathing.onclick = () => {
+      pressFlash(hsBreathing);
+      recordOrder("breathing");
+
+      clearTimers();
+      status.style.background = getComputedStyle(document.documentElement).getPropertyValue('--statusBreathing').trim() || "#f4b6c2";
+      status.textContent = "His respiratory rate is 35 and his saturations are 85% on room air.";
+      showPopup("Give oxygen?", () => {
+        pressFlash(popupTile);
+
+        // ✅ +1 overall for oxygen (once)
+        if (!oxygenAwarded){
+          oxygenAwarded = true;
+          scorePlus(1);
+        }
+
+        resolveActionAndReset("images/oxygennonrebreather.png");
+      }, 3000);
+      activeTimer = setTimeout(() => { hidePopup(); resetStatus(); }, 3000);
+    };
+
+    hsCirculation.onclick = () => {
+      pressFlash(hsCirculation);
+      recordOrder("circulation");
+
+      clearTimers();
+      status.style.background = getComputedStyle(document.documentElement).getPropertyValue('--statusCirculation').trim() || "#b6f2c2";
+      status.textContent = "His heart rate is 145 and his BP is 85/50.";
+      showPopup("Give a bolus of fluids?", () => {
+        pressFlash(popupTile);
+
+        // ✅ +1 overall for fluids (once)
+        if (!fluidsAwarded){
+          fluidsAwarded = true;
+          scorePlus(1);
+        }
+
+        resolveActionAndReset("images/ivbagoffluids.png");
+      }, 3000);
+      activeTimer = setTimeout(() => { hidePopup(); resetStatus(); }, 3000);
+    };
+
+    hsDisability.onclick = () => {
+      pressFlash(hsDisability);
+      recordOrder("disability");
+
+      clearTimers();
+      status.style.background = getComputedStyle(document.documentElement).getPropertyValue('--statusDisability').trim() || "#f2c2b6";
+      status.textContent = "His blood sugars were just checked by the nurse and they are 6 mmol/L.";
+
+      showPopup("Check GCS?", () => {
+        pressFlash(popupTile);
+
+        // ✅ +1 overall for choosing check GCS
+        scorePlus(1);
+
+        // // optional: brief feedback image, then navigate
+        // resolveActionAndReset("images/gcs.png");
+
+        // ✅ go to GCS page
+        setTimeout(() => { window.location.href = "medcalculategcs.html"; }, 120);
+      }, 3000);
+
+      activeTimer = setTimeout(() => { hidePopup(); resetStatus(); }, 3000);
+    };
+
+    hsExtra.onclick = () => {
+      pressFlash(hsExtra);
+
+      clearTimers();
+      status.style.background = getComputedStyle(document.documentElement).getPropertyValue('--statusExtra').trim() || "#fff2a8";
+      status.textContent = "He doesn't seem to have a rash and he has two wide bore cannula in situ.";
+      activeTimer = setTimeout(() => { hidePopup(); resetStatus(); }, 3000);
+    };
+  })();
+</script>
+
+</body>
+</html>

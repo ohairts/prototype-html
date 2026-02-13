@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Thrombolysis Check</title>
+
+  <link rel="stylesheet" href="css/common.css">
+  <link rel="stylesheet" href="css/tile.css">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@900&display=swap" rel="stylesheet">
+
+  <style>
+    body{
+      margin:0;
+      background:#000;
+      font-family:"Roboto Slab", serif;
+      overflow:hidden;
+      color:#fff;
+    }
+
+    .stage{
+      width:100vw;
+      height:100vh;
+      position:relative;
+      background:#0b0b0b;
+      border: 4px solid rgba(255,255,255,.08);
+      box-sizing:border-box;
+    }
+
+    /* ===== CENTER IMAGE ===== */
+    .center-img{
+      position:absolute;
+      left:50%;
+      top:50%;
+      transform: translate(-50%,-50%);
+      width: min(520px, 44vw);
+      height: min(720px, 84vh);
+      background:#111;
+      border: 3px solid rgba(255,255,255,.15);
+      box-shadow: 0 18px 40px rgba(0,0,0,.55);
+      overflow:hidden;
+      display:grid;
+      place-items:center;
+    }
+    .center-img img{
+      width:100%;
+      height:100%;
+      object-fit:contain;
+      user-select:none;
+      -webkit-user-drag:none;
+    }
+
+    /* ===== TIMER COLUMN ===== */
+    .timer-wrap{
+      position:absolute;
+      left: 36px;
+      top: 36px;
+      bottom: 36px;
+      width: 64px;
+      border: 3px solid rgba(255,0,0,.55);
+      background:#000;
+      box-shadow: 0 0 0 6px rgba(0,0,0,.35);
+      overflow:hidden;
+    }
+
+    /* Static red fill */
+    .timer-red{
+      position:absolute;
+      inset:0;
+      background:#ff0000;
+      box-shadow: inset 0 0 16px rgba(255,0,0,.9);
+      transition: opacity .2s linear, filter .2s linear;
+    }
+
+    /* Growing black mask */
+    .timer-mask{
+      position:absolute;
+      left:0;
+      top:0;
+      width:100%;
+      height:0%;
+      background:#000;
+    }
+
+    /* ===== RIGHT COLUMN ===== */
+    .right-col{
+      position:absolute;
+      right: 40px;
+      top: 70px;
+      bottom: 70px;
+      width: min(380px, 34vw);
+      display:flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 26px;
+      z-index: 10;
+    }
+
+    .tile.question{
+      background:#1a6f86;
+      color:#fff;
+      cursor:default;
+      font-size:1.15rem;
+      line-height:1.25;
+    }
+    .tile.question:hover{ transform:none; }
+
+    .tile.answer{
+      transition: transform .12s ease, filter .12s ease;
+    }
+    .tile.answer:hover{
+      transform: translateY(-2px) scale(1.03);
+      filter: brightness(1.05);
+    }
+    .tile.answer:active{
+      transform: translateY(2px) scale(.99);
+    }
+
+    .tile.red{
+      background:#d10000;
+      color:#fff;
+    }
+    .tile.green{
+      background:#84cf4f;
+      color:#fff;
+    }
+
+    .locked{
+      pointer-events:none;
+      opacity:.9;
+    }
+
+    /* ===== NEXT ARROW ===== */
+    .next-green{
+      position:absolute;
+      right:22px;
+      bottom:22px;
+      width:110px;
+      height:86px;
+      cursor:pointer;
+      display:none;
+      z-index:50;
+      filter: drop-shadow(0 10px 18px rgba(0,0,0,.35));
+      transition: transform .15s ease, filter .2s ease;
+    }
+    .next-green.show{ display:block; }
+    .next-green img{
+      width:100%;
+      height:100%;
+      object-fit:contain;
+    }
+    .next-green:hover{
+      transform: translateY(-2px) scale(1.03);
+      filter: drop-shadow(0 0 12px rgba(46,215,20,.55))
+              drop-shadow(0 12px 18px rgba(0,0,0,.35));
+    }
+  </style>
+</head>
+
+<body>
+<div class="stage">
+
+  <!-- TIMER -->
+  <div class="timer-wrap">
+    <div id="timerRed" class="timer-red"></div>
+    <div id="timerMask" class="timer-mask"></div>
+  </div>
+
+  <!-- CENTER IMAGE -->
+  <div class="center-img">
+    <img src="images/kardexPage2ThrombolysisCheck.png" alt="Kardex">
+  </div>
+
+  <!-- RIGHT TILES -->
+  <div class="right-col">
+    <div class="tile question">
+      Does he have any contraindications to thrombolysis based on his medications?
+    </div>
+
+    <div id="btnNo" class="tile answer red">
+      He cannot be thrombolysed based on these.
+    </div>
+
+    <div id="btnYes" class="tile answer green">
+      He can be thrombolysed based on these.
+    </div>
+  </div>
+
+  <!-- NEXT -->
+  <div id="nextArrow" class="next-green">
+    <img src="images/nextSlideGreenShape.png" alt="Next">
+  </div>
+
+  <!-- AUDIO -->
+  <audio id="tickSound" preload="auto" loop>
+    <source src="audio/clockTickingDown.mp3" type="audio/mp3">
+  </audio>
+
+</div>
+
+<script type="module">
+  // ----- CONFIG -----
+  const DURATION_MS = 10000;
+  const NEXT_SLIDE = "ctexplainer.html";
+  const CORRECT_POINTS = 3;
+
+  // ----- STATE.JS -----
+  let addScore = (n)=>{};
+  try{
+    const mod = await import("./js/state.js");
+    mod.ensureTimerStarted?.();
+    if (typeof mod.addScore === "function") addScore = mod.addScore;
+  }catch(e){}
+
+  // ----- ELEMENTS -----
+  const mask = document.getElementById("timerMask");
+  const red  = document.getElementById("timerRed");
+  const tick = document.getElementById("tickSound");
+  const btnYes = document.getElementById("btnYes");
+  const btnNo  = document.getElementById("btnNo");
+  const nextArrow = document.getElementById("nextArrow");
+
+  let locked = false;
+  let start = performance.now();
+  let raf;
+
+  function finish(correct){
+    if (locked) return;
+    locked = true;
+
+    btnYes.classList.add("locked");
+    btnNo.classList.add("locked");
+
+    if (correct) addScore(CORRECT_POINTS);
+
+    tick.pause();
+    nextArrow.classList.add("show");
+  }
+
+  function update(){
+    const t = Math.min(1, (performance.now() - start) / DURATION_MS);
+
+    mask.style.height = `${t * 100}%`;
+    red.style.opacity = 1 - (t * 0.4);
+
+    if (t > 0.9){
+      red.style.filter = "brightness(1.35)";
+    }
+
+    if (t >= 1){
+      finish(false);
+      return;
+    }
+    raf = requestAnimationFrame(update);
+  }
+
+  // Start ticking (safe autoplay)
+  tick.play().catch(()=>{
+    document.addEventListener("pointerdown", () => {
+      tick.play().catch(()=>{});
+    }, { once:true });
+  });
+
+  raf = requestAnimationFrame(update);
+
+  btnYes.onclick = () => finish(true);
+  btnNo.onclick  = () => finish(false);
+
+  nextArrow.onclick = () => {
+    window.location.href = NEXT_SLIDE;
+  };
+</script>
+</body>
+</html>

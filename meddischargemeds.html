@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Discharge Meds - Drag & Drop</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@900&display=swap" rel="stylesheet">
+
+  <style>
+    body{
+      margin:0;
+      background:#08394a;
+      font-family:"Roboto Slab", serif;
+      overflow:hidden;
+    }
+
+    .stage{
+      position:relative;
+      width:100vw;
+      height:100vh;
+      background:#0b4a60;
+      overflow:hidden;
+      border: 3px solid rgba(0,0,0,.55);
+      box-sizing:border-box;
+    }
+
+    /* Center hero image (swap filename) */
+    .hero{
+      position:absolute;
+      left:50%;
+      top:50%;
+      transform: translate(-50%,-50%);
+      height: min(92vh, 940px);
+      aspect-ratio: 3 / 4;
+      max-width: 44vw;
+      background: #000 url("images/oldManImprovedAwaitingDischarge.png") center / cover no-repeat;
+      border: 3px solid rgba(0,0,0,.65);
+      box-shadow: 0 18px 45px rgba(0,0,0,.45);
+      z-index: 2;
+    }
+
+        /* ===== Subtle ward clock badge (date/time hint) ===== */
+.ward-clock{
+  position:absolute;
+  left: 35vw;
+  top: 40px;
+  z-index: 40;
+
+  background: rgba(255,255,255,.10);
+  border: 2px solid rgba(255,255,255,.18);
+  color: rgba(255,255,255,.92);
+  border-radius: 14px;
+  padding: 10px 12px;
+
+  display:flex;
+  align-items:center;
+  gap: 10px;
+
+  font-weight: 1200;
+  letter-spacing: .2px;
+  box-shadow: 0 10px 18px rgba(0,0,0,.25);
+  backdrop-filter: blur(4px);
+
+  cursor: pointer;
+  user-select:none;
+
+  opacity: .92;
+  transition: transform .12s ease, filter .12s ease, opacity .2s ease;
+}
+
+.ward-clock:hover{
+  transform: translateY(-1px);
+  filter: brightness(1.05);
+  opacity: 1;
+}
+
+.clock-dot{
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  background: rgba(255,234,0,.95);
+  box-shadow: 0 0 10px rgba(255,234,0,.45);
+  animation: tickPulse 2s ease-in-out infinite;
+}
+
+@keyframes tickPulse{
+  0%,100%{ transform: scale(.9); opacity: .7; }
+  50%{ transform: scale(1.1); opacity: 1; }
+}
+
+.clock-text{
+  font-size: 13px;
+  line-height: 1.05;
+  text-align:left;
+}
+
+.clock-text .small{
+  display:block;
+  font-size: 11px;
+  opacity: .85;
+  font-weight: 900;
+}
+
+/* “reveal” state */
+.ward-clock.revealed{
+  border-color: rgba(255,234,0,.55);
+  box-shadow: 0 0 0 4px rgba(255,234,0,.12), 0 10px 18px rgba(0,0,0,.25);
+}
+
+    /* Left panel */
+    .left{
+      position:absolute;
+      left: 14px;
+      top: 14px;
+      bottom: 14px;
+      width: min(320px, 32vw);
+      z-index: 5;
+    }
+
+    .prompt{
+      background:#fff;
+      border: 6px solid #f2b300;
+      box-shadow: 0 12px 18px rgba(0,0,0,.25);
+      padding: 14px 14px;
+      font-weight: 900;
+      font-size: clamp(14px, 1.4vw, 18px);
+      line-height: 1.15;
+      text-align:center;
+      margin-bottom: 18px;
+    }
+
+    /* Tiles grid */
+    .tile-grid{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      position: relative;
+    }
+
+    .med-tile{
+      background:#52b7ea;
+      color:#fff;
+      border: 2px solid rgba(0,0,0,.45);
+      box-shadow: 0 10px 16px rgba(0,0,0,.25);
+      border-radius: 0;
+      width: 100%;
+      max-width: none;
+      height: 62px;
+      display:flex;
+      flex: none;
+      align-items:center;
+      justify-content:center;
+      text-align:center;
+      font-weight: 900;
+      font-size: clamp(14px, 1.35vw, 18px);
+      user-select:none;
+
+      cursor: grab;
+      touch-action: none;
+      position: relative;
+      z-index: 6;
+      transition: transform .12s ease, filter .12s ease;
+    }
+
+    .med-tile:active{
+      cursor: grabbing;
+      filter: brightness(.98);
+    }
+
+    .med-tile.in-drop{
+      outline: 4px solid rgba(46,215,20,.55);
+      filter: brightness(1.02);
+      box-shadow:
+        0 4px 6px rgba(0,0,0,.25),
+        inset 0 0 0 2px rgba(255,255,255,.35);
+    }
+
+    /* Right drop zone */
+    .right{
+      position:absolute;
+      right: 14px;
+      top: 14px;
+      bottom: 190px; /* ✅ leave room for pharmacy box + nav */
+      width: min(320px, 32vw);
+      z-index: 4;
+      display:flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .right-title{
+      background:#d9d9d9;
+      border: 3px solid rgba(0,0,0,.35);
+      box-shadow: 0 10px 16px rgba(0,0,0,.22);
+      padding: 12px 12px;
+      text-align:center;
+      font-weight: 900;
+      font-size: clamp(14px, 1.35vw, 18px);
+      line-height:1.15;
+    }
+
+    .dropzone{
+      flex: 1;
+      background:#d9d9d9;
+      border: 3px solid rgba(0,0,0,.35);
+      box-shadow: inset 0 0 0 6px rgba(255,255,255,.35),
+                  0 10px 16px rgba(0,0,0,.22);
+      position: relative;
+      overflow: hidden;
+
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      padding: 12px;
+
+      align-content: start;
+    }
+
+    .dropzone.is-over{
+      box-shadow: inset 0 0 0 6px rgba(46,215,20,.35), 0 10px 16px rgba(0,0,0,.22);
+    }
+
+    /* ✅ Bottom-centre pharmacy discussion box */
+    .pharmacy-wrap{
+      position:absolute;
+      left:50%;
+      bottom: 22px;
+      transform: translateX(-50%);
+      z-index: 15;
+    }
+
+    .pharmacy{
+      display:block;
+      width: min(430px, 46vw);
+      padding: 18px 18px;
+      text-align:center;
+      font-weight: 900;
+      font-size: clamp(14px, 1.6vw, 22px);
+      line-height: 1.15;
+      color:#fff;
+      text-decoration:none;
+
+      background: #f2c319;
+      border: 3px solid rgba(0,0,0,.45);
+      border-radius: 14px;
+
+      box-shadow:
+        0 0 18px rgba(46,215,20,.45),
+        0 14px 26px rgba(0,0,0,.35),
+        inset 2px 2px 0 rgba(255,255,255,.55),
+        inset -2px -2px 0 rgba(0,0,0,.22);
+
+      transition: transform .08s ease, filter .12s ease;
+      user-select:none;
+      cursor:pointer;
+    }
+    .pharmacy:hover{ filter: brightness(1.04); transform: translateX(-1%) translateY(-1px); }
+    .pharmacy:active{
+      transform: translateX(-1%) translateY(-1px);
+      box-shadow:
+        0 0 14px rgba(46,215,20,.35),
+        0 10px 20px rgba(0,0,0,.30),
+        inset 2px 2px 0 rgba(0,0,0,.20),
+        inset -2px -2px 0 rgba(255,255,255,.35);
+    }
+
+    /* Bottom-right nav arrow + instruction */
+    .nav-wrap{
+      position:absolute;
+      right: 22px;
+      bottom: 22px;
+      z-index: 20;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      user-select: none;
+    }
+
+    .nav-instruction-tile{
+      background: #ffffff;
+      color: #111;
+      font-weight: 900;
+      font-size: 14px;
+      line-height: 1.15;
+
+      padding: 10px 12px;
+      width: 210px;
+      text-align: center;
+
+      border: 3px solid rgba(0,0,0,.35);
+      border-radius: 10px;
+
+      box-shadow:
+        0 8px 14px rgba(0,0,0,.25),
+        inset 0 0 0 2px rgba(255,255,255,.35);
+    }
+
+    .nav{
+      width: 132px;
+      height: 96px;
+      flex-shrink: 0;
+      filter:
+        drop-shadow(0 0 10px rgba(242,195,25,.55))
+        drop-shadow(0 12px 18px rgba(0,0,0,.35));
+      transition: transform .08s ease, filter .12s ease;
+    }
+    .nav:hover{ filter: brightness(1.05) drop-shadow(0 0 12px rgba(242,195,25,.6)) drop-shadow(0 12px 18px rgba(0,0,0,.35)); transform: translateY(-2px); }
+    .nav:active{ transform: translateY(1px); }
+
+    .nav a{ display:block; width:100%; height:100%; }
+    .nav img{ width:100%; height:100%; object-fit:contain; display:block; }
+
+    @media (max-width: 900px){
+      .hero{ max-width: 52vw; height: 86vh; }
+      .left, .right{ width: min(320px, 40vw); }
+      .med-tile{ height: 56px; }
+      .right{ bottom: 220px; }
+      .pharmacy{ width: min(420px, 70vw); }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="stage">
+
+        <!-- Subtle date/time hint -->
+<div id="wardClock" class="ward-clock" role="button" tabindex="0" aria-label="Show ward time">
+  <span class="clock-dot" aria-hidden="true"></span>
+  <div class="clock-text" id="clockText">
+    Ward clock
+    <span class="small">tap to check</span>
+  </div>
+</div>
+
+    <div class="left">
+      <div class="prompt">
+        Click the medications you feel he will need on discharge.<br>
+        (Drag them to the<br> right-hand box.)
+      </div>
+
+      <div class="tile-grid" id="tileGrid">
+        <div class="med-tile" data-med="Bisoprolol"   data-points="0">Bisoprolol</div>
+        <div class="med-tile" data-med="Atorvastatin" data-points="1">Atorvastatin</div>
+
+        <div class="med-tile" data-med="Paracetamol"  data-points="0">Paracetamol</div>
+        <div class="med-tile" data-med="Clopidogrel"  data-points="1">Clopidogrel</div>
+
+        <div class="med-tile" data-med="Amlodipine"   data-points="0">Amlodipine</div>
+        <div class="med-tile" data-med="Aspirin"      data-points="0">Aspirin</div>
+
+        <div class="med-tile" data-med="Apixaban"     data-points="0">Apixaban</div>
+        <div class="med-tile" data-med="Ramipril"     data-points="1">Ramipril</div>
+
+        <div class="med-tile" data-med="Ranolazine"   data-points="1">Ranolazine</div>
+        <div class="med-tile" data-med="Metformin"    data-points="1">Metformin</div>
+
+        <div class="med-tile" data-med="Co-Amoxiclav" data-points="0">Co-Amoxiclav</div>
+        <div class="med-tile" data-med="Zopiclone"    data-points="0">Zopiclone</div>
+      </div>
+    </div>
+
+    <div class="hero" aria-hidden="true"></div>
+
+    <div class="right">
+      <div class="right-title">Required medications on discharge?</div>
+      <div id="dropzone" class="dropzone" aria-label="Drop medications here"></div>
+    </div>
+
+    <!-- ✅ Bottom-centre: discuss with pharmacy -->
+    <div class="pharmacy-wrap">
+      <a class="pharmacy" href="medworkbench7.html">
+        Discuss with pharmacy<br>
+        appropriate medications on<br>
+        discharge for stroke?
+      </a>
+    </div>
+
+    <!-- ✅ Bottom-right: orange next arrow + instruction -->
+    <div class="nav-wrap">
+      <div class="nav-instruction-tile">
+        Click when you feel the correct<br>
+        medications are selected
+      </div>
+
+      <div class="nav" title="Continue">
+        <a href="medbacktothesidelines.html" aria-label="Continue">
+          <img src="images/nextslideorangeshape.png" alt="Next">
+        </a>
+      </div>
+    </div>
+
+  </div>
+
+  <script type="module">
+    // Optional scoring hookup (keeps your existing project pattern)
+    let addScore = (n)=>{};
+    try{
+      const mod = await import("./js/state.js");
+      if (typeof mod.addScore === "function") addScore = mod.addScore;
+    }catch(e){}
+
+    const dropzone = document.getElementById("dropzone");
+    const tiles = Array.from(document.querySelectorAll(".med-tile"));
+
+    // Track state per tile: home position and whether it currently scores
+    const state = new Map(); // tile -> {homeParent, homeNextSibling, inDrop:boolean, awarded:boolean, dx,dy}
+    tiles.forEach(tile => {
+      state.set(tile, {
+        homeParent: tile.parentElement,
+        homeNextSibling: tile.nextElementSibling,
+        inDrop: false,
+        awarded: false,
+        dx: 0,
+        dy: 0
+      });
+    });
+
+    // Pointer-based dragging (works with mouse + touch)
+    let active = null; // {tile, pointerId, startX, startY}
+
+    function setTranslate(tile, x, y){
+      tile.style.transform = `translate(${x}px, ${y}px)`;
+    }
+
+    function resetTranslate(tile){
+      tile.style.transform = "";
+    }
+
+    function isOverDropzone(x, y){
+      const r = dropzone.getBoundingClientRect();
+      return (x >= r.left && x <= r.right && y >= r.top && y <= r.bottom);
+    }
+
+    function moveIntoDropzone(tile){
+      const s = state.get(tile);
+      if (s.inDrop) return;
+
+      dropzone.appendChild(tile);
+      s.inDrop = true;
+      tile.classList.add("in-drop");
+
+      const pts = Number(tile.dataset.points || "0");
+      if (pts > 0 && !s.awarded){
+        addScore(pts);
+        s.awarded = true;
+      }
+    }
+
+    function returnHome(tile){
+      const s = state.get(tile);
+      if (!s.inDrop) {
+        resetTranslate(tile);
+        return;
+      }
+
+      const pts = Number(tile.dataset.points || "0");
+      if (pts > 0 && s.awarded){
+        addScore(-pts);
+        s.awarded = false;
+      }
+
+      tile.classList.remove("in-drop");
+      s.inDrop = false;
+
+      const parent = s.homeParent;
+      const anchor = s.homeNextSibling;
+      if (anchor && anchor.parentElement === parent){
+        parent.insertBefore(tile, anchor);
+      }else{
+        parent.appendChild(tile);
+      }
+
+      resetTranslate(tile);
+    }
+
+    function onPointerDown(e){
+      const tile = e.currentTarget;
+      tile.setPointerCapture?.(e.pointerId);
+
+      active = {
+        tile,
+        pointerId: e.pointerId,
+        startX: e.clientX,
+        startY: e.clientY
+      };
+
+      tile.style.zIndex = 50;
+      e.preventDefault();
+    }
+
+    function onPointerMove(e){
+      if (!active || e.pointerId !== active.pointerId) return;
+
+      const tile = active.tile;
+      const s = state.get(tile);
+
+      const dx = e.clientX - active.startX;
+      const dy = e.clientY - active.startY;
+      s.dx = dx; s.dy = dy;
+      setTranslate(tile, dx, dy);
+
+      if (isOverDropzone(e.clientX, e.clientY)){
+        dropzone.classList.add("is-over");
+      }else{
+        dropzone.classList.remove("is-over");
+      }
+    }
+
+    function onPointerUp(e){
+      if (!active || e.pointerId !== active.pointerId) return;
+
+      const tile = active.tile;
+      const s = state.get(tile);
+
+      tile.style.zIndex = "";
+      dropzone.classList.remove("is-over");
+
+      if (isOverDropzone(e.clientX, e.clientY)){
+        resetTranslate(tile);
+        s.dx = 0; s.dy = 0;
+        moveIntoDropzone(tile);
+      }else{
+        resetTranslate(tile);
+        s.dx = 0; s.dy = 0;
+      }
+
+      active = null;
+    }
+
+    // Clicking a tile that's already in the dropzone returns it
+    function onClick(tile){
+      const s = state.get(tile);
+      if (s.inDrop){
+        returnHome(tile);
+      }
+    }
+
+    tiles.forEach(tile => {
+      tile.addEventListener("pointerdown", onPointerDown);
+      tile.addEventListener("click", () => onClick(tile));
+    });
+
+    window.addEventListener("pointermove", onPointerMove, {passive:false});
+    window.addEventListener("pointerup", onPointerUp);
+
+    const wardClock = document.getElementById("wardClock");
+const clockText = document.getElementById("clockText");
+
+function revealTime(){
+  wardClock.classList.add("revealed");
+  clockText.innerHTML = `Fri 6th Dec <span class="small">10:00</span>`;
+  // optional: fade back to subtle after a moment
+  clearTimeout(revealTime._t);
+  revealTime._t = setTimeout(() => {
+    wardClock.classList.remove("revealed");
+    clockText.innerHTML = `Ward clock<span class="small">tap to check</span>`;
+  }, 3500);
+}
+
+wardClock.addEventListener("click", revealTime);
+wardClock.addEventListener("keydown", (e) => {
+  if (e.key === "Enter" || e.key === " ") {
+    e.preventDefault();
+    revealTime();
+} });
+  </script>
+</body>
+</html>

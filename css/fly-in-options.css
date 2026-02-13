@@ -1,0 +1,276 @@
+/* fly-in-options.css */
+
+.fly-container {
+  position: absolute;
+  bottom: 2vh;
+  left: 0;
+  width: 100%;
+  display: flex;
+  flex-direction: row;       /* 🔑 Ensures horizontal layout */
+  justify-content: center;
+  align-items: flex-end;
+  gap: 4vw;
+  padding: 0 5vw;
+  z-index: 3;
+}
+
+  
+  .fly-image {
+    width: 25vw;
+    max-width: 50vw;
+    height: auto;
+    animation: flyIn 1.2s ease-out forwards;
+    filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.7));
+    transition: transform 0.2s ease;
+    cursor: pointer;
+  }
+  
+  .fly-image.clicked {
+    animation: pulse 0.3s ease;
+    opacity: 1 !important;
+    transform: scale(1.1) !important;
+  }
+ 
+  
+  @keyframes flyIn {
+    0% { transform: translateY(100vh); opacity: 0; }
+    100% { transform: translateY(0); opacity: 1; }
+  }
+  
+  @keyframes pulse {
+    0%   { transform: scale(1); }
+    50%  { transform: scale(1.15); }
+    100% { transform: scale(1); }
+  }
+  
+
+  /* fly-in-options.css
+   Reusable “fly-in options” overlay. */
+
+/* you can override these per-slide via :root or inline style */
+/* fly-in-options.css
+   PowerPoint-like beveled blue fly-in options with top-right icon badge.
+   Scoring is handled via data-attributes; nothing visible to players.
+*/
+
+:root{
+  --fly-overlay: rgba(0,0,0,.62);
+  --fly-panel-max: 980px;
+
+  /* button look */
+  --fly-blue: #1a148a;      /* deep blue fill */
+  --fly-blue-2: #0f0a5e;    /* darker edge */
+  --fly-border-dark: rgba(0,0,0,.65);
+  --fly-border-light: rgba(255,255,255,.30);
+  --fly-text: rgba(255,255,255,.95);
+
+  /* icon badge */
+  --fly-badge-ring: rgba(255,255,255,.70);
+  --fly-badge-bg: rgba(0,0,0,.15);
+}
+
+/* ===== Overlay ===== */
+.fly{
+  position: fixed;
+  inset: 0;
+  z-index: 999;
+  display: grid;
+  place-items: center;
+  background: var(--fly-overlay);
+
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .18s ease;
+}
+.fly.is-open{
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.fly__backdrop{
+  position:absolute;
+  inset:0;
+}
+
+/* Optional: keep panel invisible/minimal—your examples are just tiles */
+.fly__panel{
+  position: relative;
+  width: min(var(--fly-panel-max), 92vw);
+  padding: 0;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+
+  transform: translateY(18px);
+  opacity: 0;
+  transition: transform .22s ease, opacity .22s ease;
+}
+.fly.is-open .fly__panel{
+  transform: translateY(0);
+  opacity: 1;
+}
+
+/* If you do want a title area, keep it subtle */
+.fly__header{
+  display:flex;
+  align-items:flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 6px 14px;
+}
+.fly__title{
+  margin:0;
+  font-family: "Roboto Slab", serif;
+  font-weight: 900;
+  font-size: clamp(18px, 2vw, 24px);
+  color: rgba(255,255,255,.92);
+}
+.fly__subtitle{
+  margin: 6px 0 0;
+  font-weight: 800;
+  color: rgba(255,255,255,.75);
+  font-size: 14px;
+}
+.fly__close{
+  background: rgba(255,255,255,.10);
+  color: rgba(255,255,255,.95);
+  border: 2px solid rgba(255,255,255,.20);
+  border-radius: 999px;
+  padding: 8px 12px;
+  cursor:pointer;
+  font-weight: 900;
+}
+.fly__close:hover{ filter: brightness(1.08); }
+
+/* ===== Grid ===== */
+.fly__grid{
+  display:flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 0 6px 6px;
+}
+
+/* ===== The button (matches your image style) ===== */
+.fly__opt{
+  position: relative;
+  width: 100%;
+  min-height: 92px;
+
+  border-radius: 6px;               /* square-ish corners like PPT */
+  cursor: pointer;
+  user-select: none;
+
+  /* Bevel frame: dark outside + inner light line + inner dark */
+  border: 3px solid var(--fly-border-dark);
+  box-shadow:
+    0 14px 28px rgba(0,0,0,.35),
+    inset 0 0 0 2px rgba(255,255,255,.10);
+
+  /* Deep blue fill with subtle vertical gradient */
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,0) 28%),
+    linear-gradient(180deg, var(--fly-blue) 0%, #16108a 55%, var(--fly-blue-2) 100%);
+
+  /* Inner border lines like your examples */
+  outline: 2px solid rgba(255,255,255,.18);
+  outline-offset: -8px;
+
+  /* Fly-in animation */
+  transform: translateY(16px);
+  opacity: 0;
+  animation: flyIn .34s ease forwards;
+}
+
+/* Stagger */
+.fly.is-open .fly__opt:nth-child(1){ animation-delay: .05s; }
+.fly.is-open .fly__opt:nth-child(2){ animation-delay: .12s; }
+.fly.is-open .fly__opt:nth-child(3){ animation-delay: .19s; }
+.fly.is-open .fly__opt:nth-child(4){ animation-delay: .26s; }
+.fly.is-open .fly__opt:nth-child(5){ animation-delay: .33s; }
+
+@keyframes flyIn{
+  to{ transform: translateY(0); opacity: 1; }
+}
+
+.fly__opt:hover{
+  filter: brightness(1.04);
+  transform: translateY(-1px);
+}
+.fly__opt:active{
+  transform: translateY(1px) scale(.995);
+  filter: brightness(.98);
+}
+
+/* Centered label text */
+.fly__label{
+  position:absolute;
+  inset: 0;
+  display:grid;
+  place-items:center;
+  padding: 18px 86px 18px 26px; /* right padding makes room for badge */
+  text-align:center;
+
+  font-family: "Roboto Slab", serif;
+  font-weight: 900;
+  color: var(--fly-text);
+  font-size: clamp(20px, 2.4vw, 34px);
+  letter-spacing: .2px;
+  line-height: 1.05;
+}
+
+/* ===== Icon badge (top right) ===== */
+/* You can provide an icon image per option using data-icon="images/xyz.png" */
+.fly__badge{
+  position:absolute;
+  top: 12px;
+  right: 14px;
+  width: 72px;
+  height: 72px;
+  border-radius: 999px;
+
+  background:
+    radial-gradient(circle at 35% 30%, rgba(255,255,255,.22), rgba(255,255,255,0) 55%),
+    rgba(0,0,0,.18);
+
+  border: 3px solid rgba(255,255,255,.20);
+  box-shadow:
+    inset 0 0 0 3px rgba(0,0,0,.30),
+    0 10px 18px rgba(0,0,0,.35);
+  overflow:hidden;
+}
+
+.fly__badge::after{
+  /* outer ring like your examples */
+  content:"";
+  position:absolute;
+  inset: 3px;
+  border-radius: 999px;
+  border: 3px solid var(--fly-badge-ring);
+  opacity: .9;
+}
+
+/* icon image inside the badge */
+.fly__badge img{
+  position:absolute;
+  inset: 12px;
+  width: calc(100% - 24px);
+  height: calc(100% - 24px);
+  object-fit: contain;
+  filter: drop-shadow(0 2px 6px rgba(0,0,0,.45));
+}
+
+/* Picked state (if you want subtle feedback without showing scoring) */
+.fly__opt.is-picked{
+  box-shadow:
+    0 16px 34px rgba(0,0,0,.40),
+    inset 0 0 0 2px rgba(255,255,255,.14);
+  outline: 3px solid rgba(255,196,0,.75);
+  outline-offset: -10px;
+}
+
+/* Responsive */
+@media (max-width: 720px){
+  .fly__badge{ width: 62px; height: 62px; top: 10px; right: 12px; }
+  .fly__label{ padding-right: 76px; font-size: clamp(18px, 4.6vw, 28px); }
+  .fly__opt{ min-height: 86px; }
+}

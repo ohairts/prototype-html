@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Interview Slide</title>
+
+  <link rel="stylesheet" href="css/common.css">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@900&display=swap" rel="stylesheet">
+
+  <style>
+    :root{
+      --bg: #0b3b4a;
+      --tile: #ffffff;
+      --tileText: #111;
+      --hintBg: rgba(0,0,0,.20);
+      --hintBorder: rgba(255,255,255,.25);
+      --glow: rgba(46, 215, 20, .75);
+    }
+
+    body{ background: var(--bg); }
+
+    /* ===== Stage ===== */
+    .stage{
+      width:100vw;
+      height:100vh;
+      position:relative;
+      overflow:hidden;
+      background: var(--bg);
+    }
+
+    /* ===== Center image ===== */
+    .portrait{
+      position:absolute;
+      left:50%;
+      top:50%;
+      transform: translate(-50%, -50%);
+      width: min(520px, 46vw);
+      height: min(760px, 86vh);
+      background: url("images/oldmaninhospitalchairstrokezoomout.png") center/contain no-repeat;
+      background-color: rgba(0,0,0,.18);
+      border: 6px solid rgba(0,0,0,.55);
+      box-shadow: 0 18px 45px rgba(0,0,0,.45);
+      pointer-events:none;
+      z-index: 1;
+    }
+
+    /* ===== Hint (non-interactive) ===== */
+    .hint{
+      position:absolute;
+      left: 28px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 210px;
+      padding: 12px 14px;
+      text-align:center;
+      border-radius: 10px;
+      border: 2px solid var(--hintBorder);
+      background: var(--hintBg);
+      color: #fff;
+      font-weight: 900;
+      pointer-events: none;
+      user-select:none;
+      z-index: 2;
+    }
+
+    /* ===== Clickable tile buttons ===== */
+    .tile{
+      position:absolute;
+      background: var(--tile);
+      color: var(--tileText);
+      border-radius: 16px;
+      padding: 14px 16px;
+      border: 3px solid rgba(0,0,0,.25);
+      box-shadow: 0 12px 22px rgba(0,0,0,.25);
+      font-family: "Roboto Slab", serif;
+      font-weight: 900;
+      text-align: center;
+      cursor: pointer;
+      user-select: none;
+
+      max-width: min(520px, 46vw);
+      overflow-wrap: anywhere;
+
+      /* reveal defaults */
+      opacity: 0;
+      transform: translateY(10px) scale(.98);
+      pointer-events: none;
+      transition: opacity .25s ease, transform .25s ease, filter .25s ease;
+      z-index: 5;
+    }
+    .tile.is-visible{
+      opacity: 1;
+      transform: translateY(0) scale(1);
+      pointer-events: auto;
+    }
+
+    /* green glowing edge for clickable tiles */
+    .tile.glow{
+      outline: 3px solid rgba(46, 215, 20, .65);
+      box-shadow:
+        0 0 0 3px rgba(46, 215, 20, .25),
+        0 18px 22px rgba(0,0,0,.25);
+      animation: glowPulse 1.2s infinite ease-in-out;
+    }
+    @keyframes glowPulse{
+      0%,100%{ filter: drop-shadow(0 0 0 rgba(46,215,20,0)); }
+      50%{ filter: drop-shadow(0 0 14px rgba(46,215,20,.55)); }
+    }
+
+    /* depress effect */
+    .tile.is-pressed{
+      transform: translateY(2px) scale(.99);
+      box-shadow: 0 8px 14px rgba(0,0,0,.25);
+      filter: brightness(.98);
+    }
+
+    /* non-clickable “final tile” (still shows, but not interactive) */
+    .tile.static{
+      cursor: default;
+      pointer-events: none;
+    }
+    .tile.static.glow{
+      animation: none;
+      outline: 3px solid rgba(46, 215, 20, .35);
+      box-shadow: 0 0 0 3px rgba(46, 215, 20, .12), 0 18px 22px rgba(0,0,0,.25);
+      filter: none;
+    }
+
+    :root{
+  --tile: #6b7d8b;
+  --tileText: #ffffff;
+}
+
+.tile.conclusion { background:#d2b431; }
+
+    /* ===== Speech bubbles (old style vibe) ===== */
+    .bubble{
+      position:absolute;
+      background: #fff;
+      color:#111;
+      border-radius: 18px;
+      padding: 14px 16px;
+      border: 3px solid rgba(0,0,0,.22);
+      box-shadow: 0 12px 22px rgba(0,0,0,.22);
+      font-family: "Roboto Slab", serif;
+      font-weight: 900;
+      text-align: center;
+
+      max-width: min(420px, 40vw);
+      overflow-wrap: anywhere;
+
+      opacity: 0;
+      transform: translateY(10px) scale(.98);
+      pointer-events: none;
+      transition: opacity .25s ease, transform .25s ease;
+      z-index: 6;
+    }
+    .bubble.is-visible{
+      opacity:1;
+      transform: translateY(0) scale(1);
+    }
+    .bubble::after{
+      content:"";
+      position:absolute;
+      left: 18px;
+      bottom: -12px;
+      border-width: 12px 12px 0 12px;
+      border-style: solid;
+      border-color: #fff transparent transparent transparent;
+      filter: drop-shadow(0 6px 6px rgba(0,0,0,.18));
+    }
+/* Default tail (your current) = bottom-left */
+.bubble::after{
+  content:"";
+  position:absolute;
+  left: 18px;
+  bottom: -12px;
+  border-width: 12px 12px 0 12px;
+  border-style: solid;
+  border-color: #fff transparent transparent transparent;
+  filter: drop-shadow(0 6px 6px rgba(0,0,0,.18));
+}
+
+/* Tail: bottom-right */
+.bubble.tail-br::after{
+  left: auto;
+  right: 18px;
+}
+
+/* Tail: top-left */
+.bubble.tail-tl::after{
+  bottom: auto;
+  top: -12px;
+  left: 18px;
+  border-width: 0 12px 12px 12px;
+  border-color: transparent transparent #fff transparent;
+}
+
+/* Tail: top-right */
+.bubble.tail-tr::after{
+  bottom: auto;
+  top: 60%;
+  left: -90px;
+  border-width: 12px 100px 12px 0;
+  rotate: -200deg;
+  border-color: transparent transparent #fff transparent;
+}
+
+
+
+/* Tail: left-middle (points left) */
+.bubble.tail-lm::after{
+  bottom: auto;
+  top: 10%;
+  left: 235px;
+  transform: translateY(-50%);
+  border-width: 10px 120px 10px 0;
+  rotate: 160deg;
+  border-color: transparent #fff transparent transparent;
+}
+
+/* Tail: right-middle (points right) */
+
+.bubble.tail-rm::after{
+  top: -40%;
+  left: -90px;
+  transform: translateY(-50%);
+  border-width: 12px 0 100px 12px;
+  rotate: 90deg;
+  border-color: transparent transparent transparent #fff;
+}
+
+    /* ===== Positions ===== */
+    #hello { left: 28px; top: 42px; width: 260px; }
+
+    /* first response bubble */
+    #b1 { left: 200px; top: 400px; width: 260px; }
+
+    /* two options appear together */
+    #optA { left: 520px; top: 36px; width: 340px; }
+    #optB { left: 520px; top: 240px; width: 340px; }
+
+    /* branch A outcome bubble */
+    #b2 { right: 50px; top: 52px; width: 320px; }
+
+    /* branch B outcome bubble + final static tile */
+    #b3 { right: 200px; top: 350px; width: 320px; }
+    #finalTile { left: 50%; bottom: 70px; transform: translateX(-50%) translateY(10px) scale(.98); width: min(760px, 86vw); border-radius: 10px; }
+    #finalTile.is-visible{ transform: translateX(-50%) translateY(0) scale(1); }
+
+    /* ===== Nav arrows ===== */
+    .nextArrow{
+      position:absolute;
+      right: 34px;
+      width: 86px;
+      height: 66px;
+      cursor:pointer;
+      user-select:none;
+      opacity: 0;
+      transform: translateX(10px);
+      pointer-events:none;
+      transition: opacity .25s ease, transform .25s ease, filter .25s ease;
+      z-index: 10;
+    }
+    .nextArrow.is-visible{
+      opacity: 1;
+      transform: translateX(0);
+      pointer-events:auto;
+    }
+    .nextArrow img{ width:100%; height:100%; object-fit: contain; display:block; }
+    .nextArrow:hover{
+      filter: drop-shadow(0 0 12px rgba(255,196,0,.75))
+              drop-shadow(0 12px 18px rgba(0,0,0,.35));
+    }
+    #arrowA{ top: 170px; }
+    #arrowB{ bottom: 40px; }
+
+    @media (max-height: 720px){
+      #finalTile{ bottom: 54px; }
+      #arrowB{ bottom: 28px; }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="stage">
+    <div class="portrait" aria-hidden="true"></div>
+
+    <div class="hint">Click the glowing green<br>tile options</div>
+
+    <!-- Top-left clickable -->
+    <div id="hello" class="tile glow is-visible">Hello - how are you today?</div>
+
+    <!-- Speech bubble after hello -->
+    <div id="b1" class="bubble tail-lm">Oh, god I feel absolutely awful.</div>
+
+    <!-- Two options (clickable) -->
+    <div id="optA" class="tile">
+      Oh I’m sorry to hear that, I’m one of the pharmacists. Can I ask you a couple of questions while we wait for the team?
+    </div>
+
+    <div id="optB" class="tile">
+      Ok that’s not great. I’ll see if a nurse can call a doctor for you?
+    </div>
+
+    <!-- Branch A outcome -->
+    <div id="b2" class="bubble tail-tr">Oh yes, of course, thanks for coming.</div>
+
+    <!-- Branch B outcome -->
+    <div id="b3" class="bubble tail-rm">That's fine. Thanks anyway.</div>
+    <div id="finalTile" class="tile conclusion">
+      I'll head on, but I hope you start to feel better.
+    </div>
+
+    <!-- Arrows -->
+    <div id="arrowA" class="nextArrow" title="Continue">
+      <img src="images/nextSlideGreenShape.png" alt="Next">
+    </div>
+
+    <div id="arrowB" class="nextArrow" title="Continue">
+      <img src="images/nextSlideOrangeShape.png" alt="Next">
+    </div>
+  </div>
+
+<script type="module">
+  import { ensureTimerStarted, addScore } from "./js/state.js";
+  ensureTimerStarted();
+
+  const hello = document.getElementById("hello");
+  const b1 = document.getElementById("b1");
+  const optA = document.getElementById("optA");
+  const optB = document.getElementById("optB");
+
+  const b2 = document.getElementById("b2");
+  const b3 = document.getElementById("b3");
+  const finalTile = document.getElementById("finalTile");
+
+  const arrowA = document.getElementById("arrowA");
+  const arrowB = document.getElementById("arrowB");
+
+  let scoreAwarded = false;
+  let branchLocked = false;
+
+  const press = (el) => {
+    el.classList.add("is-pressed");
+    setTimeout(() => el.classList.remove("is-pressed"), 140);
+  };
+
+  const show = (el) => el.classList.add("is-visible");
+  const hideGlow = (el) => el.classList.remove("glow");
+  const showGlow = (el) => el.classList.add("glow");
+
+  const revealSequentialAfterHello = () => {
+    // Step 1 — Speech bubble appears immediately
+    show(b1);
+
+    // Step 2 — Tiles appear 1 second later
+    setTimeout(() => {
+      show(optA);
+      show(optB);
+      showGlow(optA);
+      showGlow(optB);
+    }, 1000);
+  };
+
+  // HELLO
+  hello.addEventListener("click", () => {
+    if (branchLocked) return;
+    press(hello);
+    hideGlow(hello);
+    revealSequentialAfterHello();
+  });
+
+  // OPTION A
+  optA.addEventListener("click", () => {
+    if (branchLocked) return;
+    branchLocked = true;
+
+    press(optA);
+    hideGlow(optA);
+    hideGlow(optB);
+
+    if (!scoreAwarded) {
+      addScore(1);
+      scoreAwarded = true;
+    }
+
+    show(b2);
+    show(arrowA);
+  });
+
+  // OPTION B
+  optB.addEventListener("click", () => {
+    if (branchLocked) return;
+    branchLocked = true;
+
+    press(optB);
+    hideGlow(optB);
+    hideGlow(optA);
+
+    show(b3);
+    show(finalTile);
+    show(arrowB);
+  });
+
+  // NAV
+  arrowA.addEventListener("click", () => {
+    window.location.href = "interviewquestions1.html";
+  });
+
+  arrowB.addEventListener("click", () => {
+    window.location.href = "mcqslide.html";
+  });
+</script>
+
+</body>
+</html>

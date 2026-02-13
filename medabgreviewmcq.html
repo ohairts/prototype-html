@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>ABG MCQ</title>
+
+  <link rel="stylesheet" href="css/common.css">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@900&display=swap" rel="stylesheet">
+
+  <style>
+    body{
+      margin:0;
+      background:#0b3b4a;
+      font-family:"Roboto Slab", serif;
+      overflow:hidden;
+      width:100vw;
+      height:100vh;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
+
+    .stage{
+      position:relative;
+      width:min(1280px, 92vw);
+      height:min(720px, 84vh);
+      background:#e7e7e7;
+      border: 4px solid rgba(0,0,0,.45);
+      box-shadow: 0 26px 55px rgba(0,0,0,.45);
+      overflow:hidden;
+
+      opacity:0;
+      transform: translateY(10px);
+      animation: in .28s ease forwards;
+    }
+    @keyframes in{ to{ opacity:1; transform: translateY(0);} }
+
+    .layout{
+      position:absolute;
+      inset: 28px;
+      display:grid;
+      grid-template-columns: 44% 56%;
+      gap: 22px;
+      align-items: stretch;
+    }
+
+    /* LEFT: ABG image panel */
+    .left{
+      position:relative;
+      background:#f6f6f6;
+      border: 2px solid rgba(0,0,0,.35);
+      box-shadow: 0 14px 26px rgba(0,0,0,.25);
+      overflow:hidden;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
+    .left img{
+      width:100%;
+      height:100%;
+      object-fit: contain;
+      user-select:none;
+      -webkit-user-drag:none;
+      pointer-events:none;
+    }
+
+    /* “More options please” */
+    .more-options{
+      position:absolute;
+      left: 34px;
+      bottom: 34px;
+      width: 190px;
+      height: 86px;
+      background: radial-gradient(circle at 30% 30%, #1f7a2a, #0b4d18);
+      border: 3px solid rgba(0,0,0,.45);
+      border-radius: 999px;
+      box-shadow: 0 14px 26px rgba(0,0,0,.30);
+      color:#fff;
+      font-weight:900;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      text-align:center;
+      cursor:pointer;
+      z-index: 10;
+      transition: transform .12s ease, filter .12s ease;
+    }
+    .more-options:hover{ transform: translateY(-2px) scale(1.02); filter: brightness(1.05); }
+    .more-options:active{ transform: translateY(1px) scale(.99); filter: brightness(.98); }
+
+    /* RIGHT: question + options */
+    .right{
+      position:relative;
+      display:flex;
+      flex-direction:column;
+      gap: 16px;
+    }
+
+    .qbox{
+      background:#0f76a2;
+      border: 2px solid rgba(0,0,0,.35);
+      box-shadow: 0 12px 22px rgba(0,0,0,.25);
+      padding: 18px 18px;
+      border-radius: 6px;
+      color:#fff;
+      font-weight:900;
+      text-align:center;
+      line-height:1.08;
+      font-size: clamp(18px, 2.1vw, 26px);
+    }
+    .qbox small{
+      display:block;
+      font-size: .72em;
+      opacity:.95;
+      font-weight:900;
+    }
+
+    .opt{
+      position:relative;
+      background:#0f76a2;
+      color:#fff;
+      border: 2px solid rgba(0,0,0,.35);
+      box-shadow: 0 12px 22px rgba(0,0,0,.22);
+      border-radius: 8px;
+      padding: 16px 16px;
+      font-weight:900;
+      text-align:center;
+      cursor:pointer;
+      user-select:none;
+      transition: transform .12s ease, filter .12s ease, opacity .12s ease;
+      font-size: clamp(14px, 1.35vw, 18px);
+      line-height:1.1;
+    }
+    .opt:hover{ transform: translateY(-2px); filter: brightness(1.05); }
+    .opt:active{ transform: translateY(1px) scale(.99); filter: brightness(.98); }
+
+    .opt.locked{ cursor: default; }
+    .opt.wrong{ opacity:.55; }
+    .opt.correct{
+      outline: 4px solid rgba(255,255,255,.35);
+      filter: brightness(1.06);
+    }
+
+    /* Green arrow that appears when ANY selection is made */
+    .go-next{
+      position:absolute;
+      top:50%;
+      right:22px;
+      transform: translateY(-50%);
+      width: 78px;
+      height: 78px;
+      background: #49a52b;
+      border: 3px solid rgba(0,0,0,.45);
+      box-shadow: 0 14px 26px rgba(0,0,0,.28);
+      display:none;
+      cursor:pointer;
+      z-index: 30;
+    }
+    .go-next::before{
+      content:"";
+      position:absolute;
+      left: 22px;
+      top: 50%;
+      transform: translateY(-50%);
+      width:0; height:0;
+      border-top: 18px solid transparent;
+      border-bottom: 18px solid transparent;
+      border-left: 30px solid rgba(0,0,0,.55);
+    }
+    .go-next::after{
+      content:"";
+      position:absolute;
+      left: 26px;
+      top: 50%;
+      transform: translateY(-50%);
+      width:0; height:0;
+      border-top: 16px solid transparent;
+      border-bottom: 16px solid transparent;
+      border-left: 28px solid rgba(0,0,0,.15);
+      opacity:.65;
+    }
+    .go-next.show{ display:block; }
+    .go-next:hover{ filter: brightness(1.06); transform: translateY(-50%) scale(1.03); }
+    .go-next:active{ transform: translateY(-50%) scale(.99); }
+
+    /* +1 image pop */
+    .plus-pop{
+      position:absolute;
+      right: 36px;
+      bottom: 10px;
+      width: 54px;
+      height: 54px;
+      display:none;
+      z-index: 40;
+      pointer-events:none;
+      transform: translateY(8px) scale(.98);
+      opacity:0;
+      filter: drop-shadow(0 10px 14px rgba(0,0,0,.35));
+    }
+    .plus-pop.show{
+      display:block;
+      animation: pop 1.0s ease forwards;
+    }
+    @keyframes pop{
+      0%{ opacity:0; transform: translateY(10px) scale(.9); }
+      20%{ opacity:1; transform: translateY(0) scale(1.03); }
+      100%{ opacity:0; transform: translateY(-14px) scale(1.02); }
+    }
+
+    /* Toast */
+    .toast{
+      position:absolute;
+      left: 50%;
+      bottom: 18px;
+      transform: translateX(-50%);
+      background: rgba(0,0,0,.78);
+      color:#fff;
+      padding: 10px 14px;
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,.25);
+      font-weight:900;
+      z-index: 999;
+      display:none;
+    }
+    .toast.show{ display:block; }
+
+    @media (max-width: 900px){
+      .layout{ grid-template-columns: 1fr; }
+      .more-options{ left: 18px; bottom: 18px; width: 170px; height: 78px; }
+      .go-next{ right: 18px; width:70px; height:70px; }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="stage" id="stage">
+    <div class="layout">
+
+      <!-- LEFT -->
+      <div class="left">
+        <img src="images/ptabgmartins.png" alt="Blood gas values">
+      </div>
+
+      <button class="more-options" id="moreOptions" type="button">
+        More options<br/>please
+      </button>
+
+      <!-- RIGHT -->
+      <div class="right" id="rightCol">
+        <div class="qbox">
+          How do you interpret this blood gas?
+          <small>(please select)</small>
+        </div>
+
+        <div class="opt" data-correct="false">Compensated respiratory acidosis</div>
+        <div class="opt" data-correct="false">Uncompensated respiratory acidosis</div>
+
+        <div class="opt" data-correct="true" id="correctOpt">
+          Uncompensated respiratory alkalosis with type 1 respiratory failure
+        </div>
+
+        <div class="opt" data-correct="false">Uncompensated metabolic alkalosis with type 1 respiratory failure</div>
+        <div class="opt" data-correct="false">Compensated metabolic alkalosis</div>
+        <div class="opt" data-correct="false">Type 1 respiratory failure</div>
+
+        <!-- Global arrow: appears after ANY selection -->
+        <div class="go-next" id="goNext" title="Continue" role="button" tabindex="0"></div>
+
+        <!-- +1 pop image (shown on correct) -->
+        <img class="plus-pop" id="plusPop" src="images/plusOneScorePopup.png" alt="+1">
+      </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <audio id="pingSound" preload="auto">
+      <source src="audio/audioPing.mp3" type="audio/mp3">
+    </audio>
+  </div>
+
+  <script type="module">
+    // ===== state.js integration (safe) =====
+    const scoreKey = "overallScore";
+    const addScoreLocal = (n) => {
+      const current = parseFloat(localStorage.getItem(scoreKey) || "0") || 0;
+      localStorage.setItem(scoreKey, String(current + n));
+      window.dispatchEvent(new Event("storage"));
+    };
+
+    let addScore = addScoreLocal;
+
+    try{
+      const mod = await import("./js/state.js");
+      mod.ensureTimerStarted?.();
+      if (typeof mod.addScore === "function") addScore = mod.addScore;
+    }catch(e){
+      console.warn("state.js not loaded:", e);
+    }
+
+    const stage = document.getElementById("stage");
+    const rightCol = document.getElementById("rightCol");
+    const toast = document.getElementById("toast");
+    const pingSound = document.getElementById("pingSound");
+    const plusPop = document.getElementById("plusPop");
+    const moreOptions = document.getElementById("moreOptions");
+    const goNextBtn = document.getElementById("goNext");
+
+    const CORRECT_POINTS = 1;
+    const NEXT_PAGE = "medpatientrecovery.html";
+    const WORKBENCH_PAGE = "medworkbench4.html";
+
+    let locked = false;
+    let awarded = false;
+
+
+    function showToast(msg){
+      toast.textContent = msg;
+      toast.classList.add("show");
+      setTimeout(()=>toast.classList.remove("show"), 1200);
+    }
+
+    function goWithTransition(url){
+      stage.style.transition = "opacity .22s ease, transform .22s ease";
+      stage.style.opacity = "0";
+      stage.style.transform = "translateY(-10px)";
+      setTimeout(()=>{ window.location.href = url; }, 220);
+    }
+
+    // More options -> workbench
+    moreOptions.addEventListener("click", ()=>goWithTransition(WORKBENCH_PAGE));
+
+    function showArrow(){
+      goNextBtn.classList.add("show");
+    }
+
+    // Option click
+    rightCol.addEventListener("click", (e)=>{
+      const opt = e.target.closest(".opt");
+      if (!opt || locked) return;
+
+      const isCorrect = opt.dataset.correct === "true";
+      locked = true;
+
+      // Arrow should appear after ANY selection
+      showArrow();
+
+      // lock styling
+      [...rightCol.querySelectorAll(".opt")].forEach(o => o.classList.add("locked"));
+
+      if (isCorrect){
+        opt.classList.add("correct");
+        [...rightCol.querySelectorAll(".opt")].forEach(o => { if (o !== opt) o.classList.add("wrong"); });
+
+        if (!awarded){
+          addScore(CORRECT_POINTS);
+          awarded = true;
+        }
+
+        try{
+          pingSound.currentTime = 0;
+          pingSound.play().catch(()=>{});
+        }catch(_){}
+
+        plusPop.classList.remove("show");
+        void plusPop.offsetWidth;
+        plusPop.classList.add("show");
+
+        showToast(`+${CORRECT_POINTS}`);
+      }else{
+        opt.classList.add("wrong");
+        showToast("Not quite");
+      }
+    });
+
+function goNext(){
+  goWithTransition(NEXT_PAGE);
+}
+
+
+    goNextBtn.addEventListener("click", (e)=>{ e.stopPropagation(); goNext(); });
+    goNextBtn.addEventListener("keydown", (e)=>{
+      if (e.key === "Enter" || e.key === " ") { e.preventDefault(); goNext(); }
+    });
+  </script>
+</body>
+</html>

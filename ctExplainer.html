@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>CT Result</title>
+
+  <!-- shared styles -->
+  <link rel="stylesheet" href="css/common.css">
+  <link rel="stylesheet" href="css/tile.css">
+  <link rel="stylesheet" href="css/nav-arrows.css">
+
+  <link href="https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@900&display=swap" rel="stylesheet">
+
+  <style>
+    body{
+      margin:0;
+      background:#08394a;
+      font-family:"Roboto Slab", serif;
+      overflow:hidden;
+    }
+
+    .stage{
+      position:relative;
+      width:100vw;
+      height:100vh;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
+
+    /* CT image */
+    .ct-image{
+      max-width: 75vw;
+      max-height: 75vh;
+      border: 4px solid rgba(0,0,0,.6);
+      box-shadow: 0 20px 40px rgba(0,0,0,.5);
+      background:#000;
+    }
+
+    /* explanatory tile */
+    .explain-tile{
+      position:absolute;
+      top: 26px;
+      left: 40%;
+      z-index: 5;
+      width: min(780px, 90vw);
+    }
+
+        .explain-tile:hover{
+      transform: none
+}
+
+    /* right-side nav arrow */
+    .nav-next{
+      position:absolute;
+      right: 26px;
+      top: 50%;
+      transform: translateY(-50%);
+      cursor:pointer;
+      z-index: 10;
+    }
+
+
+
+  </style>
+</head>
+
+<body>
+  <div class="stage">
+
+    <!-- explanation -->
+    <div class="tile explain-tile">
+      Yes. He appears to have a dense left-sided MCA sign.
+      This indicates his left middle cerebral artery is blocked.
+    </div>
+
+    <!-- CT image -->
+    <img
+      src="images/denseMcaSign.png"  
+      alt="CT brain showing dense MCA sign"
+      class="ct-image"
+    />
+
+    <!-- next arrow -->
+    <div class="nav-next" title="Continue">
+      <a href="ctExplainerMcq.html">
+        <img
+          src="images/nextSlideGreenShape.png"
+          alt="Next"
+          style="width:110px; height:auto;"
+        />
+      </a>
+    </div>
+
+  </div>
+</body>
+</html>

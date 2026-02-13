@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Patient Review</title>
+
+  <link rel="stylesheet" href="css/common.css">
+  <link rel="stylesheet" href="css/tile.css">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@900&display=swap" rel="stylesheet">
+
+  <style>
+    body{
+      margin:0;
+      background:#0b3b4a;
+      font-family:"Roboto Slab", serif;
+      overflow:hidden;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      width:100vw;
+      height:100vh;
+    }
+
+    .stage{
+      position:relative;
+      width:min(1200px, 92vw);
+      height:min(720px, 84vh);
+      background:#0b3b4a;
+      border: 4px solid rgba(0,0,0,.45);
+      box-shadow: 0 26px 55px rgba(0,0,0,.45);
+      overflow:hidden;
+      display:flex;
+      flex-direction:column;
+      padding:22px;
+      box-sizing:border-box;
+      gap:18px;
+    }
+
+    .title{
+      color:#fff;
+      font-weight:900;
+      font-size:clamp(22px, 3vw, 34px);
+      text-align:center;
+      text-shadow:0 3px 0 rgba(0,0,0,.25);
+      line-height:1.15;
+      margin:0;
+      flex:0 0 auto;
+    }
+
+    .grid{
+      flex:1 1 auto;
+      min-height:0;
+      display:grid;
+      grid-template-columns:1fr 1fr 1fr;
+      gap:22px;
+      align-items:stretch;
+    }
+
+    .col{
+      min-height:0;
+      overflow:hidden;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
+
+    .img-card{
+      width:100%;
+      height:100%;
+      border-radius:12px;
+      border:4px solid rgba(0,0,0,.55);
+      box-shadow:0 18px 35px rgba(0,0,0,.45);
+      overflow:hidden;
+      background:#000;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
+
+    .img-card img{
+      width:100%;
+      height:100%;
+      object-fit:cover;
+      pointer-events:none;
+      user-select:none;
+    }
+
+    .video-card{
+      width:90%;
+      height:100%;
+      border-radius:12px;
+      border:4px solid rgba(0,0,0,.55);
+      box-shadow:0 18px 35px rgba(0,0,0,.45);
+      overflow:hidden;
+      background:#000;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
+
+    .video-card video{
+      width:50%;
+      height:100%;
+      object-fit:cover;
+    }
+
+    .info-box{
+      width:280px;
+      height:180px;
+      padding:18px 18px;
+      background: linear-gradient(180deg, #b8ff66 0%, #86e81e 100%);
+      color:#0b2a12;
+      border-radius:18px;
+      border: 3px solid rgba(0,0,0,.35);
+      text-align:center;
+      font-weight:900;
+      line-height:1.12;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      box-shadow:
+        0 18px 35px rgba(0,0,0,.35),
+        inset 0 0 0 2px rgba(255,255,255,.25);
+      letter-spacing:.2px;
+      font-size: clamp(20px, 2.8vw, 34px);
+    }
+    .info-box span{ display:block; max-width: 12ch; }
+
+    .fly{
+      position:absolute;
+      left:50%;
+      bottom:-10px;
+      transform:translateX(-50%);
+      width:min(1120px, 92%);
+      opacity:1;
+      pointer-events:auto;
+      z-index:30;
+    }
+
+    .fly-panel{
+      width:100%;
+      background:rgba(0,0,0,.25);
+      border-radius:14px;
+      padding:12px;
+      box-shadow:0 18px 35px rgba(0,0,0,.35);
+      box-sizing:border-box;
+    }
+
+    .fly-grid{
+      width:100%;
+      display:grid;
+      grid-template-columns:repeat(3, minmax(0, 1fr));
+      gap:12px;
+      align-items:stretch;
+    }
+
+    .fly-link{
+      text-decoration:none;
+      display:block;
+      width:100%;
+    }
+
+    .fly-link .tile{
+      width:100%;
+      height:100%;
+      box-sizing:border-box;
+    }
+
+    @media (max-width:900px){
+      .stage{ height:min(820px, 92vh); }
+      .grid{
+        grid-template-columns:1fr;
+        grid-template-rows:1fr 1fr auto;
+      }
+    }
+
+    @media (max-width:600px){
+      .fly{
+        position:static;
+        transform:none;
+        width:100%;
+      }
+      .fly-grid{
+        grid-template-columns:1fr;
+      }
+    }
+
+    /* =======================
+       STAGE-ONLY START OVERLAY
+       ======================= */
+    .start-overlay{
+      position:absolute;
+      inset:0;
+      z-index:999;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+
+      background:
+        linear-gradient(rgba(0,0,0,.25), rgba(0,0,0,.25)),
+        url("images/monitorOverlay.png") center/cover no-repeat;
+
+      border-radius: 8px;
+      transition: opacity .25s ease, transform .25s ease;
+    }
+    .start-overlay.is-hidden{
+      opacity:0;
+      transform: scale(1.01);
+      pointer-events:none;
+    }
+
+    .start-cta{
+      background: rgba(0,0,0,.68);
+      color:#fff;
+      border: 2px solid rgba(255,255,255,.25);
+      border-radius: 18px;
+      padding: 18px 22px;
+      font-weight:900;
+      font-size: clamp(18px, 2.4vw, 30px);
+      cursor:pointer;
+      box-shadow: 0 18px 35px rgba(0,0,0,.45);
+      text-align:center;
+      user-select:none;
+      transition: transform .12s ease, filter .12s ease;
+    }
+    .start-cta:hover{ transform: translateY(-2px) scale(1.02); filter: brightness(1.06); }
+    .start-cta:active{ transform: translateY(1px) scale(.99); filter: brightness(.98); }
+  </style>
+</head>
+
+<body>
+<div class="stage">
+
+  <!-- Stage-only overlay -->
+  <div class="start-overlay" id="startOverlay" aria-label="Start screen">
+    <button class="start-cta" id="startBtn" type="button">Look at Pat?</button>
+  </div>
+
+  <h1 class="title">Back to Pat...</h1>
+
+  <div class="grid">
+
+    <div class="col">
+      <div class="img-card">
+        <img src="images/oldManWorriedInBedOxygen.png" alt="Patrick in bed">
+      </div>
+    </div>
+
+    <div class="col">
+      <div class="video-card">
+        <video src="videos/videoAbdominalBreathing.mp4" autoplay muted loop playsinline></video>
+      </div>
+    </div>
+
+    <div class="col">
+      <div class="info-box" aria-label="Clinical information">
+        <span>Pat is struggling to bring up sputum</span>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="fly" id="fly">
+    <div class="fly-panel">
+      <div class="fly-grid">
+
+        <a class="fly-link" href="patricksExam.html" data-overall="1">
+          <div class="tile">Examine Pat</div>
+        </a>
+
+        <a class="fly-link" href="WhatarepotentialbenefitsofACBT.html" data-overall="1">
+          <div class="tile">Offer<br/>physiotherapy<br/>interventions</div>
+        </a>
+
+        <a class="fly-link" href="PTworkbench6.html" data-social="1">
+          <div class="tile">Other (discuss<br/>with facilitator)</div>
+        </a>
+
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- === Audio beds === -->
+<audio id="audioMonitor" preload="auto" loop>
+  <source src="audio/audioMonitorVitalsTachypnoea.m4a" type="audio/mp4">
+</audio>
+
+<audio id="audioTachy" preload="auto" loop>
+  <source src="audio/audioTachypnoea.m4a" type="audio/mp4">
+</audio>
+
+<script type="module">
+  // --- state.js integration (matches your working MCQ pages) ---
+  let addScore = (n)=>{};
+  let addSocial = (n)=>{};
+  try{
+    const mod = await import("./js/state.js");
+    mod.ensureTimerStarted?.();
+    if (typeof mod.addScore === "function") addScore = mod.addScore;
+    if (typeof mod.addSocial === "function") addSocial = mod.addSocial;
+  }catch(e){
+    console.warn("state.js not loaded:", e);
+  }
+
+  // --- audio start ONLY after "Look at Pat?" click (user gesture) ---
+  const audioMonitor = document.getElementById("audioMonitor");
+  const audioTachy = document.getElementById("audioTachy");
+  audioTachy.playbackRate = 2.0;
+
+  async function startAudio(){
+    try { audioMonitor.currentTime = 0; } catch {}
+    try { audioTachy.currentTime = 0; } catch {}
+    await Promise.all([
+      audioMonitor.play().catch(()=>null),
+      audioTachy.play().catch(()=>null),
+    ]);
+  }
+
+  const overlay = document.getElementById("startOverlay");
+  const startBtn = document.getElementById("startBtn");
+
+  startBtn.addEventListener("click", async () => {
+    await startAudio();
+    overlay.classList.add("is-hidden");
+    setTimeout(()=> overlay.remove(), 260);
+  });
+
+  // Apply scoring on click, then navigate
+  document.querySelectorAll(".fly-link").forEach((link) => {
+    link.addEventListener("click", (e) => {
+      e.preventDefault();
+
+      const overall = Number(link.dataset.overall || 0);
+      const social  = Number(link.dataset.social  || 0);
+
+      if (overall) addScore(overall);
+      if (social) addSocial(social);
+
+      window.location.href = link.getAttribute("href");
+    });
+  });
+</script>
+
+</body>
+</html>

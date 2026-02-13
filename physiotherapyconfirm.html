@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Emergency Department</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@700;900&display=swap" rel="stylesheet">
+
+  <style>
+    :root{
+      --bg:#0b3b4a;
+      --panel:#d9d9d9;
+      --title:#ffffff;
+      --bubble:#ffc400;
+      --btn:#e9a6df;
+      --btnText:#111;
+      --arrow:#f4b400;
+      --arrowGlow: rgba(255, 170, 0, .7);
+      --orangeArrow:#ff8c1a;
+    }
+
+    *{ box-sizing:border-box; }
+    body{
+      margin:0;
+      height:100vh;
+      overflow:hidden;
+      background:var(--bg);
+      font-family: "Roboto Slab", serif;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
+
+    /* Stage: slightly taller, more reliable fit */
+    .stage{
+      width: min(1280px, 96vw);
+      height: min(760px, 96vh);
+      position:relative;
+      padding: 16px 16px 18px;
+    }
+
+    /* Title row: fixed area so it never overlaps the panel */
+    .title{
+      height: clamp(70px, 12vh, 96px);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      color:var(--title);
+      font-size: clamp(32px, 5vw, 64px);
+      font-weight: 900;
+      letter-spacing: 1px;
+      text-shadow: 0 6px 0 rgba(0,0,0,.25);
+      margin-bottom: 10px;
+    }
+
+    /* Panel fills remaining space under title */
+    .panel{
+      position:relative;
+      height: calc(100% - clamp(70px, 12vh, 96px) - 10px);
+      background: #cfcfcf;
+      border: 8px solid rgba(0,0,0,.15);
+      box-shadow: 0 18px 40px rgba(0,0,0,.35);
+      overflow:hidden;
+      display:grid;
+      grid-template-columns: 1fr 96px; /* slimmer arrow column */
+      padding: 12px;
+      gap: 12px;
+    }
+
+    .content{
+      position:relative;
+      border: 6px solid rgba(0,0,0,.15);
+      background: #eee;
+      overflow:hidden;
+      background-image: url("images/edWaitingRoomCubicle.png");
+      background-size: cover;
+      background-position: center;
+    }
+
+    .nurse{
+      position:absolute;
+      left: clamp(18px, 2.5vw, 34px);
+      bottom: calc(clamp(14px, 2.5vh, 28px) - 30%);
+      width: clamp(160px, 18vw, 230px);
+      height: auto;
+      filter: drop-shadow(0 12px 14px rgba(0,0,0,.35));
+      user-select:none;
+      pointer-events:none;
+    }
+
+    /* Speech bubble */
+    .bubble{
+      position:absolute;
+      left: calc(clamp(46px, 3vw, 60px) + 20%);
+      top: clamp(16px, 2.5vh, 28px);
+      width: clamp(300px, 42vw, 420px);
+      text-align: center;
+      background: var(--bubble);
+      border: 3px solid rgba(0,0,0,.35);
+      border-radius: 14px;
+      padding: 16px 18px;
+      font-size: clamp(16px, 1.6vw, 20px);
+      line-height: 1.25;
+      box-shadow: 0 10px 18px rgba(0,0,0,.25);
+      opacity: 0;
+      transform: translate(-40px, -40px) rotate(-4deg);
+    }
+
+    /* Make sure <br> line breaks render correctly */
+    #bubbleText{
+      display:block;
+      white-space: normal;
+    }
+
+    /* Longer tail that is visible */
+    .bubble::after{
+      content:"";
+      position:absolute;
+      left: 74px;
+      bottom: -68px;
+      width:0;
+      height:0;
+      border-left: 24px solid transparent;
+      border-right: 24px solid transparent;
+      border-top: 68px solid var(--bubble);
+      filter: drop-shadow(0 6px 0 rgba(0,0,0,.2));
+    }
+    .bubble::before{
+      content:"";
+      position:absolute;
+      left: 70px;
+      bottom: -74px;
+      width:0;
+      height:0;
+      border-left: 28px solid transparent;
+      border-right: 28px solid transparent;
+      border-top: 74px solid rgba(0,0,0,.28);
+      z-index:-1;
+    }
+
+    .bubble.show{ animation: bubbleIn .65s ease-out forwards; }
+    @keyframes bubbleIn{ to{ opacity:1; transform: translate(0,0) rotate(0); } }
+
+    /* Typed cursor */
+    .typed::after{
+      content:"";
+      display:inline-block;
+      width: 10px;
+      height: 18px;
+      margin-left: 4px;
+      background: rgba(0,0,0,.35);
+      animation: blink 0.8s infinite;
+      vertical-align: -2px;
+    }
+    @keyframes blink{ 0%,49%{opacity:1;} 50%,100%{opacity:0;} }
+
+    /* Buttons: always fit vertically */
+    .roleButtons{
+      position:absolute;
+      right: clamp(16px, 2.5vw, 36px);
+      top: 50%;
+      transform: translateY(-45%);
+      display:flex;
+      flex-direction:column;
+      gap: clamp(12px, 2.2vh, 20px);
+      opacity:0;
+      pointer-events:none;
+      transition: opacity .25s ease, transform .25s ease;
+    }
+    .roleButtons.show{
+      opacity:1;
+      pointer-events:auto;
+      transform: translateY(-50%);
+    }
+
+    .roleBtn{
+      width: clamp(240px, 28vw, 340px);
+      padding: clamp(12px, 2vh, 18px);
+      border-radius: 14px;
+      border: 3px solid rgba(0,0,0,.28);
+      background: var(--btn);
+      color: var(--btnText);
+      font-size: clamp(16px, 1.8vw, 22px);
+      font-weight: 900;
+      line-height: 1.08;
+      box-shadow: 0 10px 18px rgba(0,0,0,.25);
+      cursor:pointer;
+      text-align:center;
+      user-select:none;
+      transition: transform .15s ease, filter .15s ease;
+    }
+    .roleBtn:hover{
+      transform: translateY(-2px);
+      filter: brightness(1.05) drop-shadow(0 0 10px rgba(255,255,255,.25));
+    }
+    .roleBtn.selected{
+      outline: 4px solid rgba(0,0,0,.35);
+      filter: brightness(1.08);
+    }
+
+    /* Right arrow column: thinner arrows, aligned with buttons */
+    .arrowCol{
+      display:flex;
+      flex-direction:column;
+      justify-content:center;
+      gap: clamp(18px, 3vh, 30px);
+      align-items:center;
+      padding-right: 2px;
+    }
+
+    .go-arrow{
+      width: 64px;     /* thinner */
+      height: 44px;
+      background: var(--arrow);
+      border: 3px solid rgba(0,0,0,.35);
+      display:grid;
+      place-items:center;
+      cursor:pointer;
+
+      opacity:0;
+      transform: translateX(10px);
+      pointer-events:none;
+      transition: opacity .2s ease, transform .2s ease, filter .2s ease;
+      box-shadow: 0 10px 18px rgba(0,0,0,.25);
+    }
+    .go-arrow svg{ width: 28px; height: 28px; }
+    .go-arrow.show{ opacity:1; transform: translateX(0); pointer-events:auto; }
+    .go-arrow:hover{ filter: drop-shadow(0 0 12px var(--arrowGlow)); }
+    .go-arrow.active{ background: var(--orangeArrow); }
+
+    /* If height is tiny, shrink a bit more */
+    @media (max-height: 650px){
+      .roleButtons{ transform: translateY(-50%) scale(.95); transform-origin: right center; }
+      .bubble{ transform-origin: left top; }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="stage">
+    <div class="title">Emergency Department</div>
+
+    <body class="role-select-page">
+
+
+    <div class="panel">
+      <div class="content">
+        <img class="nurse" src="images/edNurseIrritated.png" alt="Nurse">
+
+        <div id="bubble" class="bubble">
+          <span id="bubbleText" class="typed"></span>
+        </div>
+
+        <div id="roleButtons" class="roleButtons">
+          <div class="roleBtn" data-role="pharmacist">I’m the pharmacist on<br>call</div>
+          <div class="roleBtn" data-role="physio">I’m the physiotherapist<br>on call</div>
+          <div class="roleBtn" data-role="intern">I’m the intern on<br>call</div>
+        </div>
+      </div>
+
+      <div class="arrowCol">
+        <div class="go-arrow" data-role="pharmacist" title="Continue">
+          <svg viewBox="0 0 60 60" aria-hidden="true">
+            <polygon points="18,10 52,30 18,50" fill="rgba(0,0,0,.55)"></polygon>
+          </svg>
+        </div>
+
+        <div class="go-arrow" data-role="physio" title="Continue">
+          <svg viewBox="0 0 60 60" aria-hidden="true">
+            <polygon points="18,10 52,30 18,50" fill="rgba(0,0,0,.55)"></polygon>
+          </svg>
+        </div>
+
+        <div class="go-arrow" data-role="intern" title="Continue">
+          <svg viewBox="0 0 60 60" aria-hidden="true">
+            <polygon points="18,10 52,30 18,50" fill="rgba(0,0,0,.55)"></polygon>
+          </svg>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const bubble = document.getElementById("bubble");
+    const bubbleText = document.getElementById("bubbleText");
+    const roleButtons = document.getElementById("roleButtons");
+
+    // NOTE: <br> will work because we set innerHTML while typing.
+    const messageHTML =
+      "Hi – I’m Fillipe. I’m one of the<br>" +
+      "acute nurse practitioners covering<br>" +
+      "the ED tonight. Who are you?";
+
+    bubble.classList.add("show");
+
+    function typeHTML(el, html, speed=22){
+      const tokens = html.split(/(<br\s*\/?>)/i).filter(Boolean);
+      let tokenIndex = 0;
+      let charIndex = 0;
+      let current = "";
+
+      function step(){
+        if (tokenIndex >= tokens.length){
+          el.classList.remove("typed");
+          roleButtons.classList.add("show");
+          return;
+        }
+
+        const token = tokens[tokenIndex];
+
+        if (/^<br/i.test(token)){
+          current += "<br>";
+          tokenIndex++;
+          charIndex = 0;
+          el.innerHTML = current;
+          setTimeout(step, speed);
+          return;
+        }
+
+        current += token.charAt(charIndex);
+        el.innerHTML = current;
+
+        charIndex++;
+        if (charIndex >= token.length){
+          tokenIndex++;
+          charIndex = 0;
+        }
+
+        setTimeout(step, speed);
+      }
+
+      el.classList.add("typed");
+      step();
+    }
+
+    setTimeout(() => typeHTML(bubbleText, messageHTML, 22), 300);
+
+    const roleBtns = [...document.querySelectorAll(".roleBtn")];
+    const arrows = [...document.querySelectorAll(".go-arrow")];
+
+    let selectedRole = null;
+
+    function hideAllArrows(){
+      arrows.forEach(a => a.classList.remove("show","active"));
+    }
+
+    roleBtns.forEach(btn => {
+      btn.addEventListener("click", () => {
+        selectedRole = btn.dataset.role;
+
+        roleBtns.forEach(b => b.classList.remove("selected"));
+        btn.classList.add("selected");
+
+        hideAllArrows();
+
+        const arrow = document.querySelector(`.go-arrow[data-role="${selectedRole}"]`);
+        arrow.classList.add("show","active");
+      });
+    });
+
+    const routes = {
+      pharmacist: "pharmacistined.html",
+      physio: "physiotherapistined.html",
+      intern: "internined.html"
+    };
+
+    arrows.forEach(a => {
+      a.addEventListener("click", () => {
+        const role = a.dataset.role;
+        if (routes[role]) window.location.href = routes[role];
+      });
+    });
+  </script>
+</body>
+</html>

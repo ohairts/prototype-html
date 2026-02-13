@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Discharge Medications Review</title>
+
+  <link rel="stylesheet" href="css/common.css">
+  <link rel="stylesheet" href="css/tile.css">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@900&display=swap" rel="stylesheet">
+
+  <style>
+    body{
+      margin:0;
+      background:#08394a;
+      font-family:"Roboto Slab", serif;
+      overflow:hidden;
+      color:#fff;
+    }
+    .stage{
+      position:relative;
+      width:100vw;
+      height:100vh;
+      overflow:hidden;
+      border: 3px solid rgba(0,0,0,.35);
+      box-sizing:border-box;
+    }
+
+    /* ===== main image (kardex) ===== */
+    .kardex{
+      position:absolute;
+      left:50%;
+      top:50%;
+      transform: translate(-50%,-50%);
+      width: min(520px, 42vw);
+      height: min(720px, 88vh);
+      background: #000 url("images/dischargesummaryerrors.png") center / contain no-repeat;
+      border: 3px solid rgba(0,0,0,.55);
+      box-shadow: 0 18px 45px rgba(0,0,0,.45);
+      z-index: 2;
+      user-select:none;
+    }
+
+    /* ===== interactive layer above kardex ===== */
+    .kardex-hitlayer{
+      position:absolute;
+      left:50%;
+      top:50%;
+      transform: translate(-50%,-50%);
+      width: min(520px, 42vw);
+      height: min(720px, 88vh);
+      z-index: 4;
+      pointer-events: auto;
+    }
+
+    .k-hit{
+      position:absolute;
+      border-radius: 8px;
+      background: rgba(0,0,0,0);
+      border: 3px solid rgba(0,0,0,0);
+      transition: background .15s ease, border-color .15s ease, filter .15s ease;
+      cursor:pointer;
+    }
+    .k-hit.correct{
+      background: rgba(46,215,20,.22);
+      border-color: rgba(46,215,20,.85);
+      filter: drop-shadow(0 0 10px rgba(46,215,20,.35));
+      cursor: default;
+    }
+    .k-hit.wrong{
+      background: rgba(255,140,0,.18);
+      border-color: rgba(255,140,0,.85);
+      filter: drop-shadow(0 0 10px rgba(255,140,0,.28));
+      pointer-events:none;
+    }
+
+    /* disable kardex interaction when any popup is open */
+    body.popups-open .kardex-hitlayer{
+      pointer-events:none;
+    }
+
+    /* ===== left prompt header + tiles ===== */
+    .left-header{
+      position:absolute;
+      left: 22px;
+      top: 22px;
+      width: min(280px, 26vw);
+      background:#ffc400;
+      color:#111;
+      border: 4px solid rgba(0,0,0,.35);
+      border-radius: 12px;
+      padding: 14px 14px;
+      text-align:center;
+      font-weight: 900;
+      box-shadow: 0 14px 22px rgba(0,0,0,.25);
+      z-index: 6;
+      line-height: 1.1;
+    }
+
+    /* ===== NEW: right instruction header ===== */
+    .right-header{
+      position:absolute;
+      top: 22px;
+      right: 22px;
+      width: min(320px, 26vw);
+      background:#ffc400;
+      color:#111;
+      border: 4px solid rgba(0,0,0,.35);
+      border-radius: 12px;
+      padding: 14px 16px;
+      text-align:center;
+      font-weight: 900;
+      line-height: 1.1;
+      box-shadow: 0 14px 22px rgba(0,0,0,.25);
+      z-index: 30;
+    }
+
+    .tiles{
+      position:absolute;
+      left: 22px;
+      top: 148px;
+      bottom: 22px;
+      width: min(300px, 28vw);
+      display:flex;
+      flex-direction: column;
+      gap: 18px;
+      z-index: 6;
+    }
+
+    .info-tile{
+      background:#0f78c7;
+      color:#fff;
+      border: 3px solid rgba(46,215,20,.55);
+      border-radius: 10px;
+      padding: 20px 16px;
+      text-align:center;
+      font-weight: 900;
+      cursor:pointer;
+      user-select:none;
+      box-shadow: 0 12px 18px rgba(0,0,0,.25);
+      transition: transform .12s ease, filter .12s ease;
+    }
+    .info-tile:hover{ transform: translateY(-2px); filter: brightness(1.05); }
+    .info-tile:active{ transform: translateY(2px) scale(.99); filter: brightness(.98); }
+
+    /* ===== scrap popups ===== */
+    .scraps{
+      position:absolute;
+      inset:0;
+      z-index: 10;
+      pointer-events:none;
+    }
+
+    .scrap{
+      position:absolute;
+      width: min(420px, 40vw);
+      background: #f5f1df;
+      color:#111;
+      border: 2px solid rgba(0,0,0,.25);
+      border-radius: 10px;
+      padding: 16px 18px;
+      box-shadow: 0 18px 35px rgba(0,0,0,.35);
+      pointer-events:auto;
+      cursor:pointer;
+      user-select:none;
+      background-image:
+        linear-gradient(0deg, rgba(0,0,0,.03), rgba(0,0,0,0)),
+        repeating-linear-gradient(0deg, rgba(0,0,0,.025), rgba(0,0,0,.025) 1px, transparent 1px, transparent 24px);
+    }
+
+    .scrap .hand{
+      font-family: "Comic Sans MS", "Bradley Hand", "Segoe Script", "Snell Roundhand", cursive;
+      font-weight: 600;
+      font-size: clamp(16px, 1.55vw, 20px);
+      line-height: 1.25;
+      white-space: pre-wrap;
+    }
+
+    .scrap[data-rot="a"]{ transform: rotate(-2deg); }
+    .scrap[data-rot="b"]{ transform: rotate(1.5deg); }
+    .scrap[data-rot="c"]{ transform: rotate(-1deg); }
+    .scrap[data-rot="d"]{ transform: rotate(2deg); }
+
+    .pos-details{ left: 44%; top: 14%; width: min(420px, 36vw); }
+    .pos-bg     { left: 44%; top: 26%; width: min(44vw); }
+    .pos-meas   { left: 58%; top: 18%; width: min(320px, 30vw); }
+    .pos-bloods { left: 38%; top: 10%; width: min(520px, 40vw); }
+
+    /* ===== NAV ARROW (hidden until any correct click) ===== */
+    .next-green{
+      position:absolute;
+      right: 22px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 110px;
+      height: 86px;
+      cursor:pointer;
+      z-index: 999;
+      user-select:none;
+      filter: drop-shadow(0 10px 18px rgba(0,0,0,.35));
+      transition: transform .15s ease, filter .2s ease;
+    }
+    .next-green img{
+      width:100%;
+      height:100%;
+      object-fit: contain;
+      display:block;
+    }
+    .next-green:hover{
+      transform: translateY(-50%) scale(1.03);
+      filter: drop-shadow(0 0 12px rgba(46,215,20,.55))
+              drop-shadow(0 12px 18px rgba(0,0,0,.35));
+    }
+    .hidden{ display:none; }
+
+    /* ===== Bottom-right “Discuss MROC” tile ===== */
+    .discussMROC{
+      position:absolute;
+      right: 22px;
+      bottom: 22px;
+      z-index: 20;
+      width: min(280px, 22vw);
+      min-width: 220px;
+      max-width: 320px;
+      cursor:pointer;
+    }
+    .discussMROC:hover,
+    .discussMROC:active,
+    .discussMROC:focus{
+      transform: none;
+    }
+
+    @media (max-width: 900px){
+      .kardex, .kardex-hitlayer{
+        width: min(520px, 60vw);
+        height: min(720px, 78vh);
+      }
+      .discussMROC{ right: 14px; bottom: 14px; width: min(320px, 40vw); }
+      .next-green{ right: 14px; }
+      .right-header{ right: 14px; top: 14px; width: min(320px, 40vw); }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="stage">
+
+    <div class="left-header">
+      Click options<br>below to view<br><b>AND</b><br>to remove information
+    </div>
+
+    <!-- NEW: right instruction header -->
+    <div class="right-header">
+      Please click on<br>
+      any errors you see<br>
+      on the prescription…
+    </div>
+
+    <div class="tiles" id="tiles">
+      <div class="info-tile" data-popup="details">Patient details</div>
+      <div class="info-tile" data-popup="background">Past medical history</div>
+      <div class="info-tile" data-popup="measurements">Patient<br>measurements</div>
+      <div class="info-tile" data-popup="bloods">Key blood results</div>
+    </div>
+
+    <!-- Main kardex -->
+    <div class="kardex" aria-hidden="true"></div>
+
+    <!-- Hotspot interaction layer -->
+    <div id="kardexHitLayer" class="kardex-hitlayer" aria-label="Kardex interactive layer"></div>
+
+    <!-- Popups -->
+    <div id="scraps" class="scraps"></div>
+
+    <!-- Nav arrow (appears after ANY correct hotspot click) -->
+    <div id="navGreen" class="next-green hidden" title="Continue to next slide">
+      <a href="backtothesidelines.html">
+        <img src="images/nextSlideGreenShape.png" alt="Next">
+      </a>
+    </div>
+
+    <!-- Bottom-right tile: Discuss with medical registrar -->
+    <div class="tile discussMROC" id="discussMROCTile" role="button" tabindex="0">
+      Discuss any errors with the medical registrar. <br> (Click Here)
+    </div>
+
+  </div>
+
+  <script type="module">
+    // Optional: keep timer continuity if you use it globally
+    try{
+      const mod = await import("./js/state.js");
+      mod.ensureTimerStarted?.();
+    }catch(e){}
+
+    // ---------- state.js scoring (safe) ----------
+    let addScore = (n)=>{};
+    try{
+      const mod = await import("./js/state.js");
+      if (typeof mod.addScore === "function") addScore = mod.addScore;
+    }catch(e){
+      console.warn("state.js not loaded:", e);
+    }
+
+    const scraps   = document.getElementById("scraps");
+    const tiles    = document.getElementById("tiles");
+    const hitLayer = document.getElementById("kardexHitLayer");
+    const navGreen = document.getElementById("navGreen");
+
+    // ----- bottom-right tile: award +3 social points once, then navigate -----
+    const discussMROCTile = document.getElementById("discussMROCTile");
+    let discussAwarded = false;
+
+    const goDiscussMROC = () => { window.location.href = "workbench7.html"; };
+
+    discussMROCTile.addEventListener("click", () => {
+      if (!discussAwarded){
+        addScore(3);          // social score +3
+        discussAwarded = true;
+      }
+      goDiscussMROC();
+    });
+
+    discussMROCTile.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " "){
+        e.preventDefault();
+        if (!discussAwarded){
+          addScore(3);
+          discussAwarded = true;
+        }
+        goDiscussMROC();
+      }
+    });
+
+    // ---------- POPUPS (scraps) ----------
+    const POPUPS = {
+      details: {
+        cls: "pos-details",
+        rot: "a",
+        text:
+`Details:
+
+Patrick Brown
+DOB: 14/01/1953
+MRN: 478567
+17 Hospital Grove, Hospital Rd, Dublin
+Ph: 0872756242
+
+Next of kin:
+Mary Brown
+Ph: 01-8302479`
+      },
+      background: {
+        cls: "pos-bg",
+        rot: "b",
+        text:
+`Background:
+T2DM
+HTN
+High cholesterol
+Left knee replacement 2016
+
+Med Rec:
+Aspirin 75mg OD   -> Clopidogrel 75mg OD (indication: stroke)
+Metformin 1g BD   -> Metformin 2g BD (indication: as per Endocrine review)
+Ramipril 5mg OD
+Ranolazine 375mg OD
+Atorvastatin 20mg OD -> Atorvastatin 80mg OD (indication: stroke)
+Paracetamol 1g QDS PRN -> Stopped (indication: no further pain)`
+      },
+      measurements: {
+        cls: "pos-meas",
+        rot: "c",
+        text:
+`Measurements:
+
+Height: 178cm
+Weight: 95kg
+BMI: 30`
+      },
+      bloods: {
+        cls: "pos-bloods",
+        rot: "d",
+        img: "images/bloodsondischarge.png"
+      }
+    };
+
+    function updatePopupLock(){
+      const any = scraps.querySelector(".scrap") !== null;
+      document.body.classList.toggle("popups-open", any);
+    }
+
+    function existing(id){
+      return scraps.querySelector(`[data-id="${id}"]`);
+    }
+
+    function makeScrap(id){
+      const cfg = POPUPS[id];
+      const el = document.createElement("div");
+      el.className = `scrap ${cfg.cls}`;
+      el.dataset.id = id;
+      el.dataset.rot = cfg.rot;
+      el.title = "Click to close";
+
+      if (cfg.img){
+        el.innerHTML = `<img src="${cfg.img}" alt="" style="width:100%;height:auto;display:block;object-fit:contain;">`;
+      }else{
+        el.innerHTML = `<div class="hand"></div>`;
+        el.querySelector(".hand").textContent = cfg.text;
+      }
+
+      el.addEventListener("click", () => {
+        el.remove();
+        updatePopupLock();
+      });
+
+      return el;
+    }
+
+    tiles.addEventListener("click", (e) => {
+      const tile = e.target.closest(".info-tile");
+      if (!tile) return;
+
+      const id = tile.dataset.popup;
+      const cur = existing(id);
+
+      if (cur){
+        cur.remove();
+      }else{
+        scraps.appendChild(makeScrap(id));
+      }
+      updatePopupLock();
+    });
+
+    // ---------- HOTSPOTS ----------
+    const HOTSPOTS = [
+      { id:"err1", label:"Error 1", x: 14, y: 18,  w: 18, h: 4, points: 1 },
+      { id:"err2", label:"Error 2", x: 12, y: 44, w: 24, h: 3, points: 1 },
+      { id:"err3", label:"Error 3", x: 34, y: 46, w: 20, h: 3, points: 1 },
+      { id:"err4", label:"Error 4", x: 12, y: 49.5, w: 24, h: 3, points: 1 },
+      { id:"err5", label:"Error 5", x: 12, y: 50.5, w: 24, h: 3, points: 1 },
+      { id:"err6", label:"Error 6", x: 12, y: 52, w: 75, h: 3, points: 1 },
+    ];
+
+    function showNavArrow(){
+      navGreen.classList.remove("hidden");
+    }
+
+    function buildHotspots(){
+      HOTSPOTS.forEach(h => {
+        const el = document.createElement("div");
+        el.className = "k-hit";
+        el.dataset.id = h.id;
+        el.dataset.points = String(h.points);
+
+        el.style.left   = `${h.x}%`;
+        el.style.top    = `${h.y}%`;
+        el.style.width  = `${h.w}%`;
+        el.style.height = `${h.h}%`;
+
+        el.addEventListener("click", (e) => {
+          e.stopPropagation();
+          if (el.classList.contains("correct")) return;
+
+          el.classList.add("correct");
+
+          const pts = Number(el.dataset.points || 0);
+          if (pts > 0) addScore(pts);
+
+          showNavArrow();
+        });
+
+        hitLayer.appendChild(el);
+      });
+    }
+
+    function showWrongAt(clientX, clientY){
+      const rect = hitLayer.getBoundingClientRect();
+      const xPct = ((clientX - rect.left) / rect.width) * 100;
+      const yPct = ((clientY - rect.top) / rect.height) * 100;
+
+      const mark = document.createElement("div");
+      mark.className = "k-hit wrong";
+      mark.style.left = `${Math.max(0, xPct - 6)}%`;
+      mark.style.top  = `${Math.max(0, yPct - 2.5)}%`;
+      mark.style.width  = `12%`;
+      mark.style.height = `5%`;
+
+      hitLayer.appendChild(mark);
+      setTimeout(() => mark.remove(), 900);
+    }
+
+    hitLayer.addEventListener("click", (e) => {
+      showWrongAt(e.clientX, e.clientY);
+    });
+
+    buildHotspots();
+    updatePopupLock();
+  </script>
+</body>
+</html>

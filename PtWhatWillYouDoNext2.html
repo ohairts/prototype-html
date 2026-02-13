@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>What will you do next?</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@400;600;800&display=swap" rel="stylesheet">
+
+  <style>
+    :root{
+      --bg: #0b3f53;
+      --tile: #a9bac8;
+      --tileBorder: #e6a13a;
+      --shadow: rgba(0,0,0,0.35);
+      --orange: #ea7a2c;
+      --white: #ffffff;
+      --ink: #0b0f12;
+    }
+
+    *{ box-sizing:border-box; }
+    html, body{
+      height:100%;
+      margin:0;
+      font-family: "Roboto Slab", serif;
+      background: var(--bg);
+      overflow: hidden;
+    }
+
+    /* 16:9 stage */
+    .stage{
+      position: relative;
+      width: min(100vw, calc(100vh * 16 / 9));
+      height: min(100vh, calc(100vw * 9 / 16));
+      margin: 0 auto;
+      background: var(--bg);
+      overflow: hidden;
+      border: 2px solid rgba(0,0,0,0.35);
+    }
+
+    .title{
+      position:absolute;
+      top: 6%;
+      left: 50%;
+      transform: translateX(-50%);
+      color: var(--white);
+      font-weight: 800;
+      letter-spacing: 1px;
+      font-size: clamp(34px, 5vw, 64px);
+      text-shadow: 0 3px 0 rgba(0,0,0,0.25);
+      white-space: nowrap;
+    }
+
+    /* Tiles */
+    .tile{
+      position:absolute;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      text-align:center;
+      padding: 18px;
+      background: var(--tile);
+      color: var(--ink);
+      text-decoration:none;
+      font-weight: 700;
+      border-radius: 4px;
+      border: 2px solid rgba(0,0,0,0.25);
+      box-shadow:
+        0 0 0 3px rgba(230,161,58,0.85) inset,
+        0 10px 20px var(--shadow);
+      transition: transform 120ms ease, filter 120ms ease;
+      user-select:none;
+      cursor:pointer;
+    }
+    .tile:hover{ transform: translateY(-2px); filter: brightness(1.03); }
+    .tile:active{ transform: translateY(0px) scale(0.99); }
+
+    .tile .small{
+      display:block;
+      font-weight: 700;
+      font-size: clamp(14px, 1.6vw, 20px);
+      line-height: 1.15;
+    }
+
+    /* Positioning (matches screenshot layout closely) */
+    #tPharm { left: 14%; top: 24%; width: 22%; height: 16%; }
+    #tMed   { left: 40%; top: 24%; width: 22%; height: 16%; }
+    #tMucus { left:  6%; top: 52%; width: 28%; height: 20%; }
+    #tCrash { left: 34%; top: 64%; width: 24%; height: 18%; }
+    /* nudged toward center to avoid overlapping timer bubble */
+    #tNIV   { left: 56%; top: 52%; width: 24%; height: 18%; }
+
+    /* Countdown bubble */
+    .countBubble{
+      position:absolute;
+      right: 12%;
+      top: 46%;
+      width: 78px;
+      height: 56px;
+      background: var(--white);
+      border-radius: 8px;
+      border: 2px solid rgba(0,0,0,0.25);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      box-shadow: 0 10px 20px var(--shadow);
+      z-index: 5;
+    }
+    .countBubble span{
+      font-size: 44px;
+      font-weight: 900;
+      line-height: 1;
+      color: #0a0a0a;
+    }
+
+    /* Orange timer bar (smooth wipe over 15s) */
+    .barWrap{
+      position:absolute;
+      right: 4%;
+      top: 14%;
+      width: 6%;
+      height: 76%;
+      background: rgba(0,0,0,0.2);
+      border-radius: 2px;
+      overflow:hidden;
+      border: 2px solid rgba(0,0,0,0.25);
+      z-index: 4;
+    }
+    .barFill{
+      position:absolute;
+      left:0;
+      bottom:0;
+      width:100%;
+      height:100%;
+      background: var(--orange);
+      transform-origin: bottom;
+      transform: scaleY(1);
+      animation: barWipe 15s linear forwards;
+    }
+    @keyframes barWipe{
+      from { transform: scaleY(1); }
+      to   { transform: scaleY(0); }
+    }
+
+    /* Optional “tap to enable audio” hint */
+    .audioHint{
+      position:absolute;
+      left: 50%;
+      bottom: 6%;
+      transform: translateX(-50%);
+      color: rgba(255,255,255,0.75);
+      font-size: 16px;
+      padding: 8px 12px;
+      border-radius: 8px;
+      border: 1px solid rgba(255,255,255,0.15);
+      background: rgba(255,255,255,0.06);
+      display:none;
+      z-index: 10;
+    }
+
+    /* Decorative next arrow (kept as in your screenshot) */
+    .nextBtn{
+      position:absolute;
+      right: 12%;
+      bottom: 12%;
+      width: 92px;
+      height: 58px;
+      border-radius: 6px;
+      background: #7a1e8c;
+      border: 2px solid rgba(0,0,0,0.3);
+      box-shadow: 0 10px 18px var(--shadow);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      pointer-events: none; /* decorative */
+      opacity: 0.95;
+      z-index: 3;
+    }
+    .nextBtn:before{
+      content:"";
+      width:0; height:0;
+      border-top: 16px solid transparent;
+      border-bottom: 16px solid transparent;
+      border-left: 30px solid rgba(0,0,0,0.35);
+      margin-left: 6px;
+    }
+    .nextBtn:after{
+      content:"";
+      position:absolute;
+      width:0; height:0;
+      border-top: 16px solid transparent;
+      border-bottom: 16px solid transparent;
+      border-left: 30px solid #3d133f;
+      margin-left: 10px;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="stage" role="application" aria-label="What will you do next slide">
+    <div class="title">What will you do next?</div>
+
+    <!-- Tiles -->
+    <a id="tPharm" class="tile" href="PTpharmacistDiscussion.html">
+      <span class="small">Call pharmacist on<br/>call?</span>
+    </a>
+
+    <a id="tMed" class="tile" href="PTclinicianDiscussion.html">
+      <span class="small">Call the medical<br/>team</span>
+    </a>
+
+    <a id="tMucus" class="tile" href="ptchestclearance.html" data-addscore="1">
+      <span class="small">We could perform<br/>mucus clearing<br/>exercises?</span>
+    </a>
+
+    <a id="tCrash" class="tile" href="ptcrashtrolley.html">
+      <span class="small">Grab the crash<br/>trolley?</span>
+    </a>
+
+    <a id="tNIV" class="tile" href="PTworkbench7.html">
+      <span class="small">Start non-invasive<br>ventilation<br>or other intervention?</span>
+    </a>
+
+    <!-- Countdown -->
+    <div class="countBubble" aria-label="Countdown timer">
+      <span id="count">15</span>
+    </div>
+
+    <!-- Orange bar -->
+    <div class="barWrap" aria-label="Timer bar">
+      <div id="barFill" class="barFill"></div>
+    </div>
+
+    <div class="nextBtn" aria-hidden="true" href="PTworkbench7.html"></div>
+
+    <div id="audioHint" class="audioHint">Tap anywhere to enable audio</div>
+
+    <!-- Audio -->
+    <audio id="tickAudio" preload="auto">
+      <source src="audio/clockTickingDown.mp3" type="audio/mpeg">
+    </audio>
+
+    <audio id="monitorAudio" preload="auto">
+      <source src="audio/audioEcgSimulatorPneumonia.mp3" type="audio/mpeg">
+    </audio>
+  </div>
+
+<script>
+  (function(){
+    // =========================
+    // CONFIG
+    // =========================
+    const TOTAL_MS = 15000;              // countdown + bar duration
+    const MONITOR_START_MS = 0;      // when monitor should begin
+    const MONITOR_PLAY_MS  = 30000;      // play monitor for 30s
+    const MONITOR_SEEK_S   = 22;         // start monitor audio at 22s
+    const TICK_CUT_TAIL_S  = 1.0;        // cut final 1s from loop
+
+    // =========================
+    // ELEMENTS
+    // =========================
+    const countEl = document.getElementById("count");
+    const tick = document.getElementById("tickAudio");
+    const mon  = document.getElementById("monitorAudio");
+    const hint = document.getElementById("audioHint");
+
+    // =========================
+    // COUNTDOWN (15 -> 0)
+    // =========================
+    const start = performance.now();
+
+    function updateCountdown(){
+      const elapsed = performance.now() - start;
+      const remaining = Math.max(0, TOTAL_MS - elapsed);
+      const remainingS = Math.ceil(remaining / 1000);
+      countEl.textContent = String(Math.max(0, Math.min(15, remainingS)));
+
+      if (remaining > 0) requestAnimationFrame(updateCountdown);
+      else countEl.textContent = "0";
+    }
+    requestAnimationFrame(updateCountdown);
+
+    // =========================
+    // SCORE + TILE CLICK HANDLING
+    // =========================
+    const scoreKey = "overallScore";
+    function addScore(n){
+      const current = parseFloat(localStorage.getItem(scoreKey) || "0") || 0;
+      localStorage.setItem(scoreKey, String(current + n));
+    }
+
+    const mucusTile = document.getElementById("tMucus");
+    if (mucusTile){
+      mucusTile.addEventListener("click", (e) => {
+        e.preventDefault();
+        addScore(1);
+        window.location.href = mucusTile.getAttribute("href");
+      });
+    }
+
+    // =========================
+    // AUDIO HELPERS
+    // =========================
+    function safePause(a){
+      if (!a) return;
+      try { a.pause(); } catch(e) {}
+    }
+
+    function safeReset(a, t=0){
+      if (!a) return;
+      try { a.currentTime = t; } catch(e) {}
+    }
+
+    // Autoplay fallback (if browser blocks until user gesture)
+    let armed = false;
+    function armGestureRetry(){
+      if (armed) return;
+      armed = true;
+      if (hint) hint.style.display = "block";
+
+      const resume = async () => {
+        if (hint) hint.style.display = "none";
+
+        // Try starting both; timeline logic below will enforce seek/stop windows.
+        try { if (tick) await tick.play(); } catch(e) {}
+        try { if (mon)  await mon.play();  } catch(e) {}
+
+        window.removeEventListener("pointerdown", resume, true);
+        window.removeEventListener("keydown", resume, true);
+        armed = false;
+      };
+
+      window.addEventListener("pointerdown", resume, true);
+      window.addEventListener("keydown", resume, true);
+    }
+
+    // =========================
+    // TICK: start immediately, loop excluding last 1s, stop at 15s
+    // =========================
+    let tickLoopEnd = null; // computed after metadata loads
+
+    if (tick){
+      tick.preload = "auto";
+      tick.volume = 0.9;
+      tick.loop = false; // we do our own seamless-ish loop window
+
+      tick.addEventListener("loadedmetadata", () => {
+        const dur = tick.duration;
+        if (Number.isFinite(dur) && dur > TICK_CUT_TAIL_S + 0.2) {
+          tickLoopEnd = Math.max(0, dur - TICK_CUT_TAIL_S);
+        } else {
+          // fallback: if duration unknown, just loop whole file
+          tickLoopEnd = null;
+        }
+      });
+
+      // Loop window: 0 -> (duration - 1s)
+      tick.addEventListener("timeupdate", () => {
+        if (!tick.paused && tickLoopEnd !== null && tick.currentTime >= tickLoopEnd) {
+          // jump back to start before the "weird interruption"
+          try { tick.currentTime = 0; } catch(e) {}
+          // play() sometimes needed on some browsers after setting currentTime
+          tick.play().catch(()=>{});
+        }
+      });
+    }
+
+    // Start tick now (on load)
+    (async function startTickNow(){
+      if (!tick) return;
+      try { await tick.play(); }
+      catch(e){ armGestureRetry(); }
+    })();
+
+    // Stop tick at 15s
+    window.setTimeout(() => {
+      safePause(tick);
+      safeReset(tick, 0);
+    }, TOTAL_MS);
+
+    // =========================
+    // MONITOR: start on load, but only audible from 22s -> 52s
+    // Seek to 22s when it begins, play for 30s, then stop.
+    // =========================
+    if (mon){
+      mon.preload = "auto";
+      mon.volume = 0.9;
+      mon.loop = false; // we want exactly 30s, not infinite loop
+
+      // Try to start it immediately (may be blocked; fallback handles)
+      (async function primeMonitor(){
+        try { await mon.play(); }
+        catch(e){ armGestureRetry(); }
+        // If it did start, we’ll keep it quiet until the real start moment.
+        mon.muted = true;
+      })();
+
+      // At 22s (page timeline): unmute, seek to 22s in file, play.
+      window.setTimeout(async () => {
+        if (!mon) return;
+
+        // Make sure metadata is available before seeking
+        const seekAndPlay = async () => {
+          try {
+            mon.muted = false;
+
+            // Clamp seek if file shorter than expected
+            const dur = mon.duration;
+            const target = (Number.isFinite(dur) && dur > 0)
+              ? Math.min(MONITOR_SEEK_S, Math.max(0, dur - 0.05))
+              : MONITOR_SEEK_S;
+
+            safeReset(mon, target);
+            await mon.play();
+          } catch(e){
+            armGestureRetry();
+          }
+        };
+
+        if (Number.isFinite(mon.duration) && mon.duration > 0) {
+          await seekAndPlay();
+        } else {
+          mon.addEventListener("loadedmetadata", seekAndPlay, { once: true });
+          // also nudge load in case it hasn't
+          mon.load();
+        }
+
+        // Stop monitor after 30s of playing
+        window.setTimeout(() => {
+          safePause(mon);
+          safeReset(mon, 0);
+        }, MONITOR_PLAY_MS);
+
+      }, MONITOR_START_MS);
+    }
+
+    // Optional: pause audio if tab hidden
+    document.addEventListener("visibilitychange", () => {
+      if (document.hidden){
+        safePause(tick);
+        safePause(mon);
+      }
+    });
+  })();
+</script>
+
+</body>
+</html>

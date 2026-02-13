@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Thrombolysis Decision</title>
+
+  <link rel="stylesheet" href="css/common.css">
+  <link rel="stylesheet" href="css/tile.css">
+  <link rel="stylesheet" href="css/nav-arrows.css">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@900&display=swap" rel="stylesheet">
+
+  <style>
+    body{
+      margin:0;
+      background:#08394a;
+      font-family:"Roboto Slab", serif;
+      overflow:hidden;
+      color:#fff;
+    }
+    .stage{
+      position:relative;
+      width:100vw;
+      height:100vh;
+      overflow:hidden;
+      border: 4px solid rgba(0,0,0,.35);
+      box-sizing:border-box;
+    }
+
+    /* ===== Background scan panel ===== */
+    .scan{
+      position:absolute;
+      left:50%;
+      top:50%;
+      transform: translate(-50%,-50%);
+      width: min(860px, 78vw);
+      height: min(520px, 72vh);
+      background: #000 url("images/densemcasign.png") center / contain no-repeat; /* <-- CHANGE */
+      border: 3px solid rgba(0,0,0,.55);
+      box-shadow: 0 18px 45px rgba(0,0,0,.45);
+    }
+
+    /* ===== Doctor image bottom-left ===== */
+    .doc{
+      position:absolute;
+      left: 110px;
+      bottom: 42px;
+      width: min(180px, 18vw);
+      height: auto;
+      z-index: 20;
+      filter: drop-shadow(0 18px 26px rgba(0,0,0,.45));
+      user-select:none;
+      -webkit-user-drag:none;
+      pointer-events:none;
+    }
+
+    /* ===== Speech bubble ===== */
+    .bubble{
+      position:absolute;
+      left: 230px;
+      top: 175px;
+      width: min(340px, 34vw);
+      background: #ffc400;
+      color:#111;
+      border: 4px solid rgba(0,0,0,.35);
+      border-radius: 18px;
+      padding: 16px 18px;
+      font-weight: 900;
+      font-size: clamp(14px, 1.4vw, 18px);
+      line-height: 1.2;
+      z-index: 25;
+      box-shadow: 0 14px 22px rgba(0,0,0,.25);
+    }
+    .bubble:after{
+      content:"";
+      position:absolute;
+      left: 34px;
+      bottom: -160px;
+      border-left: 10px solid transparent;
+      border-right: 10px solid transparent;
+      border-top: 170px solid #ffc400;
+      transform: rotate(5deg);
+      transform-origin: top center;
+      filter: drop-shadow(0 8px 0 rgba(0,0,0,.18));
+    }
+
+    /* ===== Timer column (red filled, erased by black mask) ===== */
+    .timer-wrap{
+      position:absolute;
+      left: 36px;
+      top: 36px;
+      bottom: 36px;
+      width: 64px;
+      border: 3px solid rgba(255,0,0,.55);
+      background:#000;
+      box-shadow: 0 0 0 6px rgba(0,0,0,.35);
+      overflow:hidden;
+      z-index: 30;
+    }
+    .timer-red{
+      position:absolute;
+      inset:0;
+      background:#ff0000;
+      box-shadow: inset 0 0 16px rgba(255,0,0,.9);
+      transition: opacity .2s linear, filter .2s linear;
+    }
+    .timer-mask{
+      position:absolute;
+      left:0;
+      top:0;
+      width:100%;
+      height:0%;
+      background:#000;
+    }
+
+    /* ===== Answers column (right) ===== */
+    .answers{
+      position:absolute;
+      right: 140px;
+      top: 160px;
+      width: min(260px, 24vw);
+      display:flex;
+      flex-direction: column;
+      gap: 22px;
+      z-index: 40;
+    }
+
+    /* Use tile.css but give these a "peach" look like screenshot */
+    .ans{
+      width: 100%;
+      max-width:none;
+      min-width:0;
+      background: #ffc4a3;
+      border: 3px solid rgba(0,0,0,.25);
+      color:#111;
+      box-shadow:
+        0 0 10px rgba(46,215,20,.55),
+        0 0 18px rgba(46,215,20,.25),
+        2px 2px 6px rgba(0,0,0,.45);
+      transition: transform .12s ease, filter .12s ease;
+      cursor:pointer;
+      user-select:none;
+    }
+    .ans:hover{
+      transform: translateY(-2px) scale(1.02);
+      filter: brightness(1.03);
+    }
+    .ans:active{
+      transform: translateY(2px) scale(.99);
+      filter: brightness(.98);
+    }
+
+    .locked{ pointer-events:none; opacity:.92; }
+
+    /* ===== Right-side nav arrow (orange panel + black triangle) ===== */
+    .nav-next{
+      position:absolute;
+      right: 26px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 70px;
+      height: 170px;
+      background: #b04b16;
+      border: 3px solid rgba(0,0,0,.55);
+      box-shadow: 0 14px 26px rgba(0,0,0,.35);
+      display:none;
+      place-items:center;
+      cursor:pointer;
+      z-index: 60;
+      user-select:none;
+    }
+    .nav-next.show{ display:grid; }
+    .nav-next:before{
+      content:"";
+      width:0;height:0;
+      border-top: 26px solid transparent;
+      border-bottom: 26px solid transparent;
+      border-left: 44px solid rgba(0,0,0,.75);
+      transform: translateX(2px);
+    }
+    .nav-next:hover{ filter: brightness(1.05); transform: translateY(-50%) scale(1.01); }
+    .nav-next:active{ transform: translateY(-50%) scale(.99); }
+
+    @media (max-width: 900px){
+      .answers{ right: 110px; top: 140px; }
+      .bubble{ left: 190px; top: 140px; width: min(360px, 48vw); }
+      .doc{ left: 90px; width: min(160px, 22vw); }
+      .scan{ width: min(920px, 90vw); height: min(520px, 62vh); }
+      .timer-wrap{ left: 18px; width: 52px; }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="stage">
+
+    <!-- TIMER -->
+    <div class="timer-wrap" aria-hidden="true">
+      <div id="timerRed" class="timer-red"></div>
+      <div id="timerMask" class="timer-mask"></div>
+    </div>
+
+    <!-- BACKGROUND SCAN -->
+    <div class="scan" aria-hidden="true"></div>
+
+    <!-- DOCTOR IMAGE -->
+    <img class="doc" src="images/edNurseIrritated.png" alt="" aria-hidden="true"> <!-- <-- CHANGE -->
+
+    <!-- SPEECH BUBBLE -->
+    <div class="bubble">
+      It’s 6pm now. He says he started to feel unwell at 4.30pm.
+      Do you think he can get the clot buster medication?
+      He has no clinical contraindications.
+    </div>
+
+    <!-- ANSWERS -->
+    <div class="answers" id="answers">
+      <div class="tile ans" data-correct="true">Yes.</div>
+      <div class="tile ans" data-correct="false">No.</div>
+      <div class="tile ans" data-correct="false">I really have no idea.<br>That’s not my job.</div>
+    </div>
+
+    <!-- NAV ARROW -->
+    <div id="navNext" class="nav-next" title="Continue" role="button" tabindex="0"></div>
+
+    <!-- ticking audio (you will provide file) -->
+    <audio id="tickSound" preload="auto" loop>
+      <source src="audio/clockTickingDown.mp3" type="audio/mp3"> <!-- <-- CHANGE -->
+    </audio>
+
+  </div>
+
+  <script type="module">
+    // ----- CONFIG -----
+    const DURATION_MS = 10000;
+    const NEXT_SLIDE = "workbench4.html";
+    const CORRECT_POINTS = 3;
+
+    // ----- state.js integration (safe) -----
+    let addScore = (n)=>{};
+    try{
+      const mod = await import("./js/state.js");
+      mod.ensureTimerStarted?.();
+      if (typeof mod.addScore === "function") addScore = mod.addScore;
+    }catch(e){
+      console.warn("state.js not loaded:", e);
+    }
+
+    // ----- elements -----
+    const mask = document.getElementById("timerMask");
+    const red  = document.getElementById("timerRed");
+    const tick = document.getElementById("tickSound");
+    const answers = document.getElementById("answers");
+    const nav = document.getElementById("navNext");
+
+    let locked = false;
+    let start = performance.now();
+    let raf = null;
+
+    function showNav(){
+      nav.classList.add("show");
+    }
+
+    function stopTimer(){
+      if (raf) cancelAnimationFrame(raf);
+      try{
+        tick.pause();
+        tick.currentTime = 0;
+      }catch(e){}
+    }
+
+    function finish(isCorrect){
+      if (locked) return;
+      locked = true;
+
+      // lock answer buttons
+      [...answers.querySelectorAll(".ans")].forEach(b => b.classList.add("locked"));
+
+      if (isCorrect){
+        addScore(CORRECT_POINTS);
+      }
+
+      stopTimer();
+      showNav();
+    }
+
+    function update(){
+      const t = Math.min(1, (performance.now() - start) / DURATION_MS);
+
+      // black mask grows downwards (erases red)
+      mask.style.height = `${t * 100}%`;
+
+      // optional polish: fade red slightly and brighten in last second
+      red.style.opacity = 1 - (t * 0.4);
+      if (t > 0.9){
+        red.style.filter = "brightness(1.35)";
+      }else{
+        red.style.filter = "";
+      }
+
+      if (t >= 1){
+        finish(false); // timeout behaves like incorrect
+        return;
+      }
+      raf = requestAnimationFrame(update);
+    }
+
+    // autoplay ticking (safe fallback if browser blocks)
+    tick.play().catch(() => {
+      document.addEventListener("pointerdown", () => {
+        tick.play().catch(()=>{});
+      }, { once:true });
+    });
+
+    raf = requestAnimationFrame(update);
+
+    // answer click
+    answers.addEventListener("click", (e) => {
+      const btn = e.target.closest(".ans");
+      if (!btn || locked) return;
+      finish(btn.dataset.correct === "true");
+    });
+
+    // nav click + keyboard
+    function goNext(){ window.location.href = NEXT_SLIDE; }
+    nav.addEventListener("click", goNext);
+    nav.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " ") goNext();
+    });
+  </script>
+</body>
+</html>

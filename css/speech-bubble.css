@@ -1,0 +1,68 @@
+/* Generic timed pop-in bubble */
+.bubble{
+  position: absolute;
+  left: 58%;
+  top: 20%;
+  transform: translate(-50%, -10px) scale(.96);
+  background: #fff;
+  color: #111;
+  padding: 16px 18px;
+  border-radius: 18px;
+  max-width: min(420px, 70vw);
+  font-family: "IBM Plex Serif", serif;
+  font-weight: 700;
+  opacity: 0;
+  pointer-events: none;
+  box-shadow: 0 14px 30px rgba(0,0,0,.35);
+  border: 3px solid rgba(0,0,0,.25);
+  z-index: 6;
+}
+
+/* little tail */
+.bubble::after{
+  content:"";
+  position:absolute;
+  left: 54px;
+  bottom: -58px;                 /* move it further down */
+  width: 0;
+  height: 0;
+  border-left: 20px solid transparent;
+  border-right: 20px solid transparent;
+  border-top: 58px solid var(--yellow);  /* LONGER tail */
+  filter: drop-shadow(0 3px 0 rgba(0,0,0,.25));
+}
+
+.role-select-page .bubble::after{
+  content:"";
+  position:absolute;
+  left: 74px;
+  bottom: -68px;
+
+  border-left: 24px solid transparent;
+  border-right: 24px solid transparent;
+  border-top: 68px solid var(--bubble);
+
+  transform: rotate(-45deg);
+  transform-origin: top center;
+}
+
+
+/* Longer speech-bubble tail (optional modifier) */
+.bubble--long-tail::after{
+  bottom: -38px;                /* pushes tail further down */
+  border-left-width: 18px;
+  border-right-width: 18px;
+  border-top-width: 48px;       /* makes tail longer */
+}
+
+
+.bubble.is-visible{
+  opacity: 1;
+  transform: translate(-50%, 0) scale(1);
+  animation: bubbleIn .35s ease-out;
+}
+
+@keyframes bubbleIn{
+  from{ opacity: 0; transform: translate(-50%, -14px) scale(.96); }
+  to{ opacity: 1; transform: translate(-50%, 0) scale(1); }
+}

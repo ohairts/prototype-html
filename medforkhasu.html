@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>HASU Hub</title>
+
+  <link rel="stylesheet" href="css/common.css">
+  <link rel="stylesheet" href="css/tile.css">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@900&display=swap" rel="stylesheet">
+
+  <style>
+    body{
+      margin:0;
+      background:#0b3b4a;
+      font-family:"Roboto Slab", serif;
+      overflow:hidden;
+
+      /* ✅ center the whole “slide” */
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      width:100vw;
+      height:100vh;
+    }
+
+    .stage{
+      position:relative;
+
+      /* ✅ centered panel size (not full screen) */
+      width: min(1200px, 88vw);
+      height: min(720px, 82vh);
+
+      background:#0b3b4a;
+      overflow:hidden;
+
+      /* optional: make it feel like a framed slide */
+      border: 4px solid rgba(0,0,0,.45);
+      box-shadow: 0 26px 55px rgba(0,0,0,.45);
+    }
+
+    /* corridor image */
+    .bg{
+      position:absolute;
+      inset: 2px;
+      background: url("images/martins.png") center / cover no-repeat;
+      border: 4px solid rgba(0,0,0,.55);
+      box-shadow: 0 22px 45px rgba(0,0,0,.45);
+    }
+
+
+    /* --- tiles (appearance from tile.css; this just places them) --- */
+    .tile-link{
+      position:absolute;
+      text-decoration:none;
+      z-index: 10;
+      display:inline-block;
+    }
+
+    /* IMPORTANT: don't override tile.css hover behaviour.
+       Keep only typography tweaks that you actually need. */
+    .tile-link .tile{
+      line-height:1.05;
+      font-weight:900;
+      font-size: clamp(18px, 2.2vw, 34px);
+      transform-origin: center;
+    }
+
+    /* positions to mimic screenshot */
+    #tileCrash{ left: 22%; top: 60%; transform: translate(-50%, -50%); }
+    #tileNotes{ left: 67%; top: 46%; transform: translate(-50%, -50%); }
+    #tilePatient{ left: 78%; top: 64%; transform: translate(-50%, -50%); }
+
+    /* --- blue arrows --- */
+    .arrow{
+      position:absolute;
+      width: 50px;
+      height: 18px;
+      background: #6fd0ff;
+      border: 3px solid rgba(0,0,0,.55);
+      box-shadow: 0 10px 18px rgba(0,0,0,.25);
+      z-index: 9;
+      transform-origin: left center;
+    }
+    .arrow::after{
+      content:"";
+      position:absolute;
+      right:-22px;
+      top:50%;
+      transform: translateY(-50%);
+      width:0; height:0;
+      border-top: 16px solid transparent;
+      border-bottom: 16px solid transparent;
+      border-left: 22px solid #6fd0ff;
+      filter: drop-shadow(2px 2px 0 rgba(0,0,0,.35));
+    }
+
+    /* place/angle arrows like the screenshot */
+    #arrowCrash{ left: 31%; top: 74%; transform: rotate(-150deg); }
+    #arrowNotes{ left: 58%; top: 57%; transform: rotate(-35deg); }
+    #arrowPatient{ left: 64%; top: 71%; transform: rotate(-20deg); }
+
+    @media (max-width: 900px){
+      .bg{ inset: 14px; }
+
+      #tileCrash{ left: 30%; top: 62%; }
+      #tileNotes{ left: 66%; top: 46%; }
+      #tilePatient{ left: 70%; top: 68%; }
+
+      .arrow{ width: 90px; }
+    }
+
+    @media (max-width: 600px){
+      #tileCrash{ left: 50%; top: 58%; }
+      #tileNotes{ left: 50%; top: 40%; }
+      #tilePatient{ left: 50%; top: 74%; }
+
+      #arrowCrash, #arrowNotes, #arrowPatient{ display:none; }
+    }
+
+    /* Page-specific tile sizing override */
+.stage .tile{
+  width: 4vw;        /* increase/decrease as needed */
+  height: 4vw;
+  max-width: 360px;
+
+  font-size: 1.1rem;
+}
+  </style>
+</head>
+
+<body>
+  <div class="stage">
+
+    <div class="bg" aria-hidden="true"></div>
+
+    <!-- Tiles -->
+    <a id="tileCrash" class="tile-link" href="medcrashtrolley.html" aria-label="Crash Trolley">
+      <div class="tile">Crash<br/>Trolley</div>
+    </a>
+
+    <a id="tileNotes" class="tile-link" href="medrunninghasu.html" aria-label="Clinical notes">
+      <div class="tile">Clinical<br/>notes</div>
+    </a>
+
+    <a id="tilePatient" class="tile-link" href="medpatient.html" aria-label="To patient">
+      <div class="tile">To<br/>Patient</div>
+    </a>
+
+    <!-- Arrows -->
+    <div id="arrowCrash" class="arrow" aria-hidden="true"></div>
+    <div id="arrowNotes" class="arrow" aria-hidden="true"></div>
+    <div id="arrowPatient" class="arrow" aria-hidden="true"></div>
+
+  </div>
+
+  <script type="module">
+    try{
+      const mod = await import("./js/state.js");
+      mod.ensureTimerStarted?.();
+    }catch(e){}
+  </script>
+</body>
+</html>

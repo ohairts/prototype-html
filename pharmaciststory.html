@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slide 3 - Scenario 1</title>
+
+  <link rel="stylesheet" href="css/common.css">
+  <link rel="stylesheet" href="css/speech-bubble.css">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Serif:wght@400;700&display=swap" rel="stylesheet">
+
+  <style>
+    /* Ensure the video frame centers content and shows ALL of the video */
+    .video-frame{
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      overflow:hidden;
+    }
+
+    /* Make sure the video is fully visible (no cropping) */
+    #scenarioVideo{
+      width:100%;
+      height:100%;
+      object-fit:contain;   /* key: see the whole video */
+      background:#000;      /* fills letterbox bars nicely */
+      display:block;
+    }
+
+    /* Page-specific speech bubble tail override */
+    #bubble::after{
+      content:"";
+      position:absolute;
+      left: -5px;
+      bottom: -250px;
+      width: 0;
+      height: 0;
+      border-left: 18px solid transparent;
+      border-right: 18px solid transparent;
+      border-top: 350px solid #fff;
+      filter: drop-shadow(0 3px 0 rgba(0,0,0,.25));
+      transform: rotate(80deg);
+      transform-origin: top center;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="slide-stage">
+    <div class="scenario-label">Scenario 1</div>
+
+    <div class="video-frame">
+      <video
+        id="scenarioVideo"
+        preload="auto"
+        autoplay
+        muted
+        playsinline
+      >
+        <source src="videos/oldmanstroke2.mp4" type="video/mp4" />
+        Your browser does not support the video tag.
+      </video>
+    </div>
+
+    <!-- Speech bubble -->
+    <div id="bubble" class="bubble bubble--long-tail" style="right: 90px; left: auto; text-align: center;">
+      Hello! <br> - ssssorrry. <br> S'there <br> sssomethhing <br> wrong?
+    </div>
+
+    <!-- Arrow -->
+    <div id="nextBtn" class="next-btn" title="Continue to Slide 4">
+      <img src="images/nextSlideGreenShape.png" alt="Next">
+    </div>
+
+    <!-- Tap for sound -->
+    <div id="soundToggle" class="sound-toggle">
+      Tap for sound
+    </div>
+  </div>
+
+  <script>
+    const video = document.getElementById("scenarioVideo");
+    const nextBtn = document.getElementById("nextBtn");
+    const bubble = document.getElementById("bubble");
+    const soundToggle = document.getElementById("soundToggle");
+
+    const ARROW_TIME = 23;
+    const BUBBLE_TIME = 25; 
+
+    let arrowShown = false;
+    let bubbleShown = false;
+
+    // Autoplay (muted) on load
+    window.addEventListener("load", () => {
+      // Ensure we start from the beginning
+      try { video.currentTime = 0; } catch(e) {}
+
+      const p = video.play();
+      if (p && typeof p.catch === "function") {
+        p.catch(() => {
+          // If autoplay is blocked (rare if muted), try again on first gesture
+          const resume = () => {
+            video.play().catch(()=>{});
+            window.removeEventListener("pointerdown", resume, true);
+            window.removeEventListener("keydown", resume, true);
+          };
+          window.addEventListener("pointerdown", resume, true);
+          window.addEventListener("keydown", resume, true);
+        });
+      }
+    });
+
+    // Timed UI events
+    video.addEventListener("timeupdate", () => {
+      if (!arrowShown && video.currentTime >= ARROW_TIME) {
+        nextBtn.classList.add("is-visible");
+        arrowShown = true;
+      }
+      if (!bubbleShown && video.currentTime >= BUBBLE_TIME) {
+        bubble.classList.add("is-visible");
+        bubbleShown = true;
+      }
+    });
+
+    // Tap-for-sound
+    soundToggle.addEventListener("click", async () => {
+      video.muted = false;
+      video.volume = 1;
+      try { await video.play(); } catch(e) {}
+      soundToggle.classList.add("hidden");
+    });
+
+    // Hide toggle if unmuted any other way
+    video.addEventListener("volumechange", () => {
+      if (!video.muted) soundToggle.classList.add("hidden");
+    });
+
+    // Navigation
+    nextBtn.addEventListener("click", () => {
+      window.location.href = "slide4.html";
+    });
+  </script>
+</body>
+</html>

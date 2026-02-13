@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Workbench</title>
+
+  <link rel="stylesheet" href="css/common.css">
+  <link rel="stylesheet" href="css/nav-arrows.css">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@900&display=swap" rel="stylesheet">
+
+  <style>
+    body{
+      margin:0;
+      background:#0b3b4a;
+      font-family:"Roboto Slab", serif;
+      overflow:hidden;
+    }
+
+    .stage{
+      width:100vw;
+      height:100vh;
+      position:relative;
+      background:#08394a;
+      overflow:hidden;
+      border: 3px solid rgba(0,0,0,.55);
+      box-sizing: border-box;
+    }
+
+    .hero{
+      position:absolute;
+      left:50%;
+      top:47%;
+      transform: translate(-50%, -50%);
+      width: min(640px, 70vw);
+      height: min(460px, 60vh);
+      background: url("images/workbenchpharmacy.png") center / cover no-repeat; /* <-- CHANGE IMAGE */
+      border: 3px solid rgba(0,0,0,.65);
+      box-shadow: 0 18px 45px rgba(0,0,0,.45);
+    }
+
+    .panel{
+      position:absolute;
+      left:50%;
+      bottom: 40px;
+      transform: translateX(-50%);
+      width: min(740px, 86vw);
+      background: #d9d9d9;
+      border: 3px solid rgba(0,0,0,.65);
+      box-shadow: 0 14px 26px rgba(0,0,0,.35);
+      padding: 16px 20px;
+      text-align:center;
+      z-index: 5;
+    }
+
+    .panel .title{
+      font-weight: 900;
+      font-size: clamp(18px, 2.2vw, 26px);
+      margin: 0;
+      color:#111;
+      line-height:1.1;
+    }
+
+    .panel .subtitle{
+      margin: 6px 0 0;
+      font-weight: 900;
+      font-size: clamp(14px, 1.6vw, 20px);
+      color:#111;
+      line-height:1.15;
+    }
+
+    /* Purple next button */
+    .nav-next{
+      position:absolute;
+      right: 42px;
+      bottom: 62px;
+      width: 110px;
+      height: 74px;
+      background: #8d2aa3;
+      border: 3px solid rgba(0,0,0,.65);
+      box-shadow: 0 14px 26px rgba(0,0,0,.35);
+      display:grid;
+      place-items:center;
+      cursor:pointer;
+      user-select:none;
+      z-index: 10;
+      transition: transform .12s ease, filter .12s ease;
+    }
+    .nav-next:hover{ transform: translateY(-2px); filter: brightness(1.05); }
+    .nav-next:active{ transform: translateY(1px) scale(.99); filter: brightness(.98); }
+
+    .nav-next::before{
+      content:"";
+      width:0; height:0;
+      border-top: 18px solid transparent;
+      border-bottom: 18px solid transparent;
+      border-left: 34px solid rgba(0,0,0,.65);
+      transform: translateX(3px);
+    }
+    .nav-next::after{
+      content:"";
+      position:absolute;
+      width:0; height:0;
+      border-top: 16px solid transparent;
+      border-bottom: 16px solid transparent;
+      border-left: 30px solid rgba(0,0,0,.18);
+      transform: translateX(7px);
+      opacity:.55;
+      pointer-events:none;
+    }
+
+    /* Make the whole purple button clickable */
+    .nav-next a{
+      position:absolute;
+      inset:0;
+      display:block;
+    }
+
+    /* Return button (safe styling even if common.css doesn't include .nav-btn) */
+    .nav-btn{
+      position:absolute;
+      bottom: 62px;
+      width: 86px;
+      height: 74px;
+      border: 3px solid rgba(0,0,0,.65);
+      box-shadow: 0 14px 26px rgba(0,0,0,.35);
+      display:grid;
+      place-items:center;
+      cursor:pointer;
+      user-select:none;
+      z-index: 10;
+      transition: transform .12s ease, filter .12s ease;
+    }
+    .nav-btn:hover{ transform: translateY(-2px); filter: brightness(1.05); }
+    .nav-btn:active{ transform: translateY(1px) scale(.99); filter: brightness(.98); }
+
+    .nav-btn.return{
+      left: 42px;
+      background: #ffcc00;
+    }
+    .nav-btn.return .icon{
+      font-size: 44px;
+      color:#111;
+      line-height:1;
+      transform: translateY(-1px);
+    }
+
+    @media (max-width: 800px){
+      .hero{ width: min(720px, 90vw); height: min(480px, 56vh); top:46%; }
+      .panel{ bottom: 18px; width: min(760px, 92vw); }
+      .nav-next{ right: 18px; bottom: 18px; width: 96px; height: 64px; }
+      .nav-btn{ left: 18px; bottom: 18px; width: 76px; height: 64px; }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="stage">
+
+    <div class="hero" aria-hidden="true"></div>
+
+    <div class="panel">
+      <p class="title">Workbench.</p>
+      <p class="subtitle">(Workbench. Please explain to facilitator what you are doing.)</p>
+    </div>
+
+    <!-- Return button -->
+    <div id="wbReturn" class="nav-btn return" title="Return to last slide" role="button" tabindex="0">
+      <span class="icon">↩</span>
+    </div>
+
+    <!-- Next button -->
+    <div id="wbNext" class="nav-next" title="Continue" role="button" tabindex="0">
+      <a id="wbNextLink" href="thrombolysisCheck.html" aria-label="Continue to next slide"></a>
+    </div>
+
+  </div>
+
+  <script type="module">
+    // Optional timer persistence
+    try{
+      const mod = await import("./js/state.js");
+      mod.ensureTimerStarted?.();
+    }catch(e){}
+
+    const params = new URLSearchParams(window.location.search);
+
+    // If provided, these are authoritative
+    const returnToParam = params.get("return"); // e.g. kardex.html
+    const nextToParam   = params.get("next");   // e.g. someNext.html
+    const pageParam     = params.get("page");   // e.g. 8
+
+    const nextLinkEl = document.getElementById("wbNextLink");
+
+    function isSameOriginReferrer(url){
+      try{
+        const u = new URL(url, window.location.href);
+        return u.origin === window.location.origin;
+      }catch(e){
+        return false;
+      }
+    }
+
+    function buildReturnUrl(){
+      // 1) Prefer explicit ?return=
+      if (returnToParam){
+        let url = returnToParam;
+
+        // append ?page= (if provided) and a marker
+        const joiner = url.includes("?") ? "&" : "?";
+        if (pageParam){
+          url = `${url}${joiner}page=${encodeURIComponent(pageParam)}&from=workbench`;
+        }else{
+          url = `${url}${joiner}from=workbench`;
+        }
+        return url;
+      }
+
+      // 2) Fallback: referrer if same-origin
+      const ref = document.referrer || "";
+      if (ref && isSameOriginReferrer(ref)) return ref;
+
+      // 3) Final fallback: history.back()
+      return null;
+    }
+
+    function goReturn(){
+      const url = buildReturnUrl();
+      if (url){
+        window.location.href = url;
+      }else{
+        history.back();
+      }
+    }
+
+    function goNext(){
+      // If next is provided, go there
+      if (nextToParam){
+        window.location.href = nextToParam;
+        return;
+      }
+      // Else just follow the default link
+      const href = nextLinkEl.getAttribute("href");
+      if (href) window.location.href = href;
+    }
+
+    // If ?next= is present, update the anchor target
+    if (nextToParam){
+      nextLinkEl.href = nextToParam;
+    }
+
+    document.getElementById("wbReturn").addEventListener("click", goReturn);
+    document.getElementById("wbReturn").addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " ") { e.preventDefault(); goReturn(); }
+    });
+
+    document.getElementById("wbNext").addEventListener("click", (e) => {
+      // Prevent the link + div double triggering in some browsers
+      e.preventDefault();
+      goNext();
+    });
+    document.getElementById("wbNext").addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " ") { e.preventDefault(); goNext(); }
+    });
+
+    // Optional keyboard shortcuts
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "ArrowLeft") goReturn();
+      if (e.key === "ArrowRight") goNext();
+    });
+  </script>
+</body>
+</html>

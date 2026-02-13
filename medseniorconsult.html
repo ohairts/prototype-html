@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Workbench</title>
+
+  <link rel="stylesheet" href="css/common.css">
+  <link rel="stylesheet" href="css/nav-arrows.css">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@900&display=swap" rel="stylesheet">
+
+  <style>
+    body{
+      margin:0;
+      background:#0b3b4a;
+      font-family:"Roboto Slab", serif;
+      overflow:hidden;
+    }
+
+    .stage{
+      width:100vw;
+      height:100vh;
+      position:relative;
+      background:#08394a;
+      overflow:hidden;
+      border: 2px solid rgba(0,0,0,.35);
+    }
+
+    .hero{
+      position:absolute;
+      left:50%;
+      top:48%;
+      transform: translate(-50%, -50%);
+      width: 28vw;
+      height: 34vw;
+      background: url("images/angryclinicianoncall.png") center / cover no-repeat;
+      border: 3px solid rgba(0,0,0,.45);
+      box-shadow: 0 18px 45px rgba(0,0,0,.45);
+    }
+
+    .panel{
+      position:absolute;
+      left:50%;
+      bottom: 44px;
+      transform: translateX(-50%);
+      width: min(720px, 82vw);
+      background: #d9d9d9;
+      border: 3px solid rgba(0,0,0,.55);
+      box-shadow: 0 14px 26px rgba(0,0,0,.35);
+      padding: 18px 20px;
+      text-align:center;
+      z-index: 5;
+    }
+
+    .panel .title{
+      font-weight: 900;
+      font-size: clamp(18px, 2.4vw, 26px);
+      margin: 0;
+      color:#111;
+      line-height:1.05;
+    }
+
+    .panel .subtitle{
+      margin: 6px 0 0;
+      font-weight: 900;
+      font-size: clamp(14px, 1.7vw, 20px);
+      color:#111;
+      line-height:1.15;
+    }
+
+    .nav-btn{
+      position:absolute;
+      bottom: 56px;
+      width: 120px;
+      height: 84px;
+      border: 3px solid rgba(0,0,0,.55);
+      box-shadow: 0 14px 26px rgba(0,0,0,.35);
+      display:grid;
+      place-items:center;
+      cursor:pointer;
+      user-select:none;
+      transition: transform .12s ease, filter .12s ease;
+      z-index: 10;
+    }
+    .nav-btn:hover{ transform: translateY(-2px); filter: brightness(1.05); }
+    .nav-btn:active{ transform: translateY(1px) scale(.99); filter: brightness(.98); }
+
+    .nav-btn.return{
+      left: 44px;
+      background: #ffcc00;
+      filter: drop-shadow(0 0 10px rgba(46,215,20,.55));
+    }
+    .nav-btn.return .icon{
+      font-size: 44px;
+      color:#111;
+      line-height:1;
+      transform: translateY(-1px);
+    }
+
+    .nav-btn.next{
+      right: 44px;
+      background: #8d2aa3;
+    }
+    .nav-btn.next::before{
+      content:"";
+      width:0; height:0;
+      border-top: 18px solid transparent;
+      border-bottom: 18px solid transparent;
+      border-left: 34px solid rgba(0,0,0,.55);
+      transform: translateX(3px);
+    }
+    .nav-btn.next::after{
+      content:"";
+      position:absolute;
+      width:0; height:0;
+      border-top: 16px solid transparent;
+      border-bottom: 16px solid transparent;
+      border-left: 30px solid rgba(0,0,0,.18);
+      transform: translateX(7px);
+      opacity:.55;
+      pointer-events:none;
+    }
+
+    @media (max-width: 800px){
+      .nav-btn{ bottom: 18px; width: 104px; height: 74px; }
+      .nav-btn.return{ left: 18px; }
+      .nav-btn.next{ right: 18px; }
+      .panel{ bottom: 18px; }
+      .hero{ width: min(820px, 92vw); height: min(520px, 58vh); top:46%; }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="stage">
+
+    <div class="hero" aria-hidden="true"></div>
+
+    <div class="panel">
+      <p class="title">Workbench.</p>
+      <p class="subtitle">Discuss with medical team 
+(your choice whom) on what you recommend.</p>
+    </div>
+
+    <div id="wbReturn" class="nav-btn return" title="Return to last slide" role="button" tabindex="0">
+      <span class="icon">↩</span>
+    </div>
+
+  </div>
+
+  <script type="module">
+    // Optional timer persistence
+    try{
+      const mod = await import("./js/state.js");
+      mod.ensureTimerStarted?.();
+    }catch(e){}
+
+    const params = new URLSearchParams(window.location.search);
+
+    // If provided, these are authoritative
+    const returnToParam = params.get("return");
+    const nextToParam   = params.get("next");
+    const pageParam     = params.get("page"); // optional
+
+    // Fallback: actual last page visited (same-origin)
+    const ref = document.referrer || "";
+
+    function isSameOriginReferrer(url){
+      try{
+        const u = new URL(url, window.location.href);
+        return u.origin === window.location.origin;
+      }catch(e){
+        return false;
+      }
+    }
+
+    function buildReturnUrl(){
+if (returnToParam){
+  const joiner = returnToParam.includes("?") ? "&" : "?";
+  let url = returnToParam;
+
+  // if a kardex page number is provided
+  if (pageParam){
+    url = `${url}${joiner}page=${encodeURIComponent(pageParam)}`;
+    // now url definitely has "?"
+    url += `&from=workbench`;
+  } else {
+    url = `${url}${joiner}from=workbench`;
+  }
+
+  return url;
+}
+    }
+    function goReturn(){
+      const url = buildReturnUrl();
+      if (url){
+        window.location.href = url;
+      }else{
+        history.back();
+      }
+    }
+
+    function goNext(){
+      // If next is not provided, do nothing (or choose a sensible default)
+      if (nextToParam){
+        window.location.href = nextToParam;
+      }else{
+        // fallback: try forward, else do nothing
+        history.forward();
+      }
+    }
+
+    document.getElementById("wbReturn").addEventListener("click", goReturn);
+
+
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "ArrowLeft") goReturn();
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Vitals</title>
+
+  <link rel="stylesheet" href="css/common.css">
+  <link rel="stylesheet" href="css/nav-arrows.css">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@900&display=swap" rel="stylesheet">
+
+  <style>
+    body{
+      margin:0;
+      background:#0b3b4a;
+      font-family:"Roboto Slab", serif;
+      overflow:hidden;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      width:100vw;
+      height:100vh;
+    }
+
+    .stage{
+      position:relative;
+      width:min(1280px, 92vw);
+      height:min(720px, 84vh);
+      background:#d4d4d4;
+      overflow:hidden;
+      box-shadow: 0 26px 55px rgba(0,0,0,.45);
+      border: 4px solid rgba(0,0,0,.45);
+      opacity:0;
+      transform: translateY(10px);
+      animation: in .28s ease forwards;
+    }
+    @keyframes in{ to { opacity:1; transform: translateY(0); } }
+    .fade-out{
+      opacity:0;
+      transform: translateY(-10px);
+      transition: opacity .22s ease, transform .22s ease;
+    }
+
+    /* ===== Paper ===== */
+    .paper{
+      position:absolute;
+      inset: 56px 150px 56px 150px;
+      background:#f6f6f6;
+      border: 2px solid rgba(0,0,0,.45);
+      box-shadow: 0 10px 18px rgba(0,0,0,.18);
+      border-radius: 6px;
+      overflow:hidden;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      z-index: 5;
+    }
+
+    .paper img{
+      width:100%;
+      height:100%;
+      object-fit: contain;
+      user-select:none;
+      -webkit-user-drag:none;
+      pointer-events:none;
+    }
+
+    /* ===== Tabs ===== */
+    .tab{
+      position:absolute;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+
+      height: 84px;
+      padding: 0 18px;
+      border-radius: 12px;
+      border: 3px solid rgba(0,0,0,.35);
+
+      font-weight:900;
+      letter-spacing:.5px;
+      color:#fff;
+      text-decoration:none;
+      user-select:none;
+
+      cursor:pointer;
+      transition: transform .18s ease, filter .18s ease, box-shadow .18s ease;
+      z-index: 40;
+      overflow: visible;
+    }
+
+    .tab span{
+      display:block;
+      font-size: clamp(18px, 2.2vw, 36px);
+      opacity:.95;
+      text-shadow: 0 2px 0 rgba(0,0,0,.25);
+      white-space: nowrap;
+    }
+
+    .tab.notes{
+      left:-72px;
+      top: 10px;
+      height:80%;
+      width:190px;
+      background:#bdbdbd;
+      border-top-right-radius: 20px;
+      border-bottom-right-radius: 20px;
+      z-index: 60;
+    }
+    .tab.notes span{ transform: rotate(-90deg); }
+
+    .tab.vitals{
+      right:-72px;
+      top: 8%;
+      height: 44%;
+      width:190px;
+      background:#d98ae0;
+      border-top-left-radius: 20px;
+      border-bottom-left-radius: 20px;
+      z-index: 70;
+    }
+
+    .tab.inv{
+      right:-72px;
+      top: 50%;
+      height: 44%;
+      width:190px;
+      background:#efc2ac;
+      border-top-left-radius: 20px;
+      border-bottom-left-radius: 20px;
+      z-index: 65;
+    }
+
+    .tab.vitals span,
+    .tab.inv span{ transform: rotate(90deg); }
+
+    .tab:hover{
+      filter: brightness(1.12);
+      box-shadow:
+        inset 0 0 0 6px rgba(255,255,255,.22),
+        0 0 18px rgba(0,0,0,.25);
+    }
+    .tab.vitals:hover,
+    .tab.inv:hover{
+      transform: translateX(-18px);
+    }
+
+    .tab.is-active{
+      filter: brightness(1.06);
+      box-shadow: inset 0 0 0 6px rgba(255,255,255,.25);
+    }
+
+    .tab::after{
+      content: attr(data-hint);
+      position:absolute;
+      top: 50%;
+      background: rgba(0,0,0,.88);
+      color:#fff;
+      font-size: 14px;
+      font-weight: 800;
+      padding: 8px 12px;
+      border-radius: 8px;
+      white-space: nowrap;
+      opacity: 0;
+      pointer-events:none;
+      z-index: 9999;
+      transition: opacity .15s ease, transform .15s ease;
+    }
+
+    .tab.notes::after{
+      left: 100%;
+      transform: translate(18px, -50%);
+    }
+    .tab.notes:hover::after{
+      opacity: 1;
+      transform: translate(26px, -50%);
+    }
+
+    .tab.vitals::after,
+    .tab.inv::after{
+      right: 100%;
+      transform: translate(-18px, -50%);
+    }
+    .tab.vitals:hover::after,
+    .tab.inv:hover::after{
+      opacity: 1;
+      transform: translate(-26px, -50%);
+    }
+
+    .tab.inv:hover{ z-index: 90; }
+    .tab.vitals:hover{ z-index: 95; }
+
+       .nav-arrow.nav-next img{
+      position:absolute;
+      height: 86px;
+      width: 86px;
+      bottom: 20px;
+      right: 100px;
+      z-index: 80;
+      cursor:pointer;
+      transition: transform .15s ease, filter .15s ease;
+    }
+
+    .nav-next:hover{
+      transform: scale(1.08);
+      filter:
+        drop-shadow(0 0 10px rgba(255,255,255,.35))
+        drop-shadow(0 0 18px rgba(0,0,0,.35));
+    }
+
+    /* Responsive paper inset */
+    @media (max-width: 900px){
+      .paper{ inset: 56px 120px 56px 120px; }
+      .tab.notes, .tab.vitals, .tab.inv{ width:170px; }
+      .tab.notes{ left:-86px; }
+      .tab.vitals, .tab.inv{ right:-86px; }
+    }
+    @media (max-width: 600px){
+      .paper{ inset: 56px 96px 56px 96px; }
+      .tab.notes, .tab.vitals, .tab.inv{ width:150px; }
+      .tab.notes{ left:-76px; }
+      .tab.vitals, .tab.inv{ right:-76px; }
+      .tab::after{ display:none; }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="stage" id="stage">
+
+    <!-- Tabs -->
+    <a class="tab notes" href="ptclinicalnotes.html" data-nav data-hint="Return to clinical notes">
+      <span>Clinical Notes</span>
+    </a>
+
+    <a class="tab vitals is-active" href="ptvitals.html" data-nav aria-current="page" data-hint="You are viewing vitals">
+      <span>Vitals</span>
+    </a>
+
+    <a class="tab inv" href="ptinvestigations.html" data-nav data-hint="View bloods & imaging">
+      <span>Investigations</span>
+    </a>
+
+    <!-- Paper -->
+    <div class="paper">
+      <img src="images/ptabgmartins.png" alt="Vitals / ABG">
+    </div>
+
+    <!-- ONLY Next arrow (uses your nav-arrows.css) -->
+    <div class="nav-arrow nav-next" id="navNext" title="Next" role="button" tabindex="0">
+      <img src="images/nextSlideGreenShape.png" alt="Next">
+    </div>
+
+  </div>
+
+  <script type="module">
+    // Optional timer persistence
+    try{
+      const mod = await import("./js/state.js");
+      mod.ensureTimerStarted?.();
+    }catch(e){}
+
+    const stage = document.getElementById("stage");
+
+    function goWithTransition(url){
+      stage.classList.add("fade-out");
+      setTimeout(() => { window.location.href = url; }, 220);
+    }
+
+    // ✅ Next to MCQ (change filename if needed)
+    const NEXT_PAGE = "ptmcqabginvestigations.html";
+
+    // Next arrow
+    const navNext = document.getElementById("navNext");
+    navNext.addEventListener("click", () => goWithTransition(NEXT_PAGE));
+    navNext.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " ") navNext.click();
+    });
+
+    // Tabs animate when clicked
+    document.querySelectorAll("[data-nav]").forEach(a=>{
+      a.addEventListener("click",(e)=>{
+        e.preventDefault();
+        goWithTransition(a.getAttribute("href"));
+      });
+    });
+
+    // Keyboard
+    document.addEventListener("keydown",(e)=>{
+      if (e.key === "ArrowRight") goWithTransition(NEXT_PAGE);
+    });
+  </script>
+</body>
+</html>

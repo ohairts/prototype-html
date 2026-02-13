@@ -1,0 +1,414 @@
+:root{
+  --bg: #0b3b4a;
+  --panel: #ffc400;
+  --panelText: #111;
+  --card: #0c0c0c;
+  --accent: #2b2b2b;
+  --white: #fff;
+}
+
+*{ box-sizing: border-box; }
+
+body{
+  margin:0;
+  height:100vh;
+  overflow:hidden;
+  font-family: "Gill Sans", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  background: var(--bg);
+  color: var(--white);
+}
+
+/* Utility */
+.center{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+.hidden{ display:none !important; }
+
+/* Generic button */
+.btn{
+  background:#242121;
+  border:2px solid #333;
+  color:#fff;
+  padding:14px 26px;
+  font-size:1.1rem;
+  cursor:pointer;
+  border-radius:10px;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.35),
+    inset 0 -1px 2px rgba(0,0,0,.45),
+    0 5px 10px rgba(0,0,0,.35);
+}
+.btn:hover{ background:#111; }
+
+/* “Next” arrow button */
+.next-arrow{
+  position: absolute;
+  right: 32px;
+  bottom: 32px;
+  width: 80px;
+  height: 80px;
+  border-radius: 999px;
+  background: rgba(255, 196, 0, 0.95);
+  border: 3px solid rgba(0,0,0,0.35);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+  box-shadow: 0 10px 20px rgba(0,0,0,.35);
+  animation: popIn .25s ease-out;
+}
+.next-arrow span{
+  color:#111;
+  font-size: 42px;
+  font-weight: 900;
+  transform: translateX(2px);
+}
+.next-arrow:hover{ transform: scale(1.03); }
+
+@keyframes popIn{
+  from{ transform: scale(.85); opacity: .0; }
+  to{ transform: scale(1); opacity: 1; }
+}
+
+/* Final slide layout (simple, matches your yellow-panel vibe) */
+.final-wrap{
+  position: relative;
+  width: 100%;
+  height: 100%;
+  padding: 28px;
+}
+
+.final-title{
+  width: min(900px, 92vw);
+  margin: 0 auto;
+  background: var(--panel);
+  color: var(--panelText);
+  border-radius: 38px;
+  padding: 52px 28px;
+  text-align:center;
+  font-family: "Roboto Slab", serif;
+  font-weight: 900;
+  letter-spacing: 1px;
+  font-size: clamp(34px, 5vw, 56px);
+}
+
+.metrics{
+  width: min(1100px, 96vw);
+  margin: 28px auto 0;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 18px;
+}
+
+.metric{
+  background: var(--panel);
+  color: var(--panelText);
+  border-radius: 22px;
+  padding: 22px 18px;
+  text-align:center;
+  position: relative;
+  min-height: 150px;
+}
+.metric .value{
+  margin: 18px auto 10px;
+  width: 78px;
+  height: 48px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background: #fff;
+  border: 2px solid rgba(0,0,0,.25);
+  font-size: 28px;
+  font-weight: 900;
+  border-radius: 6px;
+}
+.metric .label{
+  font-family: "Roboto Slab", serif;
+  font-weight: 900;
+}
+
+.reset-col{
+  position:absolute;
+  right: 28px;
+  top: 28px;
+  display:flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.reset-btn{
+  background: var(--panel);
+  color: #111;
+  border: 2px solid rgba(0,0,0,.35);
+  padding: 10px 14px;
+  font-weight: 900;
+  cursor: pointer;
+}
+.reset-btn:hover{ filter: brightness(.97); }
+
+/* Responsive */
+@media (max-width: 900px){
+  .metrics{ grid-template-columns: 1fr; }
+}
+
+/* ===== Slide layout helpers ===== */
+.slide-stage{
+  width: 100vw;
+  height: 100vh;
+  background: #0b4a5a;         /* deep teal like your screenshot */
+  position: relative;
+  overflow: hidden;
+}
+
+/* Scenario label */
+.scenario-label{
+  position: absolute;
+  top: 18px;
+  left: 18px;
+  background: #ffc400;
+  color: #000;
+  font-family: "Roboto Slab", serif;
+  font-weight: 900;
+  font-size: clamp(28px, 4vw, 46px);
+  padding: 14px 22px;
+  border-radius: 14px;
+  border: 4px solid rgba(0,0,0,.35);
+  box-shadow: 0 8px 0 rgba(0,0,0,.25);
+  z-index: 5;
+}
+
+/* Video frame */
+.video-frame{
+  position: absolute;
+  left: 50%;
+  top: 48%;
+  transform: translate(-50%, -50%);
+  width: min(720px, 80vw);
+  aspect-ratio: 16 / 9;
+  border-radius: 18px;
+  overflow: hidden;
+  background: #111;
+  box-shadow: 0 18px 40px rgba(0,0,0,.35);
+  z-index: 1;
+}
+
+.video-frame video{
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* ===== Tap for Sound ===== */
+.sound-toggle{
+  position: absolute;
+  bottom: 28px;
+  left: 28px;
+  z-index: 7;
+
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  padding: 10px 16px;
+  background: rgba(0,0,0,.7);
+  color: #fff;
+  font-weight: 800;
+  font-size: 14px;
+  border-radius: 999px;
+  cursor: pointer;
+  user-select: none;
+
+  box-shadow: 0 6px 20px rgba(0,0,0,.4);
+  transition: transform .15s ease, filter .15s ease, opacity .2s ease;
+}
+
+.sound-toggle:hover{
+  filter: brightness(1.15);
+  transform: scale(1.05);
+}
+
+.sound-toggle.hidden{
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* simple pulsing hint */
+.sound-toggle::before{
+  content: "🔊";
+  font-size: 18px;
+  animation: soundPulse 1.5s infinite;
+}
+
+@keyframes soundPulse{
+  0%{ transform: scale(1); opacity: .9; }
+  50%{ transform: scale(1.15); opacity: 1; }
+  100%{ transform: scale(1); opacity: .9; }
+}
+
+/* ===== Reusable NEXT ARROW button ===== */
+.next-btn{
+  position: absolute;
+  right: 44px;
+  bottom: 72px;
+  width: 58px;
+  height: 170px;
+  border-radius: 8px;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  user-select: none;
+
+  /* hidden by default until video ends */
+  opacity: 0;
+  transform: translateX(10px);
+  pointer-events: none;
+
+  transition: opacity .25s ease, transform .25s ease, filter .25s ease;
+}
+
+.next-btn.is-visible{
+  opacity: 1;
+  transform: translateX(0);
+  pointer-events: auto;
+}
+
+/* If you're using an image for the arrow */
+.next-btn img{
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+/* Hover glow (works for image buttons too) */
+.next-btn:hover{
+  filter: drop-shadow(0 0 14px rgba(46, 215, 20, .85))
+          drop-shadow(0 0 28px rgba(46, 215, 20, .55));
+}
+
+
+/* =========================
+   INTERVIEW SLIDE TEMPLATE
+   ========================= */
+
+.interview-stage{
+  width: 100vw;
+  height: 100vh;
+  position: relative;
+  overflow: hidden;
+  background: #0b3b4a;
+  display: grid;
+  place-items: center;
+}
+
+/* Background image layer */
+.interview-bg{
+  position: absolute;
+  inset: 0;
+  background: var(--bg, #0b3b4a);
+  background-image: var(--bg-image);
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  z-index: 0;
+}
+
+/* Foreground container that always fits */
+.interview-wrap{
+  position: relative;
+  z-index: 1;
+  width: min(1200px, 96vw);
+  height: min(700px, 92vh);
+}
+
+/* The tall central portrait “panel” */
+.interview-portrait{
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: min(520px, 50vw);
+  height: min(720px, 84vh);
+  max-height: 92%;
+  background: #111;
+  box-shadow: 0 18px 45px rgba(0,0,0,.45);
+  border: 3px solid rgba(0,0,0,.55);
+  overflow: hidden;
+}
+
+/* The portrait image itself */
+.interview-portrait img{
+  width: 100%;
+  height: 100%;
+  object-fit: contain; /* use contain to avoid cropping */
+  display: block;
+}
+
+/* Instruction box on the left */
+.interview-hint{
+  position: absolute;
+  left: 28px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: min(260px, 28vw);
+  background: rgba(8, 70, 90, .92);
+  border: 2px solid rgba(255,255,255,.35);
+  color: #fff;
+  font-weight: 900;
+  padding: 14px 14px;
+  line-height: 1.15;
+  box-shadow: 0 10px 20px rgba(0,0,0,.35);
+}
+
+.interview-hint p{
+  margin: 0;
+  font-size: clamp(14px, 1.5vw, 18px);
+}
+
+/* Small screens: keep portrait centered, hint moves up a bit and gets narrower */
+@media (max-width: 700px){
+  .interview-hint{
+    left: 14px;
+    top: 18px;
+    transform: none;
+    width: min(260px, 60vw);
+  }
+  .interview-portrait{
+    width: min(520px, 70vw);
+    height: min(720px, 78vh);
+  }
+}
+
+/* Interview: reveal animation */
+.reveal {
+  opacity: 0;
+  transform: translateY(12px) scale(0.98);
+  filter: blur(2px);
+  transition: opacity .35s ease, transform .35s ease, filter .35s ease;
+  pointer-events: none;
+}
+
+.reveal.is-visible {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  filter: blur(0);
+  pointer-events: auto;
+}
+
+/* Optional: “glow” to hint clickable tiles */
+.glow-hint {
+  box-shadow: 0 0 0 rgba(0,0,0,0);
+  animation: glowPulse 1.2s ease-in-out infinite;
+}
+@keyframes glowPulse {
+  0%,100% { box-shadow: 0 0 0 rgba(0,0,0,0); }
+  50% { box-shadow: 0 0 18px rgba(0, 255, 120, .55); }
+}
+
+.overlays{ position:absolute; inset:0; pointer-events:none; z-index:6; }
+.overlay{ position:absolute; width:64px; height:64px; }
+.overlay img{ width:100%; height:100%; object-fit:contain; display:block; }
