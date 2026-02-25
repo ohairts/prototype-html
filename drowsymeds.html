@@ -1,0 +1,722 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Drowsy Meds - Drag & Drop</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@900&display=swap" rel="stylesheet">
+
+  <style>
+    body{
+      margin:0;
+      background:#08394a;
+      font-family:"Roboto Slab", serif;
+      overflow:hidden;
+    }
+
+    .stage{
+      position:relative;
+      width:100vw;
+      height:100vh;
+      background:#0b4a60;
+      overflow:hidden;
+      border: 3px solid rgba(0,0,0,.55);
+      box-sizing:border-box;
+    }
+
+    /* Center hero image */
+    .hero{
+      position:absolute;
+      left:50%;
+      top:50%;
+      transform: translate(-50%,-50%);
+      height: min(92vh, 940px);
+      aspect-ratio: 3 / 4;
+      max-width: 44vw;
+      background: #000 url("images/patientrecoveringsick.png") center / cover no-repeat;
+      border: 3px solid rgba(0,0,0,.65);
+      box-shadow: 0 18px 45px rgba(0,0,0,.45);
+      z-index: 2;
+    }
+
+    /* Left panel */
+    .left{
+      position:absolute;
+      left: 14px;
+      top: 14px;
+      bottom: 14px;
+      width: min(320px, 32vw);
+      z-index: 5;
+    }
+
+    .prompt{
+      background:#fff;
+      border: 6px solid #f2b300;
+      box-shadow: 0 12px 18px rgba(0,0,0,.25);
+      padding: 14px 14px;
+      font-weight: 900;
+      font-size: clamp(14px, 1.4vw, 18px);
+      line-height: 1.15;
+      text-align:center;
+      margin-bottom: 18px;
+    }
+
+    /* Tiles grid */
+    .tile-grid{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      position: relative;
+    }
+
+    .med-tile{
+      background:#52b7ea;
+      color:#fff;
+      border: 2px solid rgba(0,0,0,.45);
+      box-shadow: 0 10px 16px rgba(0,0,0,.25);
+      border-radius: 0;
+      width: 100%;
+      height: 62px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      text-align:center;
+      font-weight: 900;
+      font-size: clamp(14px, 1.35vw, 18px);
+      user-select:none;
+      cursor: grab;
+      touch-action: none;
+      position: relative;
+      z-index: 6;
+      transition: transform .12s ease, filter .12s ease;
+    }
+    .med-tile:active{
+      cursor: grabbing;
+      filter: brightness(.98);
+    }
+    .med-tile.in-drop{
+      outline: 4px solid rgba(46,215,20,.55);
+      filter: brightness(1.02);
+      box-shadow:
+        0 4px 6px rgba(0,0,0,.25),
+        inset 0 0 0 2px rgba(255,255,255,.35);
+    }
+
+    /* Right panel */
+    .right{
+      position:absolute;
+      right: 14px;
+      top: 14px;
+      bottom: 14px;
+      width: min(360px, 36vw);
+      z-index: 4;
+      display:flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    /* ===== Pharmacy tile: VERY OBVIOUS + dramatic hover ===== */
+    .discuss{
+      background: linear-gradient(180deg, rgba(255,245,0,.98), rgba(255,140,0,.98));
+      color:#0b0b0b;
+      border: 5px solid rgba(0,0,0,.65);
+      border-radius: 18px;
+      padding: 18px 14px;
+      text-align:center;
+      font-weight: 900;
+      font-size: clamp(18px, 1.8vw, 26px);
+      line-height:1.05;
+      cursor:pointer;
+      user-select:none;
+      text-decoration:none;
+      display:block;
+
+      box-shadow:
+        0 22px 34px rgba(0,0,0,.34),
+        0 0 0 8px rgba(255,245,0,.18),
+        inset 0 0 0 3px rgba(255,255,255,.40);
+
+      position: relative;
+      overflow:hidden;
+
+      transform: translateZ(0);
+      transition: transform .16s ease, filter .16s ease, box-shadow .16s ease;
+      animation: pharmacyPulse 1.8s ease-in-out infinite;
+    }
+
+    @keyframes pharmacyPulse{
+      0%,100%{
+        box-shadow:
+          0 22px 34px rgba(0,0,0,.34),
+          0 0 0 8px rgba(255,245,0,.18),
+          0 0 0 0 rgba(46,215,20,.0),
+          inset 0 0 0 3px rgba(255,255,255,.40);
+      }
+      50%{
+        box-shadow:
+          0 24px 38px rgba(0,0,0,.36),
+          0 0 0 9px rgba(255,245,0,.22),
+          0 0 0 12px rgba(46,215,20,.12),
+          inset 0 0 0 3px rgba(255,255,255,.42);
+      }
+    }
+
+    .discuss::before{
+      content:"";
+      position:absolute;
+      inset:-40%;
+      background: radial-gradient(circle, rgba(255,255,255,.75) 0%, rgba(255,255,255,0) 55%);
+      transform: translateX(-70%) rotate(14deg);
+      opacity: .55;
+      pointer-events:none;
+      transition: transform .26s ease, opacity .26s ease;
+    }
+
+    .discuss::after{
+      content:"";
+      position:absolute;
+      top:-40%;
+      left:-60%;
+      width: 60%;
+      height: 180%;
+      background: linear-gradient(90deg,
+        rgba(255,255,255,0) 0%,
+        rgba(255,255,255,.55) 50%,
+        rgba(255,255,255,0) 100%);
+      transform: rotate(18deg);
+      opacity: .0;
+      pointer-events:none;
+    }
+
+    .discuss .small{
+      display:block;
+      margin-top: 8px;
+      font-size: clamp(12px, 1.1vw, 14px);
+      opacity: .9;
+      font-weight: 900;
+      letter-spacing: .2px;
+    }
+
+    .discuss:hover{
+      transform: translateY(-5px) scale(1.03);
+      filter: brightness(1.10) saturate(1.12);
+      box-shadow:
+        0 28px 44px rgba(0,0,0,.40),
+        0 0 0 10px rgba(46,215,20,.18),
+        0 0 22px rgba(255,245,0,.62),
+        inset 0 0 0 3px rgba(255,255,255,.45);
+    }
+    .discuss:hover::before{
+      transform: translateX(35%) rotate(14deg);
+      opacity: .85;
+    }
+    .discuss:hover::after{
+      opacity: .75;
+      animation: shineSweep .55s ease forwards;
+    }
+    @keyframes shineSweep{
+      from{ left:-70%; }
+      to{ left:120%; }
+    }
+    .discuss:active{
+      transform: translateY(-1px) scale(1.00);
+      filter: brightness(1.03);
+    }
+
+    .right-title{
+      background:#d9d9d9;
+      border: 3px solid rgba(0,0,0,.35);
+      box-shadow: 0 10px 16px rgba(0,0,0,.22);
+      padding: 10px 12px;
+      text-align:center;
+      font-weight: 900;
+      font-size: clamp(14px, 1.35vw, 18px);
+      line-height:1.15;
+    }
+
+    .dropzone{
+      flex: 1;
+      background:#d9d9d9;
+      border: 3px solid rgba(0,0,0,.35);
+      box-shadow: inset 0 0 0 6px rgba(255,255,255,.35),
+                  0 10px 16px rgba(0,0,0,.22);
+      position: relative;
+      overflow: hidden;
+
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      padding: 12px;
+      align-content: start;
+    }
+    .dropzone.is-over{
+      box-shadow: inset 0 0 0 6px rgba(46,215,20,.35), 0 10px 16px rgba(0,0,0,.22);
+    }
+
+    /* ===== Trash area (SEPARATE from tray) ===== */
+    .trash-area{
+      background: rgba(0,0,0,.10);
+      border: 3px solid rgba(255,255,255,.16);
+      box-shadow: 0 14px 24px rgba(0,0,0,.22);
+      border-radius: 14px;
+      padding: 10px 10px 12px;
+      display:flex;
+      flex-direction: column;
+      gap: 10px;
+      user-select:none;
+    }
+
+    .trash-header{
+      background:#ffffff;
+      border: 3px solid rgba(0,0,0,.35);
+      box-shadow: 0 10px 16px rgba(0,0,0,.18);
+      border-radius: 12px;
+      padding: 10px 12px;
+      text-align:center;
+      font-weight: 900;
+      font-size: clamp(13px, 1.2vw, 16px);
+      line-height:1.15;
+    }
+
+    .trash-wrap{
+      position: relative;
+      width: 100%;
+      height: 120px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      border-radius: 14px;
+
+      border: 3px dashed rgba(255,255,255,.22);
+      box-shadow:
+        inset 0 0 0 3px rgba(0,0,0,.25),
+        0 12px 18px rgba(0,0,0,.25);
+      background: rgba(255,255,255,.06);
+      overflow:hidden;
+    }
+
+    .trash-wrap img{
+      width: 120px;
+      height: 110px;
+      object-fit: contain;
+      filter: drop-shadow(0 10px 16px rgba(0,0,0,.35));
+      pointer-events:none;
+    }
+
+    /* Emphasis pulse */
+    .trash-wrap::after{
+      content:"";
+      position:absolute;
+      inset:-10px;
+      border-radius: 18px;
+      border: 4px solid rgba(46,215,20,.0);
+      box-shadow: 0 0 0 0 rgba(46,215,20,.0);
+      animation: binPulse 2.4s ease-in-out infinite;
+      pointer-events:none;
+    }
+    @keyframes binPulse{
+      0%,100%{ border-color: rgba(46,215,20,.15); box-shadow: 0 0 0 0 rgba(46,215,20,.0); }
+      50%{ border-color: rgba(46,215,20,.55); box-shadow: 0 0 0 10px rgba(46,215,20,.10); }
+    }
+
+    .trash-wrap.is-over{
+      border-color: rgba(46,215,20,.80);
+      box-shadow:
+        inset 0 0 0 3px rgba(46,215,20,.25),
+        0 0 0 8px rgba(46,215,20,.12),
+        0 12px 18px rgba(0,0,0,.25);
+      background: rgba(46,215,20,.10);
+    }
+
+    /* ===== Nav arrow bottom-right ===== */
+    .nav-wrap{
+      position:absolute;
+      right: 600px;
+      bottom: 20px;
+      z-index: 50;
+      display:flex;
+      align-items:center;
+      gap: 12px;
+      user-select:none;
+    }
+
+    .nav-instruction-tile{
+      background: #ffffff;
+      color: #111;
+      font-weight: 900;
+      font-size: 14px;
+      line-height: 1.15;
+      padding: 10px 12px;
+      width: 230px;
+      text-align: center;
+      border: 3px solid rgba(0,0,0,.35);
+      border-radius: 10px;
+      box-shadow:
+        0 8px 14px rgba(0,0,0,.25),
+        inset 0 0 0 2px rgba(255,255,255,.35);
+    }
+
+    .nav{
+      width: 200px;
+      height: 96px;
+      flex-shrink: 0;
+      filter:
+        drop-shadow(0 0 10px rgba(46,215,20,.55))
+        drop-shadow(0 12px 18px rgba(0,0,0,.35));
+    }
+    .nav a{ display:block; width:150%; height:100%; }
+    .nav img{ width:170%; height:100%; object-fit:contain; display:block; }
+
+    /* ===== Intro overlay (smaller nurse image; full height visible) ===== */
+    .intro-overlay{
+      position: fixed;
+      inset: 0;
+      z-index: 99999;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      background: rgba(235, 220, 220, 0.331);
+      animation: holdThenFade 7.0s linear forwards;
+    }
+    @keyframes holdThenFade{
+      0%{ opacity: 1; }
+      82%{ opacity: 1; }
+      100%{ opacity: 0; }
+    }
+
+    .intro-card{
+      width: min(720px, 86vw);
+      height: min(78vh, 540px);
+      position: relative;
+      border-radius: 18px;
+      overflow:hidden;
+      border: 3px solid rgba(255,255,255,.18);
+      box-shadow: 0 18px 45px rgba(0,0,0,.55);
+      background: #111;
+    }
+
+    .intro-bg{
+      position:absolute;
+      inset:0;
+      background: #000 url("images/stressednurseclipboard.png") center / contain no-repeat;
+      filter: saturate(1.05) contrast(1.02);
+    }
+
+    .intro-text{
+      position:absolute;
+      left: 50%;
+      bottom: 18px;
+      transform: translateX(-50%);
+      width: min(640px, 90%);
+      background: rgba(255, 188, 2, 0.95);
+      border: 6px solid #f2b300;
+      box-shadow: 0 12px 18px rgba(0,0,0,.35);
+      padding: 14px 14px;
+      text-align:center;
+      font-weight: 900;
+      font-size: clamp(15px, 1.6vw, 20px);
+      line-height: 1.15;
+    }
+
+    @media (max-width: 900px){
+      .hero{ max-width: 52vw; height: 86vh; }
+      .left, .right{ width: min(360px, 44vw); }
+      .med-tile{ height: 56px; }
+
+      .nav-wrap{ right: 14px; bottom: 14px; }
+      .nav{ width: 120px; height: 88px; }
+      .nav-instruction-tile{ width: 210px; font-size: 13px; }
+
+      .intro-card{ width: min(640px, 92vw); height: min(72vh, 520px); }
+    }
+  </style>
+</head>
+
+<body>
+  <!-- 7-second overlay that dissolves away -->
+  <div id="introOverlay" class="intro-overlay" aria-hidden="false">
+    <div class="intro-card">
+      <div class="intro-bg" aria-hidden="true"></div>
+      <div class="intro-text">
+        Before you go, do you know which medications I need to avoid if he needs a painkiller later?
+        He's just so sleepy right now and I don't want to make that worse.
+      </div>
+    </div>
+  </div>
+
+  <div class="stage">
+    <div class="left">
+      <div class="prompt">
+        Put the <b>appropriate analgesia</b> in grey tray if suitable<br><br>
+        Drag and drop the drowsiness-worsening medications into the <b>trash</b>
+      </div>
+
+      <div class="tile-grid" id="tileGrid">
+        <div class="med-tile" data-med="Morphine">Morphine</div>
+        <div class="med-tile" data-med="Oxynorm">Oxynorm</div>
+
+        <div class="med-tile" data-med="Paracetamol">Paracetamol</div>
+        <div class="med-tile" data-med="Tramadol">Tramadol</div>
+
+        <div class="med-tile" data-med="Codeine">Codeine</div>
+        <div class="med-tile" data-med="Zopiclone">Zopiclone</div>
+
+        <div class="med-tile" data-med="Zolpidem">Zolpidem</div>
+        <div class="med-tile" data-med="Difene gel">Difene gel</div>
+      </div>
+    </div>
+
+    <div class="hero" aria-hidden="true"></div>
+
+    <div class="right">
+      <a id="discussLink" class="discuss" href="ptworkbench10.html" aria-label="Discuss with Pharmacy">
+        Discuss with Pharmacy
+      </a>
+
+      <div class="right-title">Appropriate analgesia</div>
+      <div id="dropzone" class="dropzone" aria-label="Drop appropriate analgesia here"></div>
+
+      <!-- Separate bin panel -->
+      <div class="trash-area" aria-label="Offending medications bin area">
+        <div class="trash-header">Put the offending medications here</div>
+        <div id="trashWrap" class="trash-wrap" aria-label="Trash (avoid)">
+          <img src="images/trash.png" alt="Trash">
+        </div>
+      </div>
+    </div>
+
+    <!-- Nav arrow -->
+    <div class="nav-wrap">
+      <div class="nav-instruction-tile">
+        Click the green arrow when you’re happy with your choices.
+      </div>
+      <div class="nav">
+        <a href="pttreatedaspirationevent.html" aria-label="Continue">
+          <img src="images/nextslidegreenshape.png" alt="Next">
+        </a>
+      </div>
+    </div>
+
+    <!-- ping audio -->
+    <audio id="ping" src="audio/audioping.mp3" preload="auto"></audio>
+  </div>
+
+  <script type="module">
+    // Optional scoring hookup (match your Kardex pattern)
+    let addScore  = (n)=>{};
+    let addSocial = (n)=>{};
+    try{
+      const mod = await import("./js/state.js");
+      mod.ensureTimerStarted?.();
+      if (typeof mod.addScore === "function") addScore = mod.addScore;
+      if (typeof mod.addSocial === "function") addSocial = mod.addSocial;
+    }catch(e){}
+
+    // Intro overlay: remove after animation completes (~7s)
+    const introOverlay = document.getElementById("introOverlay");
+    setTimeout(() => {
+      introOverlay.style.pointerEvents = "none";
+      introOverlay.setAttribute("aria-hidden","true");
+      setTimeout(() => introOverlay.remove(), 450);
+    }, 7050);
+
+    const dropzone = document.getElementById("dropzone");
+    const trashWrap = document.getElementById("trashWrap");
+    const ping = document.getElementById("ping");
+
+    const tiles = Array.from(document.querySelectorAll(".med-tile"));
+
+    // Correct answers for "avoid due to drowsiness"
+    const AVOID_CORRECT = new Set([
+      "Morphine",
+      "Oxynorm",
+      "Tramadol",
+      "Codeine",
+      "Zopiclone",
+      "Zolpidem"
+    ]);
+
+    // Track state per tile: home position and whether it has been scored for trash
+    const state = new Map();
+    tiles.forEach(tile => {
+      state.set(tile, {
+        homeParent: tile.parentElement,
+        homeNextSibling: tile.nextElementSibling,
+        inDrop: false,
+        trashed: false,
+        awardedTrash: false,
+        dx: 0,
+        dy: 0
+      });
+    });
+
+    // Pointer-based dragging
+    let active = null;
+
+    function setTranslate(tile, x, y){
+      tile.style.transform = `translate(${x}px, ${y}px)`;
+    }
+    function resetTranslate(tile){
+      tile.style.transform = "";
+    }
+
+    function isOverEl(el, x, y){
+      const r = el.getBoundingClientRect();
+      return (x >= r.left && x <= r.right && y >= r.top && y <= r.bottom);
+    }
+
+    function moveIntoDropzone(tile){
+      const s = state.get(tile);
+      if (s.trashed) return;
+
+      if (!s.inDrop){
+        dropzone.appendChild(tile);
+        s.inDrop = true;
+        tile.classList.add("in-drop");
+      }
+    }
+
+    function returnHome(tile){
+      const s = state.get(tile);
+      if (s.trashed) return;
+
+      tile.classList.remove("in-drop");
+      s.inDrop = false;
+
+      const parent = s.homeParent;
+      const anchor = s.homeNextSibling;
+      if (anchor && anchor.parentElement === parent){
+        parent.insertBefore(tile, anchor);
+      }else{
+        parent.appendChild(tile);
+      }
+
+      resetTranslate(tile);
+    }
+
+    function playPing(){
+      try{
+        ping.currentTime = 0;
+        ping.play();
+      }catch(e){}
+    }
+
+    function trashTile(tile){
+      const s = state.get(tile);
+      if (s.trashed) return;
+
+      const med = String(tile.dataset.med || "").trim();
+
+      // Score only once per tile, only if correct
+      if (AVOID_CORRECT.has(med) && !s.awardedTrash){
+        playPing();
+        addScore(1);
+        s.awardedTrash = true;
+      }
+
+      // Visually remove
+      s.trashed = true;
+      tile.style.transition = "transform .18s ease, opacity .18s ease, filter .18s ease";
+      tile.style.opacity = "0";
+      tile.style.transform = "scale(.92)";
+      tile.style.filter = "blur(1px)";
+      setTimeout(() => tile.remove(), 220);
+    }
+
+    function onPointerDown(e){
+      const tile = e.currentTarget;
+      const s = state.get(tile);
+      if (s.trashed) return;
+
+      tile.setPointerCapture?.(e.pointerId);
+
+      active = {
+        tile,
+        pointerId: e.pointerId,
+        startX: e.clientX,
+        startY: e.clientY
+      };
+
+      tile.style.zIndex = 50;
+      e.preventDefault();
+    }
+
+    function onPointerMove(e){
+      if (!active || e.pointerId !== active.pointerId) return;
+
+      const tile = active.tile;
+      const s = state.get(tile);
+      if (s.trashed) return;
+
+      const dx = e.clientX - active.startX;
+      const dy = e.clientY - active.startY;
+      s.dx = dx; s.dy = dy;
+      setTranslate(tile, dx, dy);
+
+      const overDrop = isOverEl(dropzone, e.clientX, e.clientY);
+      const overTrash = isOverEl(trashWrap, e.clientX, e.clientY);
+
+      if (overDrop) dropzone.classList.add("is-over");
+      else dropzone.classList.remove("is-over");
+
+      if (overTrash) trashWrap.classList.add("is-over");
+      else trashWrap.classList.remove("is-over");
+    }
+
+    function onPointerUp(e){
+      if (!active || e.pointerId !== active.pointerId) return;
+
+      const tile = active.tile;
+      const s = state.get(tile);
+
+      tile.style.zIndex = "";
+      dropzone.classList.remove("is-over");
+      trashWrap.classList.remove("is-over");
+
+      if (!s.trashed){
+        const overTrash = isOverEl(trashWrap, e.clientX, e.clientY);
+        const overDrop  = isOverEl(dropzone, e.clientX, e.clientY);
+
+        resetTranslate(tile);
+        s.dx = 0; s.dy = 0;
+
+        if (overTrash){
+          trashTile(tile);
+        }else if (overDrop){
+          moveIntoDropzone(tile);
+        }else{
+          // cancel transform only
+        }
+      }
+
+      active = null;
+    }
+
+    function onClick(tile){
+      const s = state.get(tile);
+      if (s.trashed) return;
+      if (s.inDrop) returnHome(tile);
+    }
+
+    tiles.forEach(tile => {
+      tile.addEventListener("pointerdown", onPointerDown);
+      tile.addEventListener("click", () => onClick(tile));
+    });
+
+    window.addEventListener("pointermove", onPointerMove, {passive:false});
+    window.addEventListener("pointerup", onPointerUp);
+
+    // Discuss with Pharmacy: +3 SOCIAL ONLY, then navigate (reliable)
+    // (Matches your Kardex pattern: addSocial is the social channel)
+    const discussLink = document.getElementById("discussLink");
+    discussLink.addEventListener("click", (e) => {
+      e.preventDefault();
+      addSocial(3);
+      setTimeout(() => {
+        window.location.href = discussLink.href;
+      }, 120);
+    });
+  </script>
+</body>
+</html>
