@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Antibiotic Shelf</title>
+
+<link rel="stylesheet" href="css/common.css">
+<link rel="stylesheet" href="css/nav-arrows.css">
+<link href="https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@900&display=swap" rel="stylesheet">
+
+<style>
+  body{
+    margin:0;
+    background:#0b3b4a;
+    font-family:"Roboto Slab", serif;
+    overflow:hidden;
+  }
+
+/* match screenshot: teal stage with a thin dark border */
+.stage{
+  width:100vw;
+  height:100vh;
+  position:relative;
+  background:#08394a;
+  overflow:hidden;
+  border: 3px solid rgba(0,0,0,.55);
+  box-sizing: border-box;
+}
+
+/* NEW: centered “enclosed image” background */
+.hero{
+  position:absolute;
+  left:50%;
+  top:50%;
+  transform: translate(-50%, -50%);
+  width: min(1100px, 94vw);
+  height: min(740px, 86vh);
+  background: url("images/librarypharmacy.png") center / cover no-repeat;
+  border: 3px solid rgba(0,0,0,.65);
+  box-shadow: 0 18px 45px rgba(0,0,0,.45);
+  z-index: 1;     /* sits behind UI */
+}
+
+  .heading{
+    position:absolute;
+    left:50%;
+    top:22px;
+    transform: translateX(-50%);
+    width:min(980px, 92vw);
+    background:#d9d9d9;
+    border: 3px solid rgba(0,0,0,.55);
+    box-shadow: 0 14px 26px rgba(0,0,0,.35);
+    padding: 14px 18px;
+    z-index: 6;
+    text-align:center;
+  }
+  .heading h1{
+    margin:0;
+    font-weight:900;
+    font-size: clamp(18px, 2.2vw, 28px);
+    color:#111;
+    line-height:1.1;
+  }
+
+  /* Options grid */
+  .grid{
+    position:absolute;
+    left:50%;
+    top:52%;
+    transform: translate(-50%, -50%);
+    width:min(920px, 90vw);
+    display:grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+    padding: 16px;
+    z-index: 7;
+  }
+
+  .option{
+    background:#d9d9d9;
+    border: 3px solid rgba(0,0,0,.55);
+    box-shadow: 0 10px 18px rgba(0,0,0,.30);
+    padding: 14px 12px;
+    text-align:center;
+    cursor:pointer;
+    user-select:none;
+    transition: transform .12s ease, filter .12s ease, opacity .18s ease;
+    font-weight:900;
+    font-size: clamp(14px, 1.6vw, 18px);
+    color:#111;
+    line-height:1.15;
+    min-height: 72px;
+    display:grid;
+    place-items:center;
+  }
+  .option:hover{ transform: translateY(-2px); filter: brightness(1.03); }
+  .option:active{ transform: translateY(1px) scale(.99); filter: brightness(.98); }
+
+  .option.locked{
+    cursor:not-allowed;
+    opacity:.55;
+    filter: grayscale(.15);
+  }
+  .option.correct{
+    outline: 6px solid rgba(46,215,20,.55);
+    box-shadow: 0 0 0 4px rgba(46,215,20,.25), 0 14px 26px rgba(0,0,0,.35);
+  }
+  .option.wrong{
+    outline: 6px solid rgba(255,60,60,.45);
+    box-shadow: 0 0 0 4px rgba(255,60,60,.18), 0 14px 26px rgba(0,0,0,.35);
+  }
+
+  /* Next arrow (hidden until selection) */
+  .nav-btn{
+    position:absolute;
+    bottom: 44px;
+    width: 120px;
+    height: 84px;
+    border: 3px solid rgba(0,0,0,.55);
+    box-shadow: 0 14px 26px rgba(0,0,0,.35);
+    display:grid;
+    place-items:center;
+    cursor:pointer;
+    user-select:none;
+    transition: transform .12s ease, filter .12s ease, opacity .18s ease;
+    z-index: 10;
+  }
+  .nav-btn:hover{ transform: translateY(-2px); filter: brightness(1.05); }
+  .nav-btn:active{ transform: translateY(1px) scale(.99); filter: brightness(.98); }
+
+  .nav-btn.next{
+    right: 44px;
+    background: #8d2aa3;
+    opacity: 0;
+    pointer-events: none;
+  }
+  .nav-btn.next.show{
+    opacity: 1;
+    pointer-events: auto;
+  }
+  .nav-btn.next::before{
+    content:"";
+    width:0; height:0;
+    border-top: 18px solid transparent;
+    border-bottom: 18px solid transparent;
+    border-left: 34px solid rgba(0,0,0,.55);
+    transform: translateX(3px);
+  }
+  .nav-btn.next::after{
+    content:"";
+    position:absolute;
+    width:0; height:0;
+    border-top: 16px solid transparent;
+    border-bottom: 16px solid transparent;
+    border-left: 30px solid rgba(0,0,0,.18);
+    transform: translateX(7px);
+    opacity:.55;
+    pointer-events:none;
+  }
+
+  /* --- Side pop-out menu --- */
+  .side-menu{
+    position:absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 12;
+    display:flex;
+    flex-direction:column;
+    gap: 10px;
+  }
+  .side-btn{
+    background:#d9d9d9;
+    border: 3px solid rgba(0,0,0,.55);
+    box-shadow: 0 10px 18px rgba(0,0,0,.30);
+    padding: 12px 12px;
+    cursor:pointer;
+    user-select:none;
+    font-weight:900;
+    font-size: 14px;
+    color:#111;
+    width: 190px;
+    text-align:center;
+    transition: transform .12s ease, filter .12s ease, opacity .18s ease;
+  }
+  .side-btn:hover{ transform: translateY(-2px); filter: brightness(1.03); }
+  .side-btn:active{ transform: translateY(1px) scale(.99); filter: brightness(.98); }
+
+  /* --- Slide-out guidelines panel --- */
+  .drawer{
+    position:absolute;
+    top:0;
+    right:0;
+    height:100%;
+    width: min(560px, 92vw);
+    transform: translateX(102%);
+    transition: transform .22s ease;
+    background:#0a3c4c;
+    border-left: 3px solid rgba(0,0,0,.55);
+    box-shadow: -18px 0 45px rgba(0,0,0,.45);
+    z-index: 20;
+    display:flex;
+    flex-direction:column;
+  }
+  .drawer.open{
+    transform: translateX(0);
+  }
+  .drawer-header{
+    flex: 0 0 auto;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap: 10px;
+    padding: 14px 14px;
+    background:#d9d9d9;
+    border-bottom: 3px solid rgba(0,0,0,.55);
+  }
+  .drawer-title{
+    margin:0;
+    font-weight:900;
+    font-size: 16px;
+    color:#111;
+    line-height:1.1;
+  }
+  .drawer-close{
+    background:#8d2aa3;
+    border: 3px solid rgba(0,0,0,.55);
+    box-shadow: 0 10px 18px rgba(0,0,0,.25);
+    color:#111;
+    font-weight:900;
+    cursor:pointer;
+    padding: 8px 12px;
+    user-select:none;
+  }
+  .drawer-close:hover{ filter: brightness(1.05); }
+  .drawer-close:active{ transform: translateY(1px) scale(.99); filter: brightness(.98); }
+
+  .drawer-body{
+    flex: 1 1 auto;
+    padding: 14px;
+    overflow:auto;
+    min-height: 0; /* important for flex + overflow */
+  }
+
+  .guidelines-shot{
+    display:block;
+    width:100%;
+    height:auto;
+    max-height: calc(100vh - 140px);
+    object-fit: contain;
+    border: 3px solid rgba(0,0,0,.55);
+    box-shadow: 0 14px 26px rgba(0,0,0,.35);
+    background:#08394a;
+  }
+
+  .img-error{
+    margin-top: 12px;
+    background:#d9d9d9;
+    border: 3px solid rgba(0,0,0,.55);
+    box-shadow: 0 10px 18px rgba(0,0,0,.25);
+    padding: 10px 12px;
+    font-weight:900;
+    color:#111;
+    display:none;
+  }
+  .img-error.show{ display:block; }
+
+  /* Overlay when drawer open */
+  .overlay{
+    position:absolute;
+    inset:0;
+    background: rgba(0,0,0,.35);
+    opacity:0;
+    pointer-events:none;
+    transition: opacity .18s ease;
+    z-index: 19;
+  }
+  .overlay.show{
+    opacity:1;
+    pointer-events:auto;
+  }
+
+  /* ===========================
+     NEW: Intro overlay (5s)
+     =========================== */
+  .intro-overlay{
+    position:absolute;
+    inset:0;
+    z-index: 200; /* above everything */
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    pointer-events: auto;
+    opacity: 1;
+    transition: opacity 1.1s ease; /* dissolve */
+  }
+  .intro-overlay.fade-out{
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  /* Dimmer layer */
+  .intro-overlay::before{
+    content:"";
+    position:absolute;
+    inset:0;
+    background: rgba(0,0,0,.45);
+  }
+
+  /* Nurse image */
+  .intro-nurse{
+    position:absolute;
+    inset:0;
+    background: url("images/claresnursetired.png") center / contain no-repeat;
+    filter: drop-shadow(0 18px 45px rgba(0,0,0,.55));
+    z-index: 1;
+  }
+
+  /* Message tile */
+  .intro-tile{
+    position:relative;
+    z-index: 2;
+    width: min(980px, 92vw);
+    top: 20%;
+    background:#dcc61f;
+    border: 4px solid rgba(0,0,0,.65);
+    box-shadow: 0 18px 40px rgba(0,0,0,.55);
+    padding: 18px 20px;
+    text-align:center;
+  }
+  .intro-tile p{
+    margin:0;
+    font-weight:900;
+    font-size: clamp(16px, 2.1vw, 26px);
+    color:#111;
+    line-height:1.2;
+  }
+
+  @media (max-width: 860px){
+    .heading{ top: 14px; }
+
+    .grid{
+      width:min(960px, 94vw);
+      gap: 10px;
+      padding: 12px;
+      top: 56%;
+    }
+    .nav-btn{ bottom: 18px; width: 104px; height: 74px; }
+    .nav-btn.next{ right: 18px; }
+
+    .side-menu{
+      left: 10px;
+      top: auto;
+      bottom: 18px;
+      transform: none;
+      flex-direction:column;
+      width:auto;
+    }
+    .side-btn{
+      width: 180px;
+      font-size: 13px;
+      padding: 10px 10px;
+    }
+
+    .intro-tile{ width: min(980px, 94vw); }
+  }
+
+  @media (max-width: 560px){
+    .grid{
+      grid-template-columns: 1fr;
+      top: 58%;
+    }
+    .side-btn{ width: 170px; }
+  }
+</style>
+</head>
+
+<body>
+<div class="stage">
+
+  <!-- NEW: intro overlay -->
+  <div id="introOverlay" class="intro-overlay" aria-hidden="false">
+    <div class="intro-nurse" aria-hidden="true"></div>
+    <div class="intro-tile" role="dialog" aria-live="polite">
+      <p>
+        Before you leave - I need to prescribe antibiotics for Pat's chest infection.
+        He had intravenous antibiotics last month for a pneumonia. Can you help me?
+      </p>
+    </div>
+  </div>
+
+  <div class="hero" aria-hidden="true"></div>
+
+  <div class="heading">
+    <h1>Which antibiotic do you want to take from the shelf?</h1>
+  </div>
+
+  <!-- Side menu -->
+  <div class="side-menu" aria-label="Side menu">
+    <div id="btnGuidelines" class="side-btn" role="button" tabindex="0">Review Local Guidelines</div>
+    <div id="btnOther" class="side-btn" role="button" tabindex="0">Other</div>
+  </div>
+
+  <!-- Guidelines drawer -->
+  <div id="overlay" class="overlay" aria-hidden="true"></div>
+
+  <aside id="drawer" class="drawer" aria-label="Local guidelines panel" aria-hidden="true">
+    <div class="drawer-header">
+      <p class="drawer-title">Local Guidelines (Pneumonia)</p>
+      <div id="drawerClose" class="drawer-close" role="button" tabindex="0" aria-label="Close guidelines">Close</div>
+    </div>
+    <div class="drawer-body">
+      <img
+        id="guidelinesImg"
+        class="guidelines-shot"
+        src="images/antimicrobialguidelines.png"
+        alt="Screenshot of local pneumonia antibiotic guidelines">
+      <div id="imgError" class="img-error">
+        Image not found. Check the file path:
+        <b>images/antimicrobialguidelines.png</b>
+        (Case-sensitive, and must be in the same project folder.)
+      </div>
+    </div>
+  </aside>
+
+  <!-- Antibiotic options -->
+  <div class="grid" id="optionsGrid" aria-label="Antibiotic options">
+    <div class="option" data-choice="Cefalexin" tabindex="0" role="button">Cefalexin</div>
+    <div class="option" data-choice="Amoxicillin" tabindex="0" role="button">Amoxicillin</div>
+    <div class="option" data-choice="Vancomicin" tabindex="0" role="button">Vancomicin</div>
+
+    <div class="option" data-choice="Gentamicin" tabindex="0" role="button">Gentamicin</div>
+    <div class="option" data-choice="Nitrofurantoin" tabindex="0" role="button">Nitrofurantoin</div>
+    <div class="option" data-choice="Piperacillin-Tazobactam" tabindex="0" role="button">Piperacillin-Tazobactam</div>
+
+    <div class="option" data-choice="Meropenem" tabindex="0" role="button">Meropenem</div>
+    <div class="option" data-choice="Clarithromicin" tabindex="0" role="button">Clarithromicin</div>
+    <div class="option" data-choice="Trimethoprim-Sulfamethoxazole" tabindex="0" role="button">Trimethoprim-Sulfamethoxazole</div>
+  </div>
+
+  <div id="nextBtn" class="nav-btn next" title="Move to next slide" role="button" tabindex="0"></div>
+
+  <!-- Audio -->
+  <audio id="audioCorrect" preload="auto">
+    <source src="audio/audioping.mp3" type="audio/mpeg">
+  </audio>
+  <audio id="audioWrong" preload="auto">
+    <source src="audio/audiowrongbuzzer.m4a" type="audio/mp4">
+  </audio>
+
+</div>
+
+<script type="module">
+document.addEventListener("DOMContentLoaded", async () => {
+
+  // NEW: dissolve intro overlay after 5 seconds
+  const introOverlay = document.getElementById("introOverlay");
+  window.setTimeout(() => {
+    if (!introOverlay) return;
+    introOverlay.classList.add("fade-out");
+    // remove from DOM after fade for cleanliness
+    window.setTimeout(() => introOverlay.remove(), 1200);
+  }, 5000);
+
+  // --- Scoring the SAME WAY as your MCQ page ---
+  let addScore = (n)=>{};
+  try{
+    const mod = await import("./js/state.js");
+    mod.ensureTimerStarted?.();
+    if (typeof mod.addScore === "function") addScore = mod.addScore;
+  }catch(e){
+    console.warn("state.js not loaded:", e);
+  }
+
+  const CORRECT = "Piperacillin-Tazobactam";
+  const NEXT_PAGE = "pharmmeasuringslide.html";
+  const OTHER_PAGE = "workbench10.html";
+
+  const nextBtn = document.getElementById("nextBtn");
+  const options = Array.from(document.querySelectorAll(".option"));
+
+  const audioCorrect = document.getElementById("audioCorrect");
+  const audioWrong = document.getElementById("audioWrong");
+
+  // Drawer elements
+  const drawer = document.getElementById("drawer");
+  const overlay = document.getElementById("overlay");
+  const btnGuidelines = document.getElementById("btnGuidelines");
+  const btnOther = document.getElementById("btnOther");
+  const drawerClose = document.getElementById("drawerClose");
+
+  // Image error helper
+  const guidelinesImg = document.getElementById("guidelinesImg");
+  const imgError = document.getElementById("imgError");
+  guidelinesImg.addEventListener("error", () => {
+    imgError.classList.add("show");
+  });
+
+  let locked = false;
+
+  function lockAllExcept(selectedEl){
+    options.forEach(el => {
+      if (el !== selectedEl) el.classList.add("locked");
+      el.setAttribute("aria-disabled", "true");
+      el.tabIndex = -1;
+    });
+    selectedEl.classList.remove("locked");
+    selectedEl.setAttribute("aria-disabled", "false");
+    selectedEl.tabIndex = 0;
+    locked = true;
+  }
+
+  function revealNext(){
+    nextBtn.classList.add("show");
+  }
+
+  function playSound(which){
+    try{
+      if (which === "correct") {
+        audioWrong.pause(); audioWrong.currentTime = 0;
+        audioCorrect.currentTime = 0;
+        audioCorrect.play();
+      } else {
+        audioCorrect.pause(); audioCorrect.currentTime = 0;
+        audioWrong.currentTime = 0;
+        audioWrong.play();
+      }
+    } catch(e){}
+  }
+
+  function handleChoice(el){
+    if (locked) return;
+
+    const choice = el.dataset.choice || "";
+    const isCorrect = (choice === CORRECT);
+
+    el.classList.add(isCorrect ? "correct" : "wrong");
+    playSound(isCorrect ? "correct" : "wrong");
+
+    // Award score via state.js (same mechanism as MCQ page)
+    if (isCorrect) addScore(1);
+
+    lockAllExcept(el);
+    revealNext();
+  }
+
+  options.forEach(el => {
+    el.addEventListener("click", () => handleChoice(el));
+    el.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        handleChoice(el);
+      }
+    });
+  });
+
+  function goNext(){
+    window.location.href = NEXT_PAGE;
+  }
+
+  nextBtn.addEventListener("click", goNext);
+  nextBtn.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      goNext();
+    }
+  });
+
+  // Keyboard helpers
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "ArrowRight" && nextBtn.classList.contains("show")) goNext();
+    if (e.key === "Escape" && drawer.classList.contains("open")) closeDrawer();
+  });
+
+  // --- Drawer logic ---
+  function openDrawer(){
+    drawer.classList.add("open");
+    overlay.classList.add("show");
+    drawer.setAttribute("aria-hidden", "false");
+    overlay.setAttribute("aria-hidden", "false");
+  }
+
+  function closeDrawer(){
+    drawer.classList.remove("open");
+    overlay.classList.remove("show");
+    drawer.setAttribute("aria-hidden", "true");
+    overlay.setAttribute("aria-hidden", "true");
+  }
+
+  btnGuidelines.addEventListener("click", openDrawer);
+  btnGuidelines.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openDrawer(); }
+  });
+
+  drawerClose.addEventListener("click", closeDrawer);
+  drawerClose.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" || e.key === " ") { e.preventDefault(); closeDrawer(); }
+  });
+
+  overlay.addEventListener("click", closeDrawer);
+
+  // --- Other button routes to workbench10.html ---
+  function goOther(){
+    window.location.href = OTHER_PAGE;
+  }
+  btnOther.addEventListener("click", goOther);
+  btnOther.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" || e.key === " ") { e.preventDefault(); goOther(); }
+  });
+
+});
+</script>
+
+</body>
+</html>
