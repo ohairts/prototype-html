@@ -144,7 +144,6 @@
       transition: transform .16s ease, filter .16s ease, box-shadow .16s ease;
       animation: pharmacyPulse 1.8s ease-in-out infinite;
     }
-
     @keyframes pharmacyPulse{
       0%,100%{
         box-shadow:
@@ -187,15 +186,6 @@
       transform: rotate(18deg);
       opacity: .0;
       pointer-events:none;
-    }
-
-    .discuss .small{
-      display:block;
-      margin-top: 8px;
-      font-size: clamp(12px, 1.1vw, 14px);
-      opacity: .9;
-      font-weight: 900;
-      letter-spacing: .2px;
     }
 
     .discuss:hover{
@@ -500,6 +490,9 @@
 
     <!-- ping audio -->
     <audio id="ping" src="audio/audioping.mp3" preload="auto"></audio>
+
+    <!-- muffled background audio -->
+    <audio id="bgVitals" src="audio/audionormalvitals.m4a" preload="auto" loop playsinline></audio>
   </div>
 
   <script type="module">
@@ -708,7 +701,6 @@
     window.addEventListener("pointerup", onPointerUp);
 
     // Discuss with Pharmacy: +3 SOCIAL ONLY, then navigate (reliable)
-    // (Matches your Kardex pattern: addSocial is the social channel)
     const discussLink = document.getElementById("discussLink");
     discussLink.addEventListener("click", (e) => {
       e.preventDefault();
@@ -717,6 +709,64 @@
         window.location.href = discussLink.href;
       }, 120);
     });
+
+    // ===== Background "normal vitals" audio (autoplay if allowed; otherwise on first click)
+    const bgVitals = document.getElementById("bgVitals");
+
+    // Slight muffling using Web Audio API (low-pass filter + lower gain)
+    let audioCtx, sourceNode, lowpass, gainNode;
+    function setupMuffleChain(){
+      if (audioCtx) return;
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      if (!AudioCtx) return; // older browsers: will just play unfiltered
+
+      audioCtx = new AudioCtx();
+
+      sourceNode = audioCtx.createMediaElementSource(bgVitals);
+
+      lowpass = audioCtx.createBiquadFilter();
+      lowpass.type = "lowpass";
+      lowpass.frequency.value = 1200; // "slightly muffled" (lower = more muffled)
+      lowpass.Q.value = 0.7;
+
+      gainNode = audioCtx.createGain();
+      gainNode.gain.value = 0.55; // a bit quieter
+
+      sourceNode.connect(lowpass);
+      lowpass.connect(gainNode);
+      gainNode.connect(audioCtx.destination);
+    }
+
+    async function tryStartVitals(){
+      try{
+        setupMuffleChain();
+        if (audioCtx && audioCtx.state === "suspended") await audioCtx.resume();
+
+        // ensure we start from the beginning when page loads
+        if (bgVitals.readyState >= 1) bgVitals.currentTime = 0;
+        bgVitals.volume = 1.0; // actual loudness controlled by gainNode if available
+        await bgVitals.play();
+        return true;
+      }catch(err){
+        return false;
+      }
+    }
+
+    // Try autoplay as soon as possible
+    tryStartVitals();
+
+    // If blocked, start on first user interaction anywhere
+    const unlock = async () => {
+      const ok = await tryStartVitals();
+      if (ok){
+        window.removeEventListener("pointerdown", unlock, true);
+        window.removeEventListener("keydown", unlock, true);
+        window.removeEventListener("touchstart", unlock, true);
+      }
+    };
+    window.addEventListener("pointerdown", unlock, true);
+    window.addEventListener("touchstart", unlock, true);
+    window.addEventListener("keydown", unlock, true);
   </script>
 </body>
 </html>
