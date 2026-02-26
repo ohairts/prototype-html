@@ -249,7 +249,7 @@
         <div>
           <h2 class="fly__title" id="flyTitle">Choose your approach</h2>
           <p class="fly__subtitle" id="flySubtitle">
-            Pick one. This may affect overall points and social score.
+            Pick one. 
           </p>
         </div>
         <button class="fly__close" type="button" data-fly-close="true">Close</button>
@@ -376,12 +376,10 @@
 
       if (social) addSocial(social);
 
-      // Any fly-in option -> workbench2
-      showNav("ptworkbench2.html");
+  if (DEBUG) console.log("[Fly-in] social +", social);
 
-      if (DEBUG) console.log("[Fly-in] social +", social);
-
-      setTimeout(closeFly, 220);
+  closeFly();
+  window.location.href="ptworkbench1.html";
     });
 
     setTimeout(openFly, 4000);

@@ -374,7 +374,6 @@ flyGrid.addEventListener("click",(e)=>{
 
   const social  = Number(opt.dataset.social || 0);
 
-  // IMPORTANT: fly-ins should NOT affect overall score
   if (social) addSocial(social);
 
   if (DEBUG) console.log("[Fly-in] social +", social);
