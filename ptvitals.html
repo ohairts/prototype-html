@@ -214,7 +214,7 @@
     #zoomPreview{
       position: fixed;
       width: 240px;
-      height: 240px;
+      height: 300px;
       border-radius: 10px;
       border: 3px solid rgba(0,0,0,.55);
       box-shadow: 0 18px 35px rgba(0,0,0,.35);
@@ -227,7 +227,7 @@
 
     /* small label (optional) */
     #zoomPreview::after{
-      content: "×1.5";
+      content: "×2.0";
       position:absolute;
       right: 8px;
       bottom: 6px;
@@ -331,56 +331,79 @@
     });
 
     // ===== Magnifier preview (×1.5) =====
-    const ZOOM = 1.5;
-    const paper = document.getElementById("paper");
-    const img = document.getElementById("paperImg");
-    const preview = document.getElementById("zoomPreview");
+const ZOOM = 2.0;
+const paper = document.getElementById("paper");
+const img = document.getElementById("paperImg");
+const preview = document.getElementById("zoomPreview");
 
-    function setPreviewImage(){
-      preview.style.backgroundImage = `url("${img.src}")`;
-    }
-    if (img.complete) setPreviewImage();
-    img.addEventListener("load", setPreviewImage);
+function setPreviewImage(){
+  preview.style.backgroundImage = `url("${img.src}")`;
+}
+if (img.complete) setPreviewImage();
+img.addEventListener("load", setPreviewImage);
 
-    function clamp(n, min, max){ return Math.max(min, Math.min(max, n)); }
+function clamp(n, min, max){ return Math.max(min, Math.min(max, n)); }
 
-    function onMove(e){
-      // show preview
-      preview.style.display = "block";
+// ✅ ADD THIS helper
+function getContainedImageRect(containerRect, imgEl){
+  const iw = imgEl.naturalWidth;
+  const ih = imgEl.naturalHeight;
 
-      // place preview beside cursor
-      const offset = 18;
-      let left = e.clientX + offset;
-      let top  = e.clientY + offset;
+  // if image not ready yet
+  if (!iw || !ih) {
+    return { x: 0, y: 0, w: containerRect.width, h: containerRect.height };
+  }
 
-      // keep preview on-screen
-      const pw = preview.offsetWidth || 240;
-      const ph = preview.offsetHeight || 240;
-      left = clamp(left, 10, window.innerWidth - pw - 10);
-      top  = clamp(top, 10, window.innerHeight - ph - 10);
+  // object-fit: contain scaling
+  const scale = Math.min(containerRect.width / iw, containerRect.height / ih);
+  const w = iw * scale;
+  const h = ih * scale;
 
-      preview.style.left = left + "px";
-      preview.style.top  = top  + "px";
+  // centered letterboxing offsets
+  const x = (containerRect.width - w) / 2;
+  const y = (containerRect.height - h) / 2;
 
-      // map cursor to image region INSIDE the paper
-      const rect = paper.getBoundingClientRect();
-      const x = clamp(e.clientX - rect.left, 0, rect.width);
-      const y = clamp(e.clientY - rect.top, 0, rect.height);
+  return { x, y, w, h };
+}
 
-      // Use background-size based on paper size so it matches what the user sees
-      const bgW = rect.width * ZOOM;
-      const bgH = rect.height * ZOOM;
+// ✅ REPLACE your onMove with this version
+function onMove(e){
+  preview.style.display = "block";
 
-      // Shift background so the hovered point appears centered in preview
-      const px = (x / rect.width) * bgW;
-      const py = (y / rect.height) * bgH;
+  const offset = 18;
+  let left = e.clientX + offset;
+  let top  = e.clientY + offset;
 
-      const centerX = pw / 2;
-      const centerY = ph / 2;
+  const pw = preview.offsetWidth || 240;
+  const ph = preview.offsetHeight || 240;
 
-      preview.style.backgroundSize = `${bgW}px ${bgH}px`;
-      preview.style.backgroundPosition = `${centerX - px}px ${centerY - py}px`;
-    }
+  left = clamp(left, 10, window.innerWidth - pw - 10);
+  top  = clamp(top, 10, window.innerHeight - ph - 10);
+
+  preview.style.left = left + "px";
+  preview.style.top  = top  + "px";
+
+  const rect = paper.getBoundingClientRect();
+  const draw = getContainedImageRect(rect, img);
+
+  const cx = clamp(e.clientX - rect.left, 0, rect.width);
+  const cy = clamp(e.clientY - rect.top, 0, rect.height);
+
+  const ix = clamp(cx - draw.x, 0, draw.w);
+  const iy = clamp(cy - draw.y, 0, draw.h);
+
+  const bgW = draw.w * ZOOM;
+  const bgH = draw.h * ZOOM;
+
+  const px = (ix / draw.w) * bgW;
+  const py = (iy / draw.h) * bgH;
+
+  const centerX = pw / 2;
+  const centerY = ph / 2;
+
+  preview.style.backgroundSize = `${bgW}px ${bgH}px`;
+  preview.style.backgroundPosition = `${centerX - px}px ${centerY - py}px`;
+}
 
     function onEnter(){
       preview.style.display = "block";
