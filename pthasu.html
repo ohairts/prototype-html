@@ -28,13 +28,15 @@
     }
 
     /* LEFT PANEL */
-    .left{
-      background:#7b746b;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      position:relative;
-    }
+.left{
+  background:#7b746b;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  position:relative;
+  padding:40px;
+  text-align:center;
+}
 
     .left::after{
       content:"";
@@ -47,12 +49,19 @@
       border-radius: 0 100% 100% 0;
     }
 
-    .left h1{
-      color:#ffffff;
-      font-size: clamp(48px, 6vw, 96px);
-      letter-spacing: 4px;
-      margin:0;
-    }
+.left h1{
+  color:#ffffff;
+  font-size: clamp(48px, 6vw, 96px);
+  letter-spacing: 4px;
+  margin:0;
+  line-height:1.1;
+}
+
+.subtitle{
+  color:white;
+  font-size: clamp(20px, 2.2vw, 36px);
+  margin-top:20px;
+}
 
     /* RIGHT PANEL */
     .right{
@@ -108,7 +117,8 @@
 
     <!-- LEFT TITLE PANEL -->
     <div class="left">
-      <h1>HASU</h1>
+<h1>HASU</h1>
+<p class="subtitle">(Hyperacute Stroke Unit)</p>
     </div>
 
     <!-- RIGHT IMAGE PANEL -->
