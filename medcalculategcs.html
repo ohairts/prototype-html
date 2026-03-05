@@ -106,14 +106,20 @@
     font-weight:800;
     font-size: clamp(20px, 2.4vw, 34px);
     text-align:center;
+     width: 100%;
+  max-width: 620px;   /* adjust */
+  justify-self: center;
   }
 
   /* Live total calculator (bottom-left) */
   .gcsCalc{
-    position: fixed;
-    left: 300px;
-    bottom: 18px;
-    z-index: 60;
+  position: fixed;
+  left: 15%;
+  top: 22px;
+  bottom: auto;
+
+  z-index: 60;
+  
     background: rgba(54, 240, 63, 0.838);
     color: #000000;
     border: 2px solid rgba(255,255,255,.25);
@@ -405,7 +411,7 @@
 
     <div class="mediaPane videoPane">
       <div id="overlayHeading" class="overlayHeading">
-        Can you move your arm for me?
+        Can you lift your two arms for me?
       </div>
       <video id="overlayVideoRight" playsinline muted autoplay loop></video>
     </div>
@@ -468,7 +474,7 @@
 
   // ===== MEDIA SOURCES =====
   const POP_LEFT_IMG = "images/gcscheck1.png";
-  const POP_RIGHT_VIDEO = "videos/leftarmweakness.mp4";
+  const POP_RIGHT_VIDEO = "videos/oldmanrightsidedweakness.mp4";
 
   // ===== Reset behaviour (fresh every page load) =====
   localStorage.removeItem("gcs_eyes");
