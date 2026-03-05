@@ -137,12 +137,13 @@
       color: #111;
 
       border: 4px solid rgba(0,0,0,.28);
-      border-radius: 999px;
+      border-radius: 14px;
       box-shadow: 0 14px 22px rgba(0,0,0,.25);
 
       font-family: "Roboto Slab", serif;
       font-weight: 900;
       font-size: clamp(16px, 1.6vw, 22px);
+      text-align: center;
       line-height: 1.2;
 
       opacity: 0;
@@ -199,7 +200,7 @@
       -webkit-mask: radial-gradient(circle, #000 62%, transparent 63%);
               mask: radial-gradient(circle, #000 62%, transparent 63%);
       opacity: .95;
-      animation: pieFill 10s linear forwards;
+      animation: pieFill 15s linear forwards;
     }
 
     .sw-ring{
@@ -211,7 +212,7 @@
       stroke-dashoffset: 276.46;
       transform: rotate(-90deg);
       transform-origin: 60px 66px;
-      animation: ringFill 10s linear forwards;
+      animation: ringFill 15s linear forwards;
     }
 
     .sw-hand{ stroke: rgba(255,255,255,.92); stroke-width: 6; stroke-linecap: round; opacity: .95; }
@@ -345,7 +346,7 @@
       </svg>
     </div>
 
-    <!-- Next arrow (shows on any answer OR at 10s) -->
+    <!-- Next arrow (shows on any answer OR at 15s) -->
     <div id="nextBtn" class="next" title="Continue"></div>
 
   </div>
@@ -359,10 +360,10 @@
       if (typeof mod.addScore === "function") addScore = mod.addScore;
     }catch(e){}
 
-    // ---- 10s ticking audio on load (loops 8s clip smoothly) ----
+    // ---- 15s ticking audio on load (loops 8s clip smoothly) ----
     const tickAudio = document.getElementById("tickAudio");
 
-    async function playTickFor10s(){
+    async function playTickFor15s(){
       if (!tickAudio) return;
 
       tickAudio.loop = true;
@@ -385,9 +386,9 @@
           tickAudio.pause();
           tickAudio.currentTime = 0;
         }catch(e){}
-      }, 10000);
+      }, 15000);
     }
-    playTickFor10s();
+    playTickFor15s();
 
     const answersEl = document.getElementById("answers");
     const bubble = document.getElementById("bubble");
@@ -444,7 +445,7 @@
     });
 
     // Timer rule: at 10 seconds, show arrow even if no selection
-    setTimeout(showNextArrow, 10000);
+    setTimeout(showNextArrow, 15000);
   </script>
 </body>
 </html>

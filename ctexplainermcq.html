@@ -67,6 +67,7 @@
       padding: 16px 18px;
       font-weight: 900;
       font-size: clamp(14px, 1.4vw, 18px);
+      text-align: center;
       line-height: 1.2;
       z-index: 25;
       box-shadow: 0 14px 22px rgba(0,0,0,.25);
@@ -232,7 +233,7 @@
 
   <script type="module">
     // ----- CONFIG -----
-    const DURATION_MS = 10000;
+    const DURATION_MS = 15000;
     const NEXT_SLIDE = "workbench4.html";
     const CORRECT_POINTS = 3;
 
@@ -292,7 +293,7 @@
 
       // optional polish: fade red slightly and brighten in last second
       red.style.opacity = 1 - (t * 0.4);
-      if (t > 0.9){
+      if (t > 0.933){
         red.style.filter = "brightness(1.35)";
       }else{
         red.style.filter = "";

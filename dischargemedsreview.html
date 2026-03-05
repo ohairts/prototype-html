@@ -110,6 +110,7 @@
       padding: 14px 16px;
       text-align:center;
       font-weight: 900;
+      font-size: 24px;
       line-height: 1.1;
       box-shadow: 0 14px 22px rgba(0,0,0,.25);
       z-index: 30;
@@ -182,7 +183,7 @@
     .scrap[data-rot="d"]{ transform: rotate(2deg); }
 
     .pos-details{ left: 44%; top: 14%; width: min(420px, 36vw); }
-    .pos-bg     { left: 44%; top: 26%; width: min(44vw); }
+    .pos-bg     { left: 44%; top: 26%; width: 44vw}
     .pos-meas   { left: 58%; top: 18%; width: min(320px, 30vw); }
     .pos-bloods { left: 38%; top: 10%; width: min(520px, 40vw); }
 
@@ -216,19 +217,33 @@
     /* ===== Bottom-right “Discuss MROC” tile ===== */
     .discussMROC{
       position:absolute;
-      right: 22px;
-      bottom: 22px;
+      right: 42px;
+      bottom: 32px;
       z-index: 20;
-      width: min(280px, 22vw);
-      min-width: 220px;
+      width: min(320px, 22vw);
+      font-size: 25px;
+      line-height: 1.15;
+      min-width: 320px;
       max-width: 320px;
       cursor:pointer;
+ transition: transform .12s ease, filter .12s ease, box-shadow .12s ease;
     }
-    .discussMROC:hover,
-    .discussMROC:active,
-    .discussMROC:focus{
-      transform: none;
-    }
+
+    .discussMROC:hover{
+  transform: translateY(-2px) scale(1.01);
+  filter: brightness(1.05);
+  box-shadow: 0 0 0 4px rgba(255,255,255,.22), 0 14px 26px rgba(0,0,0,.35);
+}
+
+.discussMROC:active{
+  transform: translateY(1px) scale(.99);
+  filter: brightness(.98);
+}
+
+.discussMROC:focus-visible{
+  outline: 4px solid rgba(46,215,20,.65);
+  outline-offset: 6px;
+}
 
     @media (max-width: 900px){
       .kardex, .kardex-hitlayer{
